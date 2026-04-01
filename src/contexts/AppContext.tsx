@@ -100,7 +100,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             try {
               history = await fetchCryptoPriceHistory(a.coingeckoId!, 30);
             } catch {
-              history = generateMockSparkline(a.trend, a.score);
+              history = generateMockSparkline(a.trend, a.score, a.basePrice);
             }
             updates[a.id] = { price: p.usd, change24h: p.usd_24h_change, history, currency: 'USD', lastUpdated: Date.now() };
           }
@@ -120,13 +120,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           try {
             history = await fetchForexHistory(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
           } catch {
-            history = generateMockSparkline(a.trend, a.score);
+            history = generateMockSparkline(a.trend, a.score, a.basePrice);
           }
           updates[a.id] = { price: rate.rate, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
           await new Promise((r) => setTimeout(r, 1200)); // respect 5 req/min rate limit
         } catch (e) {
           console.warn(`[AppContext] AV forex ${a.id} failed:`, e);
-          updates[a.id] = { history: generateMockSparkline(a.trend, a.score) };
+          const history = generateMockSparkline(a.trend, a.score, a.basePrice);
+          updates[a.id] = { price: a.basePrice, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
         }
       }
     }

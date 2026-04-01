@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import StatsBar from '../components/StatsBar';
 import AnalysisTable from '../components/AnalysisTable';
 import { useApp } from '../contexts/AppContext';
@@ -12,16 +12,32 @@ const BIAS_FILTERS: FilterBias[] = ['All', 'Very Bullish', 'Bullish', 'Neutral',
 const CAT_FILTERS: FilterCat[] = ['All', 'Forex', 'Indices', 'Commodities', 'Crypto'];
 
 const Dashboard: React.FC = () => {
-  const { assets, isRefreshing, lastRefresh, refreshData, setSelectedAsset } = useApp();
+  const { assets, isRefreshing, lastRefresh, refreshData, setSelectedAsset, activeView, setActiveView } = useApp();
   const [sortKey, setSortKey] = useState<SortKey>('score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [filterBias, setFilterBias] = useState<FilterBias>('All');
   const [filterCat, setFilterCat] = useState<FilterCat>('All');
   const [search, setSearch] = useState('');
 
+  // Sync Sidebar navigation to Local Dashboard Filters
+  useEffect(() => {
+    if (activeView === 'forex') setFilterCat('Forex');
+    else if (activeView === 'indices') setFilterCat('Indices');
+    else if (activeView === 'commodities') setFilterCat('Commodities');
+    else if (activeView === 'crypto') setFilterCat('Crypto');
+    else if (activeView === 'dashboard') setFilterCat('All');
+  }, [activeView]);
+
   const processed = useMemo(() => {
     let r = [...assets];
-    if (search.trim()) r = r.filter((a) => a.name.toLowerCase().includes(search.toLowerCase()));
+    if (search.trim()) {
+      const q = search.trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace('euro', 'eur');
+      r = r.filter((a) => {
+        const idClean = a.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const nameClean = a.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return nameClean.includes(q) || idClean.includes(q);
+      });
+    }
     if (filterBias !== 'All') r = r.filter((a) => a.bias === filterBias);
     if (filterCat !== 'All') r = r.filter((a) => a.category === filterCat);
     r.sort((a, b) => {
@@ -65,7 +81,10 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="bias-filter-group">
           {CAT_FILTERS.map((c) => (
-            <button key={c} id={`cat-${c.toLowerCase()}`} className={`bias-filter-btn cat-btn ${filterCat === c ? 'active' : ''}`} onClick={() => setFilterCat(c)}>{c}</button>
+            <button key={c} id={`cat-${c.toLowerCase()}`} className={`bias-filter-btn cat-btn ${filterCat === c ? 'active' : ''}`} onClick={() => {
+              setFilterCat(c);
+              setActiveView(c === 'All' ? 'dashboard' : c.toLowerCase());
+            }}>{c}</button>
           ))}
         </div>
         <div className="sort-controls">

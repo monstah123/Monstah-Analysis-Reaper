@@ -73,15 +73,28 @@ const AIInsight: React.FC = () => {
     setLoading(true);
     setError('');
 
-    // Prepend system prompt to guide the AI
-    const systemMessage: Message = { role: 'system', content: buildSystemPrompt(selected) };
-    const apiMessages = [systemMessage, ...newMessages];
+    // Filter back-to-back user messages to prevent strict API crashes
+    const safeMessages: Message[] = [];
+    for (const m of newMessages) {
+      if (safeMessages.length > 0 && safeMessages[safeMessages.length - 1].role === m.role) {
+        // DeepSeek/Others instantly crash on sequential same-role messages.
+        // If two user messages exist consecutively, merge them.
+        safeMessages[safeMessages.length - 1].content += `\n\n${m.content}`;
+      } else {
+        safeMessages.push({ ...m });
+      }
+    }
+
+    // Prepend system prompt to guide the AI, explicitly inside the first user message to bypass strict 'system' role blocks on standard proxies
+    if (safeMessages.length > 0 && safeMessages[0].role === 'user') {
+      safeMessages[0].content = `[SYSTEM INSTRUCTIONS: ${buildSystemPrompt(selected)}]\n\nUSER QUERY: ${safeMessages[0].content}`;
+    }
 
     try {
-      const res = await fetch(`${apiKeys.aiBaseUrl}/chat/completions`, {
+      const res = await fetch(`${apiKeys.aiBaseUrl.replace(/\/$/, '')}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKeys.openai}` },
-        body: JSON.stringify({ model: apiKeys.aiModel, messages: apiMessages, stream: true }),
+        body: JSON.stringify({ model: apiKeys.aiModel, messages: safeMessages, stream: true }),
         signal: abortRef.current.signal,
       });
 

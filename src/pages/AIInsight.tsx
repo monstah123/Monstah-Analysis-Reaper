@@ -120,9 +120,9 @@ const AIInsight: React.FC = () => {
         signal: abortRef.current.signal,
       });
       
-      // Smart Failover: If proxy 404s (common on local npm run dev), call provider directly
-      if (res.status === 404) {
-        console.warn('[Terminal] Proxy 404. Initializing Direct-Brain Fallback Protocol...');
+      // Smart Failover: If proxy 404s/500s (common on local npm run dev if proxy target is missing), call provider directly
+      if (res.status === 404 || res.status === 500) {
+        console.warn('[Terminal] Proxy error (404/500). Initializing Direct-Brain Fallback Protocol...');
         res = await fetch(`${apiKeys.aiBaseUrl.replace(/\/$/, '')}/chat/completions`, {
           method: 'POST',
           headers: { 

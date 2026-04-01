@@ -136,7 +136,7 @@ const AssetDrawer: React.FC = () => {
               </button>
             </div>
             <div className="drawer-chart" style={{ height: '450px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e2d48' }}>
-              <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} />
+              <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} containerId="tv_drawer" />
             </div>
           </div>
         )}
@@ -155,7 +155,7 @@ const AssetDrawer: React.FC = () => {
               </button>
             </div>
             <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e2d48' }}>
-              <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} />
+              <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} containerId="tv_fullscreen" />
             </div>
           </div>
         )}

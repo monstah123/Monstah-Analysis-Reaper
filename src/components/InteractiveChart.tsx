@@ -3,9 +3,10 @@ import React, { useEffect, useRef } from 'react';
 // Using the TradingView Advanced Real-Time Chart Widget for full candlesticks + tools
 interface ChartProps {
   tvSymbol: string;
+  containerId?: string;
 }
 
-const InteractiveChart: React.FC<ChartProps> = ({ tvSymbol }) => {
+const InteractiveChart: React.FC<ChartProps> = ({ tvSymbol, containerId = 'tradingview_advanced_widget' }) => {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const InteractiveChart: React.FC<ChartProps> = ({ tvSymbol }) => {
           "enable_publishing": false,
           "hide_side_toolbar": false,
           "allow_symbol_change": true,
-          "container_id": "tradingview_advanced_widget",
+          "container_id": containerId,
           "save_image": false,
           "backgroundColor": "#090c12",
           "gridColor": "rgba(42, 46, 57, 0.06)",
@@ -42,7 +43,7 @@ const InteractiveChart: React.FC<ChartProps> = ({ tvSymbol }) => {
 
   return (
     <div className='tradingview-widget-container' style={{ height: '100%', width: '100%' }}>
-      <div id='tradingview_advanced_widget' ref={container} style={{ height: '100%', width: '100%' }} />
+      <div id={containerId} ref={container} style={{ height: '100%', width: '100%' }} />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import type { AssetData } from '../data/mockData';
 import { useApp } from '../contexts/AppContext';
 import InteractiveChart from './InteractiveChart';
 import ScoreBreakdown from './ScoreBreakdown';
+import TradingViewPrice from './TradingViewPrice';
 
 const getBiasClass = (bias: AssetData['bias']) => {
   const map: Record<string, string> = {
@@ -13,6 +14,29 @@ const getBiasClass = (bias: AssetData['bias']) => {
     'Very Bearish': 'bias-very-bearish',
   };
   return map[bias] ?? 'bias-neutral';
+};
+
+const getTvSymbol = (id: string): string | null => {
+  const map: Record<string, string> = {
+    'EURUSD': 'FX:EURUSD',
+    'GBPNZD': 'FX:GBPNZD',
+    'AUDUSD': 'FX:AUDUSD',
+    'USDJPY': 'FX:USDJPY',
+    'NZDUSD': 'FX:NZDUSD',
+    'BITCOIN': 'BINANCE:BTCUSDT',
+    'ETHEREUM': 'BINANCE:ETHUSDT',
+    'SOLANA': 'BINANCE:SOLUSDT',
+    'GOLD': 'OANDA:XAUUSD',
+    'SILVER': 'OANDA:XAGUSD',
+    'USOIL': 'TVC:USOIL',
+    'COPPER': 'COMEX:HG1!',
+    'DOW': 'DJ:DJI',
+    'DAX': 'XETR:DAX',
+    'NIKKEI': 'TVC:NI225',
+    'SP500': 'TVC:SPX',
+    'NASDAQ': 'TVC:NDX',
+  };
+  return map[id] || null;
 };
 
 const AssetDrawer: React.FC = () => {
@@ -69,23 +93,31 @@ const AssetDrawer: React.FC = () => {
 
         {/* Live Price */}
         <div className="drawer-section">
-          <p className="drawer-section-title">Live Price</p>
-          {isRefreshing ? (
-            <div className="drawer-price-loading">Fetching live data…</div>
-          ) : priceDisplay ? (
-            <div className="drawer-price-row">
-              <span className="drawer-price">{priceDisplay}</span>
-              {changeDisplay && (
-                <span className={`drawer-change ${(md?.change24h ?? 0) >= 0 ? 'pos' : 'neg'}`}>{changeDisplay} 24h</span>
-              )}
+          <p className="drawer-section-title">Live TradingView Price</p>
+          {getTvSymbol(selectedAsset.id) ? (
+            <div style={{ height: '90px', marginTop: '-10px' }}>
+              <TradingViewPrice symbol={getTvSymbol(selectedAsset.id)!} />
             </div>
           ) : (
-            <div className="drawer-price-placeholder">
-              <span>Not connected</span>
-              <button className="drawer-connect-btn" onClick={() => { setSelectedAsset(null); setActiveView('settings'); }}>
-                Connect Live Data →
-              </button>
-            </div>
+            <>
+              {isRefreshing ? (
+                <div className="drawer-price-loading">Fetching live data…</div>
+              ) : priceDisplay ? (
+                <div className="drawer-price-row">
+                  <span className="drawer-price">{priceDisplay}</span>
+                  {changeDisplay && (
+                    <span className={`drawer-change ${(md?.change24h ?? 0) >= 0 ? 'pos' : 'neg'}`}>{changeDisplay} 24h</span>
+                  )}
+                </div>
+              ) : (
+                <div className="drawer-price-placeholder">
+                  <span>Not connected</span>
+                  <button className="drawer-connect-btn" onClick={() => { setSelectedAsset(null); setActiveView('settings'); }}>
+                    Connect Live Data →
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 

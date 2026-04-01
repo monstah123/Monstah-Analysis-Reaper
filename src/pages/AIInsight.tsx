@@ -55,13 +55,14 @@ function formatResponse(text: string): React.ReactElement {
 }
 
 const AIInsight: React.FC = () => {
-  const { assets, apiKeys, aiInsightAsset, setAiInsightAsset, marketData } = useApp();
+  const { assets, apiKeys, aiInsightAsset, setAiInsightAsset, marketData, updateMarketPrice } = useApp();
   const [selected, setSelected] = useState<AssetData>(aiInsightAsset ?? assets[0]);
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputStr, setInputStr] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [syncPrice, setSyncPrice] = useState('');
   
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -89,15 +90,12 @@ const AIInsight: React.FC = () => {
     const safeMessages: Message[] = [];
     for (const m of newMessages) {
       if (safeMessages.length > 0 && safeMessages[safeMessages.length - 1].role === m.role) {
-        // DeepSeek/Others instantly crash on sequential same-role messages.
-        // If two user messages exist consecutively, merge them.
         safeMessages[safeMessages.length - 1].content += `\n\n${m.content}`;
       } else {
         safeMessages.push({ ...m });
       }
     }
 
-    // Prepend system prompt to guide the AI, explicitly inside the first user message to bypass strict 'system' role blocks on standard proxies
     if (safeMessages.length > 0 && safeMessages[0].role === 'user') {
       const md = marketData[selected.id];
       const prompt = buildSystemPrompt(selected, md?.price, md?.change24h, md?.lastUpdated);
@@ -120,7 +118,6 @@ const AIInsight: React.FC = () => {
         signal: abortRef.current.signal,
       });
       
-      // Smart Failover: If proxy 404s/500s (common on local npm run dev if proxy target is missing), call provider directly
       if (res.status === 404 || res.status === 500) {
         console.warn('[Terminal] Proxy error (404/500). Initializing Direct-Brain Fallback Protocol...');
         res = await fetch(`${apiKeys.aiBaseUrl.replace(/\/$/, '')}/chat/completions`, {
@@ -149,7 +146,6 @@ const AIInsight: React.FC = () => {
         throw new Error(`[INSTITUTIONAL ERROR] ${errMsg}`);
       }
 
-      // 4. Handle Streaming Response
       if (!res.body) throw new Error('No response body from AI core.');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -209,8 +205,22 @@ const AIInsight: React.FC = () => {
     const a = assets.find((x) => x.id === assetId)!;
     setSelected(a);
     setAiInsightAsset(a);
-    setMessages([]); // Clear chat history when switching assets
+    setMessages([]); 
     setError('');
+    setSyncPrice('');
+  };
+
+  const handleManualSync = () => {
+    const p = parseFloat(syncPrice);
+    if (!isNaN(p) && p > 0) {
+      updateMarketPrice(selected.id, p);
+      // Trigger a follow-up chat message to announce the sync
+      const syncMsg: Message = { role: 'user', content: `NOTICE: Adjusted live tick to ${p}. Recalculate analysis based on this current price.` };
+      const updatedMsgs = [...messages, syncMsg];
+      setMessages(updatedMsgs);
+      setSyncPrice('');
+      streamChat(updatedMsgs);
+    }
   };
 
   return (
@@ -222,18 +232,38 @@ const AIInsight: React.FC = () => {
         </div>
       </div>
 
-      <div className="insight-controls" style={{ flexShrink: 0 }}>
+      <div className="insight-controls" style={{ flexShrink: 0, display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <select
           id="ai-asset-select"
           className="sort-select insight-select"
           value={selected.id}
           onChange={(e) => handleAssetChange(e.target.value)}
           disabled={loading}
+          style={{ minWidth: '220px' }}
         >
           {assets.map((a) => (
             <option key={a.id} value={a.id}>{a.name} ({a.bias}, {a.score > 0 ? '+' : ''}{a.score})</option>
           ))}
         </select>
+
+        <div className="sync-widget" style={{ display: 'flex', alignItems: 'center', background: '#1e2d48', borderRadius: '8px', padding: '0 10px', border: '1px solid #2a3f63' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: '#8b9ab8', marginRight: '8px', whiteSpace: 'nowrap' }}>TICK SYNC:</span>
+          <input 
+            type="number" 
+            placeholder="Live Price" 
+            value={syncPrice}
+            onChange={(e) => setSyncPrice(e.target.value)}
+            style={{ width: '100px', background: 'transparent', border: 'none', color: '#fff', fontSize: '14px', outline: 'none' }}
+          />
+          <button 
+            className="btn btn-primary" 
+            onClick={handleManualSync} 
+            disabled={!syncPrice || loading}
+            style={{ height: '30px', padding: '0 10px', fontSize: '11px', margin: '5px 0' }}
+          >
+            SYNC
+          </button>
+        </div>
         
         {messages.length === 0 && (
           <button className="btn btn-primary" onClick={handleGenerateReport} disabled={loading}>
@@ -244,7 +274,6 @@ const AIInsight: React.FC = () => {
 
       {error && <div className="insight-error" style={{ flexShrink: 0 }}>⚠️ {error}</div>}
 
-      {/* Chat Messages Area */}
       <div 
         ref={scrollRef} 
         className="settings-card" 
@@ -276,14 +305,13 @@ const AIInsight: React.FC = () => {
             </div>
           </div>
         ))}
-        {loading && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
+        {loading && (
           <div style={{ alignSelf: 'flex-start', color: '#8b9ab8', padding: '10px' }}>
              {apiKeys.aiBaseUrl.includes('deepseek') ? 'DeepSeek' : 'OpenAI'} is thinking... <span className="ai-cursor">▌</span>
           </div>
         )}
       </div>
 
-      {/* Chat Input Bar */}
       <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexShrink: 0 }}>
         <input 
           type="text" 

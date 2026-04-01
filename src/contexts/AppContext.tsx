@@ -37,6 +37,7 @@ interface AppContextType {
   setActiveView: (v: string) => void;
   aiInsightAsset: AssetData | null;
   setAiInsightAsset: (a: AssetData | null) => void;
+  updateMarketPrice: (id: string, price: number) => void;
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -191,6 +192,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshRef.current = false;
   }, [apiKeys.alphaVantage, apiKeys.fred]);
 
+  const updateMarketPrice = useCallback((assetId: string, p: number) => {
+    setMarketData((prev) => ({
+      ...prev,
+      [assetId]: {
+        ...(prev[assetId] ?? {}),
+        price: p,
+        lastUpdated: Date.now()
+      }
+    }));
+  }, []);
+
   // Initial load + 15-min auto-refresh
   useEffect(() => {
     fetchMarketData();
@@ -209,6 +221,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedAsset, setSelectedAsset,
         activeView, setActiveView,
         aiInsightAsset, setAiInsightAsset,
+        updateMarketPrice,
       }}
     >
       {children}

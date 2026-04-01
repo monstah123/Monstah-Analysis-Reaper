@@ -54,7 +54,7 @@ const DEFAULT_KEYS: ApiKeys = {
   aiModel: import.meta.env.VITE_AI_MODEL || 'gpt-4o',
 };
 
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+const CACHE_TTL = 1 * 60 * 1000; // 1 minute (Institutional Frequency)
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [apiKeysRaw, setApiKeysRaw] = useLocalStorage<ApiKeys>('mar_api_keys', DEFAULT_KEYS);

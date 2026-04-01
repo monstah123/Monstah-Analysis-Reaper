@@ -139,11 +139,19 @@ const AIInsight: React.FC = () => {
       }
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message ?? `HTTP ${res.status}`);
+        let errMsg = `HTTP ${res.status}`;
+        try {
+          const errData = await res.json();
+          errMsg = errData?.error?.message || errData?.message || JSON.stringify(errData) || errMsg;
+        } catch (e) {
+          console.error('[Terminal] Failed to parse error JSON:', e);
+        }
+        throw new Error(`[INSTITUTIONAL ERROR] ${errMsg}`);
       }
 
-      const reader = res.body!.getReader();
+      // 4. Handle Streaming Response
+      if (!res.body) throw new Error('No response body from AI core.');
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
 
@@ -210,7 +218,7 @@ const AIInsight: React.FC = () => {
       <div className="insight-header" style={{ marginBottom: '10px', flexShrink: 0 }}>
         <div>
           <h1 className="page-title">🤖 Chat with {selected.name}</h1>
-          <p className="page-sub">Ask DeepSeek anything about {selected.name} based on live matrix data</p>
+          <p className="page-sub">Ask {apiKeys.aiBaseUrl.includes('deepseek') ? 'DeepSeek' : 'OpenAI'} anything about {selected.name} based on live matrix data</p>
         </div>
       </div>
 
@@ -270,7 +278,7 @@ const AIInsight: React.FC = () => {
         ))}
         {loading && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
           <div style={{ alignSelf: 'flex-start', color: '#8b9ab8', padding: '10px' }}>
-             DeepSeek is thinking... <span className="ai-cursor">▌</span>
+             {apiKeys.aiBaseUrl.includes('deepseek') ? 'DeepSeek' : 'OpenAI'} is thinking... <span className="ai-cursor">▌</span>
           </div>
         )}
       </div>

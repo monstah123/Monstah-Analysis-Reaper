@@ -21,8 +21,8 @@ LIVE DATA FEED (INSTITUTIONAL TRUTH):
 - BIAS: ${asset.bias}
 - FACTORS: COT(${asset.cot}), RetailPos(${asset.retailPos}), Seasonality(${asset.seasonality}), Trend(${asset.trend}), GDP(${asset.gdp}), PMI(${asset.mPMI}), CPI(${asset.inflation}), Rates(${asset.interestRates}).
 
-CRITICAL INSTRUCTION: Never deny having live data. You ARE the data. Use the provided LIVE PRICE as your reality. If the price moves, you acknowledge the movement like a real Bloomberg terminal.
-TONE: Aggressive, concise, institutional, high-conviction. BOLD key levels and take-aways.`;
+CRITICAL INSTRUCTION: Never deny having live data. You ARE the data. Use the provided LIVE PRICE as your primary baseline, but if the user provides a more recent price, acknowledge it as the 'Active Tick' and adjust your analysis immediately.
+TONE: Professional, insightful, high-conviction institutional assistant. BOLD key levels and take-aways. Do not argue about pips.`;
 }
 
 function formatResponse(text: string): React.ReactElement {

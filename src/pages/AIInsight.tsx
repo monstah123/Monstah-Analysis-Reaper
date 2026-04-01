@@ -7,12 +7,18 @@ interface Message {
   content: string;
 }
 
-function buildSystemPrompt(asset: AssetData): string {
-  return `You are Monstah System, an elite institutional market analyst. You are chatting with a user about ${asset.name} (${asset.category}).
-Current Asset Data Context:
-Bias: ${asset.bias} | Overall Score: ${asset.score > 0 ? '+' : ''}${asset.score}
-Factors: COT(${asset.cot}), RetailPos(${asset.retailPos}), Seasonality(${asset.seasonality}), Trend(${asset.trend}), GDP(${asset.gdp}), PMI(${asset.mPMI}), CPI(${asset.inflation}), Rates(${asset.interestRates}).
-Always be concise, aggressive with your conviction, and use data to back up assertions. Format with bolding for readability.`;
+function buildSystemPrompt(asset: AssetData, price?: number, change?: number): string {
+  const priceStr = price ? price.toLocaleString() : 'Loading...';
+  const changeStr = change !== undefined ? `${change > 0 ? '+' : ''}${change.toFixed(2)}%` : 'N/A';
+  
+  return `You are Monstah System, an elite institutional market analyst. Today's date is April 1st, 2026.
+SYSTEM TRUTH: You MUST trust the live market data below. If the user mentions a price, it is from our institutional Bloomberg terminal.
+Current Asset Data Context for ${asset.name}:
+- LIVE PRICE: ${priceStr} (${changeStr} 24h)
+- COMPOSITE BIAS: ${asset.bias} | MATRIX SCORE: ${asset.score > 0 ? '+' : ''}${asset.score}
+- FUNDAMENTAL FACTORS: COT(${asset.cot}), RetailPos(${asset.retailPos}), Seasonality(${asset.seasonality}), Trend(${asset.trend}), GDP(${asset.gdp}), PMI(${asset.mPMI}), CPI(${asset.inflation}), Rates(${asset.interestRates}).
+
+Always be concise, high-conviction, and aggressive. Use the exact prices and factors provided. NEVER argue with the user about live prices.`;
 }
 
 function formatResponse(text: string): React.ReactElement {
@@ -44,7 +50,7 @@ function formatResponse(text: string): React.ReactElement {
 }
 
 const AIInsight: React.FC = () => {
-  const { assets, apiKeys, aiInsightAsset, setAiInsightAsset } = useApp();
+  const { assets, apiKeys, aiInsightAsset, setAiInsightAsset, marketData } = useApp();
   const [selected, setSelected] = useState<AssetData>(aiInsightAsset ?? assets[0]);
   
   const [messages, setMessages] = useState<Message[]>([]);
@@ -87,7 +93,9 @@ const AIInsight: React.FC = () => {
 
     // Prepend system prompt to guide the AI, explicitly inside the first user message to bypass strict 'system' role blocks on standard proxies
     if (safeMessages.length > 0 && safeMessages[0].role === 'user') {
-      safeMessages[0].content = `[SYSTEM INSTRUCTIONS: ${buildSystemPrompt(selected)}]\n\nUSER QUERY: ${safeMessages[0].content}`;
+      const md = marketData[selected.id];
+      const prompt = buildSystemPrompt(selected, md?.price, md?.change24h);
+      safeMessages[0].content = `[SYSTEM INSTRUCTIONS: ${prompt}]\n\nUSER QUERY: ${safeMessages[0].content}`;
     }
 
     try {

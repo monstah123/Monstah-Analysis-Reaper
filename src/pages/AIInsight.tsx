@@ -1,49 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import type { AssetData } from '../data/mockData';
 
-function buildPrompt(asset: AssetData): string {
-  return `You are a professional market analyst specializing in forex, indices, commodities, and crypto. Analyze the following asset data and provide concise, actionable trading insights.
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
 
-Asset: ${asset.name} (${asset.category})
-Bias: ${asset.bias}
-Overall Score: ${asset.score > 0 ? '+' : ''}${asset.score}
-
-Factor Breakdown (scale: -2 to +2):
-• COT (Commitment of Traders): ${asset.cot}
-• Retail Positioning: ${asset.retailPos}
-• Seasonality: ${asset.seasonality}
-• Trend: ${asset.trend}
-• GDP: ${asset.gdp}
-• Manufacturing PMI: ${asset.mPMI}
-• Services PMI: ${asset.sPMI}
-• Retail Sales: ${asset.retailSales}
-• Inflation (CPI): ${asset.inflation}
-• Employment Change: ${asset.employmentChange}
-• Unemployment Rate: ${asset.unemploymentRate}
-• Interest Rates: ${asset.interestRates}
-
-Provide your analysis in this exact structure:
-**📊 Market Overview**
-[2-3 sentence summary of the current market situation]
-
-**🎯 Key Bullish Drivers**
-[Bullet points of strongest positive factors]
-
-**⚠️ Key Risk Factors**
-[Bullet points of main risks and bearish pressures]
-
-**💡 Trading Approach**
-[Specific, actionable trading recommendation with entry logic]
-
-**🎲 Confidence Level**
-[High/Medium/Low — with brief justification]`;
+function buildSystemPrompt(asset: AssetData): string {
+  return `You are Monstah System, an elite institutional market analyst. You are chatting with a user about ${asset.name} (${asset.category}).
+Current Asset Data Context:
+Bias: ${asset.bias} | Overall Score: ${asset.score > 0 ? '+' : ''}${asset.score}
+Factors: COT(${asset.cot}), RetailPos(${asset.retailPos}), Seasonality(${asset.seasonality}), Trend(${asset.trend}), GDP(${asset.gdp}), PMI(${asset.mPMI}), CPI(${asset.inflation}), Rates(${asset.interestRates}).
+Always be concise, aggressive with your conviction, and use data to back up assertions. Format with bolding for readability.`;
 }
 
 function formatResponse(text: string): React.ReactElement {
   const lines = text.split('\n');
-
-  // Helper to parse inline bolding
   const parseInline = (str: string) => {
     const parts = str.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -58,13 +31,13 @@ function formatResponse(text: string): React.ReactElement {
     <div className="ai-response">
       {lines.map((line, i) => {
         if (line.startsWith('**') && line.endsWith('**') && !line.includes(':')) {
-          return <h3 key={i} className="ai-section-heading">{line.replace(/\*\*/g, '')}</h3>;
+          return <h3 key={i} className="ai-section-heading" style={{ margin: '10px 0 5px' }}>{line.replace(/\*\*/g, '')}</h3>;
         }
         if (line.startsWith('• ') || line.startsWith('- ')) {
-          return <p key={i} className="ai-bullet">{parseInline(line)}</p>;
+          return <p key={i} className="ai-bullet" style={{ margin: '4px 0', paddingLeft: '15px' }}>{parseInline(line)}</p>;
         }
         if (line.trim() === '') return <br key={i} />;
-        return <p key={i} className="ai-para">{parseInline(line)}</p>;
+        return <p key={i} className="ai-para" style={{ margin: '6px 0' }}>{parseInline(line)}</p>;
       })}
     </div>
   );
@@ -73,27 +46,42 @@ function formatResponse(text: string): React.ReactElement {
 const AIInsight: React.FC = () => {
   const { assets, apiKeys, aiInsightAsset, setAiInsightAsset } = useApp();
   const [selected, setSelected] = useState<AssetData>(aiInsightAsset ?? assets[0]);
-  const [response, setResponse] = useState('');
+  
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputStr, setInputStr] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
   const abortRef = useRef<AbortController | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const generate = async () => {
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
+
+  const streamChat = async (newMessages: Message[]) => {
     if (!apiKeys.openai) {
-      setError('No API key set. Go to ⚙️ Settings and add your OpenAI or DeepSeek key.');
+      setError('No API key set. Go to ⚙️ Settings and add your DeepSeek key.');
       return;
     }
+    
     abortRef.current?.abort();
     abortRef.current = new AbortController();
     setLoading(true);
-    setResponse('');
     setError('');
+
+    // Prepend system prompt to guide the AI
+    const systemMessage: Message = { role: 'system', content: buildSystemPrompt(selected) };
+    const apiMessages = [systemMessage, ...newMessages];
 
     try {
       const res = await fetch(`${apiKeys.aiBaseUrl}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKeys.openai}` },
-        body: JSON.stringify({ model: apiKeys.aiModel, messages: [{ role: 'user', content: buildPrompt(selected) }], stream: true }),
+        body: JSON.stringify({ model: apiKeys.aiModel, messages: apiMessages, stream: true }),
         signal: abortRef.current.signal,
       });
 
@@ -106,12 +94,16 @@ const AIInsight: React.FC = () => {
       const decoder = new TextDecoder();
       let buffer = '';
 
+      // Create an empty assistant message to append to
+      setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
+        
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
           const data = line.slice(6).trim();
@@ -119,7 +111,12 @@ const AIInsight: React.FC = () => {
           try {
             const chunk = JSON.parse(data);
             const delta = chunk.choices?.[0]?.delta?.content ?? '';
-            setResponse((p) => p + delta);
+            setMessages((prev) => {
+              const newMsgs = [...prev];
+              const lastIdx = newMsgs.length - 1;
+              newMsgs[lastIdx] = { ...newMsgs[lastIdx], content: newMsgs[lastIdx].content + delta };
+              return newMsgs;
+            });
           } catch { /* skip */ }
         }
       }
@@ -130,75 +127,122 @@ const AIInsight: React.FC = () => {
     }
   };
 
+  const handleSend = () => {
+    if (!inputStr.trim() || loading) return;
+    const userMsg: Message = { role: 'user', content: inputStr.trim() };
+    const updatedMsgs = [...messages, userMsg];
+    setMessages(updatedMsgs);
+    setInputStr('');
+    streamChat(updatedMsgs);
+  };
+
+  const handleGenerateReport = () => {
+    const defaultPrompt = "Generate a complete, structured market analysis report for this asset including Market Overview, Key Bullish Drivers, Key Risk Factors, Trading Approach, and a Confidence Level.";
+    const userMsg: Message = { role: 'user', content: defaultPrompt };
+    const updatedMsgs = [...messages, userMsg];
+    setMessages(updatedMsgs);
+    streamChat(updatedMsgs);
+  };
+
+  const handleAssetChange = (assetId: string) => {
+    const a = assets.find((x) => x.id === assetId)!;
+    setSelected(a);
+    setAiInsightAsset(a);
+    setMessages([]); // Clear chat history when switching assets
+    setError('');
+  };
+
   return (
-    <div className="page-container">
-      <div className="insight-header">
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', paddingBottom: '20px' }}>
+      <div className="insight-header" style={{ marginBottom: '10px', flexShrink: 0 }}>
         <div>
-          <h1 className="page-title">🤖 AI Market Insight</h1>
-          <p className="page-sub">GPT-powered deep-dive analysis for any tracked asset</p>
+          <h1 className="page-title">🤖 Chat with {selected.name}</h1>
+          <p className="page-sub">Ask DeepSeek anything about {selected.name} based on live matrix data</p>
         </div>
       </div>
 
-      <div className="insight-controls">
+      <div className="insight-controls" style={{ flexShrink: 0 }}>
         <select
           id="ai-asset-select"
           className="sort-select insight-select"
           value={selected.id}
-          onChange={(e) => {
-            const a = assets.find((x) => x.id === e.target.value)!;
-            setSelected(a);
-            setAiInsightAsset(a);
-            setResponse('');
-            setError('');
-          }}
+          onChange={(e) => handleAssetChange(e.target.value)}
+          disabled={loading}
         >
           {assets.map((a) => (
             <option key={a.id} value={a.id}>{a.name} ({a.bias}, {a.score > 0 ? '+' : ''}{a.score})</option>
           ))}
         </select>
-        <button
-          id="btn-generate-insight"
-          className="btn btn-primary"
-          onClick={generate}
-          disabled={loading}
-        >
-          {loading ? '⏳ Generating…' : '🔮 Generate Analysis'}
-        </button>
-        {loading && (
-          <button className="btn" onClick={() => abortRef.current?.abort()}>⏹ Stop</button>
+        
+        {messages.length === 0 && (
+          <button className="btn btn-primary" onClick={handleGenerateReport} disabled={loading}>
+            {loading ? '⏳ Generating...' : '🔮 Generate Full Report'}
+          </button>
         )}
       </div>
 
-      {!apiKeys.openai && (
-        <div className="insight-no-key">
-          <span>🔑</span>
-          <div>
-            <strong>No AI API key detected.</strong>
-            <p>Add your OpenAI or DeepSeek key in <strong>Settings</strong> to unlock AI analysis.</p>
-          </div>
-        </div>
-      )}
+      {error && <div className="insight-error" style={{ flexShrink: 0 }}>⚠️ {error}</div>}
 
-      {error && <div className="insight-error">⚠️ {error}</div>}
-
-      {(response || loading) && (
-        <div className="insight-card">
-          <div className="insight-card-header">
-            <span className="insight-asset-badge">{selected.name}</span>
-            <span className="insight-model-badge">{apiKeys.aiModel}</span>
+      {/* Chat Messages Area */}
+      <div 
+        ref={scrollRef} 
+        className="settings-card" 
+        style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px', marginTop: '10px' }}
+      >
+        {messages.length === 0 && !loading && (
+          <div style={{ textAlign: 'center', color: '#8b9ab8', marginTop: 'auto', marginBottom: 'auto' }}>
+            <p style={{ fontSize: '18px', marginBottom: '10px' }}>💬 Start a conversation about {selected.name}</p>
+            <p style={{ fontSize: '14px' }}>Type a question below or click "Generate Full Report" to get started.</p>
           </div>
-          <div className="insight-body">
-            {response ? formatResponse(response) : <div className="ai-skeleton"><div/><div/><div/><div/></div>}
-            {loading && <span className="ai-cursor">▌</span>}
-          </div>
-        </div>
-      )}
+        )}
 
-      {!response && !loading && !error && apiKeys.openai && (
-        <div className="insight-empty">
-          <p>Select an asset above and click <strong>Generate Analysis</strong> to get an AI-powered market breakdown.</p>
-        </div>
-      )}
+        {messages.map((msg, idx) => (
+          <div key={idx} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start'
+          }}>
+            <div style={{
+              maxWidth: '85%',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              backgroundColor: msg.role === 'user' ? '#3b82f6' : '#1e2d48',
+              color: msg.role === 'user' ? '#ffffff' : '#e2e8f0',
+              border: msg.role === 'assistant' ? '1px solid #2a3f63' : 'none',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}>
+              {msg.role === 'assistant' ? formatResponse(msg.content) : msg.content}
+            </div>
+          </div>
+        ))}
+        {loading && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
+          <div style={{ alignSelf: 'flex-start', color: '#8b9ab8', padding: '10px' }}>
+             DeepSeek is thinking... <span className="ai-cursor">▌</span>
+          </div>
+        )}
+      </div>
+
+      {/* Chat Input Bar */}
+      <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexShrink: 0 }}>
+        <input 
+          type="text" 
+          value={inputStr}
+          onChange={(e) => setInputStr(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          placeholder={`Ask a question about ${selected.name}... e.g., "Why is the COT score bullish?"`}
+          style={{ flex: 1, padding: '12px 20px', borderRadius: '8px', background: '#090c12', border: '1px solid #1e2d48', color: '#fff', fontSize: '15px' }}
+          disabled={loading}
+        />
+        <button 
+          className="btn btn-primary" 
+          onClick={handleSend} 
+          disabled={loading || !inputStr.trim()}
+          style={{ padding: '0 25px' }}
+        >
+          {loading ? '⏳' : 'Send'}
+        </button>
+      </div>
+
     </div>
   );
 };

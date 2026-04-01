@@ -6,6 +6,7 @@ import Sentiment from './pages/Sentiment';
 import Fundamental from './pages/Fundamental';
 import Technical from './pages/Technical';
 import AIInsight from './pages/AIInsight';
+import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
 import './index.css';
 
@@ -18,6 +19,7 @@ function AppContent() {
       case 'fundamental': return <Fundamental />;
       case 'technical': return <Technical />;
       case 'ai-insight': return <AIInsight />;
+      case 'calendar': return <Calendar />;
       case 'settings': return <Settings />;
       default: return <Dashboard />;
     }

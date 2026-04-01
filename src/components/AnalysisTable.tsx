@@ -53,12 +53,12 @@ const columns = [
 ];
 
 const getScoreColor = (score: number): string => {
-  if (score >= 8) return '#3b82f6';
-  if (score >= 5) return '#6366f1';
+  if (score >= 8) return '#22c55e'; // Green for Very Bullish (Monstah Style)
+  if (score >= 5) return '#4ade80'; 
   if (score >= 2) return '#84cc16';
   if (score >= -1) return '#94a3b8';
-  if (score >= -5) return '#f97316';
-  return '#ef4444';
+  if (score >= -5) return '#f9b17a';
+  return '#ef4444'; // Red for Bearish
 };
 
 const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => {
@@ -84,7 +84,9 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
                 <td className="td-asset">
                   <div className="asset-info">
                     <span className="asset-rank">#{index + 1}</span>
-                    <span className="asset-name">{asset.name}</span>
+                    <span className={`asset-name ${asset.score > 0 ? 'text-pos' : asset.score < 0 ? 'text-neg' : ''}`}>
+                      {asset.name}
+                    </span>
                   </div>
                 </td>
                 <td className="td-bias">

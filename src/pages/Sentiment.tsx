@@ -91,7 +91,7 @@ const Sentiment: React.FC = () => {
           <div className="stat-icon">🏦</div>
           <div className="stat-body">
             <span className="stat-label">Most Bullish (Inst.)</span>
-            <span className="stat-value" style={{ color: '#3b82f6' }}>{cotChartData[0]?.name}</span>
+            <span className="stat-value" style={{ color: '#22c55e' }}>{cotChartData[0]?.name}</span>
             <span className="stat-sub">COT Score: +{cotChartData[0]?.cotScore}</span>
           </div>
         </div>
@@ -107,7 +107,7 @@ const Sentiment: React.FC = () => {
           <div className="stat-icon">🐑</div>
           <div className="stat-body">
             <span className="stat-label">Highest Retail Long</span>
-            <span className="stat-value">{retailChartData.find(d => d.long > 50)?.name || 'N/A'}</span>
+            <span className="stat-value" style={{ color: '#22c55e' }}>{retailChartData.find(d => d.long > 50)?.name || 'N/A'}</span>
             <span className="stat-sub">Retail sentiment is contrarian</span>
           </div>
         </div>
@@ -124,7 +124,7 @@ const Sentiment: React.FC = () => {
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" width={80} tick={{ fill: '#8b9ab8', fontSize: 12 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="long" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="long" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="short" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -141,7 +141,7 @@ const Sentiment: React.FC = () => {
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" width={80} tick={{ fill: '#8b9ab8', fontSize: 12 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="long" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="long" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="short" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>

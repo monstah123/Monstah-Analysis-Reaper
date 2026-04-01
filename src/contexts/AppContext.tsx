@@ -110,25 +110,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // Forex via Alpha Vantage (requires key)
-    if (apiKeys.alphaVantage) {
-      const forexAssets = mockAssets.filter((a) => a.avFrom && a.avTo);
-      for (const a of forexAssets) {
+    // Forex via Frankfurter (No key needed)
+    const forexAssets = mockAssets.filter((a) => a.avFrom && a.avTo);
+    for (const a of forexAssets) {
+      try {
+        const rate = await fetchForexRate(a.avFrom!, a.avTo!);
+        let history: { date: string; value: number }[] | undefined;
         try {
-          const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
-          let history: { date: string; value: number }[] | undefined;
-          try {
-            history = await fetchForexHistory(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
-          } catch {
-            history = generateMockSparkline(a.trend, a.score, a.basePrice);
-          }
-          updates[a.id] = { price: rate.rate, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
-          await new Promise((r) => setTimeout(r, 1200)); // respect 5 req/min rate limit
-        } catch (e) {
-          console.warn(`[AppContext] AV forex ${a.id} failed:`, e);
-          const history = generateMockSparkline(a.trend, a.score, a.basePrice);
-          updates[a.id] = { price: a.basePrice, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
+          history = await fetchForexHistory(a.avFrom!, a.avTo!);
+        } catch {
+          history = generateMockSparkline(a.trend, a.score, a.basePrice);
         }
+        updates[a.id] = { price: rate.rate, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
+      } catch (e) {
+        console.warn(`[AppContext] Frankfurter forex ${a.id} failed:`, e);
+        const history = generateMockSparkline(a.trend, a.score, a.basePrice);
+        updates[a.id] = { price: a.basePrice, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
       }
     }
 

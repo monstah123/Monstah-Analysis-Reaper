@@ -1,4 +1,4 @@
-const BASE = 'https://www.alphavantage.co/query';
+const BASE = 'https://api.frankfurter.app';
 
 export interface ForexRate {
   rate: number;
@@ -6,20 +6,17 @@ export interface ForexRate {
   changePct: number;
 }
 
-/** Fetch current exchange rate for a forex pair */
+/** Fetch current exchange rate for a forex pair using Frankfurter (No API Key Required) */
 export async function fetchForexRate(
   from: string,
   to: string,
-  apiKey: string,
 ): Promise<ForexRate> {
-  const url = `${BASE}?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=${to}&apikey=${apiKey}`;
+  const url = `${BASE}/latest?from=${from}&to=${to}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Alpha Vantage error ${res.status}`);
+  if (!res.ok) throw new Error(`Frankfurter error ${res.status}`);
   const json = await res.json();
-  const data = json['Realtime Currency Exchange Rate'];
-  if (!data) throw new Error('Alpha Vantage: no data (check API key or rate limit)');
-  const rate = parseFloat(data['5. Exchange Rate']);
-  // Alpha Vantage free tier doesn't give 24h change for FX, so we approximate 0
+  const rate = json.rates[to];
+  if (!rate) throw new Error('Frankfurter: no rate data');
   return { rate, change: 0, changePct: 0 };
 }
 
@@ -27,19 +24,23 @@ export async function fetchForexRate(
 export async function fetchForexHistory(
   from: string,
   to: string,
-  apiKey: string,
   days = 30,
 ): Promise<{ date: string; value: number }[]> {
-  const url = `${BASE}?function=FX_DAILY&from_symbol=${from}&to_symbol=${to}&apikey=${apiKey}`;
+  const d = new Date();
+  const endDate = d.toISOString().split('T')[0];
+  d.setDate(d.getDate() - (days + 20)); // Buffer to get enough trading days
+  const startDate = d.toISOString().split('T')[0];
+  
+  const url = `${BASE}/${startDate}..${endDate}?from=${from}&to=${to}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Alpha Vantage FX_DAILY error ${res.status}`);
+  if (!res.ok) throw new Error(`Frankfurter FX_DAILY error ${res.status}`);
   const json = await res.json();
-  const series: Record<string, { '4. close': string }> = json['Time Series FX (Daily)'] ?? {};
+  const series = json.rates ?? {};
+  
   return Object.entries(series)
-    .slice(0, days)
-    .reverse()
-    .map(([date, v]) => ({
+    .slice(-days)
+    .map(([date, rates]: [string, any]) => ({
       date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      value: parseFloat(v['4. close']),
+      value: rates[to] as number,
     }));
 }

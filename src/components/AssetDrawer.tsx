@@ -40,7 +40,9 @@ const getTvSymbol = (id: string): string | null => {
 };
 
 const AssetDrawer: React.FC = () => {
+  const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing } = useApp();
   const [isFullscreenChart, setIsFullscreenChart] = useState(false);
+  const open = !!selectedAsset;
 
   if (!selectedAsset) return (
     <>

@@ -121,12 +121,12 @@ const AssetDrawer: React.FC = () => {
           )}
         </div>
 
-        {/* Interactive Chart */}
-        {md?.history && (
+        {/* Advanced Market Chart */}
+        {getTvSymbol(selectedAsset.id) && (
           <div className="drawer-section">
-            <p className="drawer-section-title">30-Day Interactive Trend</p>
-            <div className="drawer-chart" style={{ height: '220px' }}>
-              <InteractiveChart data={md.history} positive={isBullish} />
+            <p className="drawer-section-title">Institutional Advanced Chart</p>
+            <div className="drawer-chart" style={{ height: '450px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e2d48' }}>
+              <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} />
             </div>
           </div>
         )}

@@ -91,9 +91,9 @@ const AIInsight: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`${apiKeys.aiBaseUrl.replace(/\/$/, '')}/chat/completions`, {
+      const res = await fetch('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKeys.openai}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: apiKeys.aiModel, messages: safeMessages, stream: true }),
         signal: abortRef.current.signal,
       });

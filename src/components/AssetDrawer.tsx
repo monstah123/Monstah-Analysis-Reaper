@@ -1,7 +1,7 @@
 import React from 'react';
 import type { AssetData } from '../data/mockData';
 import { useApp } from '../contexts/AppContext';
-import SparkLine from './SparkLine';
+import InteractiveChart from './InteractiveChart';
 import ScoreBreakdown from './ScoreBreakdown';
 
 const getBiasClass = (bias: AssetData['bias']) => {
@@ -89,12 +89,12 @@ const AssetDrawer: React.FC = () => {
           )}
         </div>
 
-        {/* Sparkline */}
+        {/* Interactive Chart */}
         {md?.history && (
           <div className="drawer-section">
-            <p className="drawer-section-title">30-Day Price Trend</p>
-            <div className="drawer-chart">
-              <SparkLine data={md.history} positive={isBullish} height={90} />
+            <p className="drawer-section-title">30-Day Interactive Trend</p>
+            <div className="drawer-chart" style={{ height: '220px' }}>
+              <InteractiveChart data={md.history} positive={isBullish} />
             </div>
           </div>
         )}

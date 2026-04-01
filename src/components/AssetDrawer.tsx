@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { AssetData } from '../data/mockData';
 import { useApp } from '../contexts/AppContext';
 import InteractiveChart from './InteractiveChart';
@@ -38,11 +39,19 @@ const getTvSymbol = (id: string): string | null => {
   };
   return map[id] || null;
 };
-
 const AssetDrawer: React.FC = () => {
   const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing } = useApp();
   const [isFullscreenChart, setIsFullscreenChart] = useState(false);
   const open = !!selectedAsset;
+
+  // Handle ESC key to close fullscreen
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreenChart(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   if (!selectedAsset) return (
     <>
@@ -141,23 +150,24 @@ const AssetDrawer: React.FC = () => {
           </div>
         )}
 
-        {/* Fullscreen Chart Modal */}
-        {isFullscreenChart && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#090c12', zIndex: 9999, display: 'flex', flexDirection: 'column', padding: '20px' }}>
+        {/* Fullscreen Chart Modal (Portal to body to escape drawer constraints) */}
+        {isFullscreenChart && createPortal(
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#090c12', zIndex: 99999, display: 'flex', flexDirection: 'column', padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0 }}>{selectedAsset.name} — Full Analysis</h2>
+              <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800 }}>{selectedAsset.name} — Professional Full Analysis</h1>
               <button 
                 className="btn btn-secondary" 
                 onClick={() => setIsFullscreenChart(false)}
-                style={{ background: '#ef4444', border: 'none' }}
+                style={{ background: '#ef4444', border: 'none', padding: '10px 20px', fontWeight: 700 }}
               >
                 Close Fullscreen [Esc]
               </button>
             </div>
-            <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e2d48' }}>
+            <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e2d48', boxShadow: '0 0 50px rgba(0,0,0,0.5)' }}>
               <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} containerId="tv_fullscreen" />
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Score Breakdown */}

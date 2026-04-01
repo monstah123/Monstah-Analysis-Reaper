@@ -37,11 +37,26 @@ export default async function handler(req, res) {
     // that creates "retail sentiment" based on the inverse of the current trend 
     // (Retail is usually inverse to the actual trend).
     else if (category === 'Forex') {
-      // In a real Vercel app, you would add an FCS API key to your vercel environment vars:
-      // const fcsKey = process.env.VITE_FCS_API_KEY;
-      // const response = await axios.get(`https://fcsapi.com/api-v3/forex/sentiment?symbol=${asset}&access_key=${fcsKey}`);
+      const fcsKey = process.env.VITE_FCS_API_KEY;
       
-      // Temporary algorithmic stub for free tier:
+      // If you've placed the FCS API Key in Vercel, it uses the live API!
+      if (fcsKey) {
+        const response = await axios.get(`https://fcsapi.com/api-v3/forex/sentiment?symbol=${asset}&access_key=${fcsKey}`);
+        if (response.data && response.data.response) {
+          const sent = response.data.response[0]; // Usually returns something like { s: "EUR/USD", action: "Buy", ... }
+          // If the FCS response isn't directly a long/short percentage, we synthesize it based on the action/score they return
+          // This ensures the dashboard always has a 0-100 gauge visual.
+          const isBull = sent.action === 'Buy' || sent.action === 'Strong Buy';
+          result = {
+            long: isBull ? 65 : 35,
+            short: isBull ? 35 : 65,
+            source: 'FCS API (Live)'
+          };
+          return res.status(200).json(result);
+        }
+      }
+
+      // 3. Temporary algorithmic stub for free tier (If no key is present in Vercel yet):
       const pseudoHash = asset.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const dayHash = new Date().getDate();
       

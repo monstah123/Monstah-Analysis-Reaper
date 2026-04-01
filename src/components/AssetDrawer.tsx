@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AssetData } from '../data/mockData';
 import { useApp } from '../contexts/AppContext';
 import InteractiveChart from './InteractiveChart';
@@ -40,8 +40,7 @@ const getTvSymbol = (id: string): string | null => {
 };
 
 const AssetDrawer: React.FC = () => {
-  const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing } = useApp();
-  const open = !!selectedAsset;
+  const [isFullscreenChart, setIsFullscreenChart] = useState(false);
 
   if (!selectedAsset) return (
     <>
@@ -124,8 +123,36 @@ const AssetDrawer: React.FC = () => {
         {/* Advanced Market Chart */}
         {getTvSymbol(selectedAsset.id) && (
           <div className="drawer-section">
-            <p className="drawer-section-title">Institutional Advanced Chart</p>
+            <div className="drawer-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p className="drawer-section-title">Institutional Advanced Chart</p>
+              <button 
+                className="btn-text" 
+                style={{ fontSize: '0.8rem', color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)', padding: '4px 8px', borderRadius: '4px' }}
+                onClick={() => setIsFullscreenChart(true)}
+              >
+                ⛶ Fullscreen
+              </button>
+            </div>
             <div className="drawer-chart" style={{ height: '450px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e2d48' }}>
+              <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} />
+            </div>
+          </div>
+        )}
+
+        {/* Fullscreen Chart Modal */}
+        {isFullscreenChart && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: '#090c12', zIndex: 9999, display: 'flex', flexDirection: 'column', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>{selectedAsset.name} — Full Analysis</h2>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setIsFullscreenChart(false)}
+                style={{ background: '#ef4444', border: 'none' }}
+              >
+                Close Fullscreen [Esc]
+              </button>
+            </div>
+            <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', border: '1px solid #1e2d48' }}>
               <InteractiveChart tvSymbol={getTvSymbol(selectedAsset.id)!} />
             </div>
           </div>

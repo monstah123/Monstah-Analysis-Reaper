@@ -1,61 +1,56 @@
-import axios from 'axios';
-
-// Vercel Serverless Function - Advanced AI Insight Proxy (CORS Fix + Key Pass-through)
+// Vercel Serverless Function - Ultra-Stable AI Proxy (Zero Dependencies)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const { model, messages, stream } = req.body;
-  
-  // Try server-side env vars FIRST, then look for a pass-through from the client headers
-  const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY || req.headers['x-api-key'];
+  const apiKey = req.headers['x-api-key'] || process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY;
   const baseUrl = process.env.VITE_AI_BASE_URL || 'https://api.deepseek.com';
 
   if (!apiKey) {
-    return res.status(401).json({ error: 'AI API Key missing. Please set it in Settings [X-API-KEY].' });
+    return res.status(401).json({ error: 'AI API Key missing on server AND client.' });
   }
 
   try {
-    const aiResponse = await axios({
+    const aiRes = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
-      url: `${baseUrl.replace(/\/$/, '')}/chat/completions`,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream'
+        'Content-Type': 'application/json'
       },
-      data: {
+      body: JSON.stringify({
         model: model || 'deepseek-chat',
         messages,
         stream: !!stream
-      },
-      responseType: stream ? 'stream' : 'json'
+      })
     });
+
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      console.error('AI Upstream Error:', errText);
+      return res.status(aiRes.status).json({ error: errText });
+    }
 
     if (stream) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
-      // Native Node stream support for Vercel
-      aiResponse.data.on('data', (chunk) => {
+      const reader = aiRes.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
         res.write(chunk);
-      });
-
-      aiResponse.data.on('end', () => {
-        res.end();
-      });
-
-      aiResponse.data.on('error', (err) => {
-        console.error('Stream Read Error:', err);
-        res.end();
-      });
+      }
+      res.end();
     } else {
-      res.status(200).json(aiResponse.data);
+      const data = await aiRes.json();
+      res.status(200).json(data);
     }
   } catch (error) {
-    const status = error.response?.status || 500;
-    const data = error.response?.data || { error: error.message };
-    console.error(`AI Proxy Error [${status}]:`, data);
-    res.status(status).json(data);
+    console.error('AI Proxy Critical Error:', error.message);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 }

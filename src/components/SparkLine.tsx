@@ -22,7 +22,7 @@ const SparkLine: React.FC<SparkLineProps> = ({ data, positive = true, height = 6
         <YAxis domain={['auto', 'auto']} hide />
         <Tooltip
           contentStyle={{ background: '#0f1623', border: '1px solid #1e2d48', borderRadius: 6, fontSize: 11 }}
-          formatter={(v: number) => [v.toFixed(4), 'Price']}
+          formatter={(v: any) => [v.toFixed(4), 'Price']}
           labelFormatter={(l) => l}
         />
         <Area

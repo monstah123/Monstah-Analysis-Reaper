@@ -97,7 +97,12 @@ const AIInsight: React.FC = () => {
           'Content-Type': 'application/json',
           'x-api-key': apiKeys.openai // Pass local key to proxy securely
         },
-        body: JSON.stringify({ model: apiKeys.aiModel, messages: safeMessages, stream: true }),
+        body: JSON.stringify({ 
+          model: apiKeys.aiModel, 
+          messages: safeMessages, 
+          stream: true,
+          baseUrl: apiKeys.aiBaseUrl // Sync local base URL to proxy
+        }),
         signal: abortRef.current.signal,
       });
 

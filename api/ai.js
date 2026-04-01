@@ -1,13 +1,14 @@
-// Vercel Serverless Function - Ultra-Stable AI Proxy (Zero Dependencies)
+// Vercel Serverless Function - Smart Dynamic AI Proxy (Sync Mode)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const { model, messages, stream } = req.body;
+  // Now we accept baseUrl and apiKey passed dynamically from the frontend settings
+  const { model, messages, stream, baseUrl: clientBaseUrl } = req.body;
   const apiKey = req.headers['x-api-key'] || process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY;
-  const baseUrl = process.env.VITE_AI_BASE_URL || 'https://api.deepseek.com';
+  const baseUrl = clientBaseUrl || process.env.VITE_AI_BASE_URL || 'https://api.openai.com/v1';
 
   if (!apiKey) {
-    return res.status(401).json({ error: 'AI API Key missing on server AND client.' });
+    return res.status(401).json({ error: 'AI API Key missing. Add it to your Settings!' });
   }
 
   try {
@@ -18,16 +19,16 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: model || 'deepseek-chat',
+        model: model || 'gpt-4o', 
         messages,
         stream: !!stream
       })
     });
 
     if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      console.error('AI Upstream Error:', errText);
-      return res.status(aiRes.status).json({ error: errText });
+      // 400 errors come from here - now we surface exactly WHAT the AI is mad about (e.g. Model Name)
+      const errData = await aiRes.json().catch(() => ({ error: 'Unknown Upstream Error' }));
+      return res.status(aiRes.status).json(errData);
     }
 
     if (stream) {
@@ -51,6 +52,6 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('AI Proxy Critical Error:', error.message);
-    res.status(500).json({ error: error.message, stack: error.stack });
+    res.status(500).json({ error: error.message });
   }
 }

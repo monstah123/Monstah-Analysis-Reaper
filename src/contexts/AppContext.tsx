@@ -117,7 +117,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const forexAssets = mockAssets.filter((a) => a.avFrom && a.avTo);
     for (const a of forexAssets) {
       try {
-        const rate = await fetchForexRate(a.avFrom!, a.avTo!);
+        const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
         let history: { date: string; value: number }[] | undefined;
         try {
           history = await fetchForexHistory(a.avFrom!, a.avTo!);

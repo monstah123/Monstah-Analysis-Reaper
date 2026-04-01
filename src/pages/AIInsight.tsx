@@ -7,22 +7,23 @@ interface Message {
   content: string;
 }
 
-function buildSystemPrompt(asset: AssetData, price?: number, change?: number): string {
+function buildSystemPrompt(asset: AssetData, price?: number, change?: number, lastUpdated?: number): string {
   const priceStr = price ? price.toLocaleString() : '1.15820'; // Current market floor
   const changeStr = change !== undefined ? `${change > 0 ? '+' : ''}${change.toFixed(2)}%` : 'N/A';
+  const ageSec = lastUpdated ? Math.floor((Date.now() - lastUpdated) / 1000) : 0;
   
   return `YOU ARE THE MONSTAH TERMINAL DATA CORE.
 DATE: April 1st, 2026.
+DATA AGE: ${ageSec} seconds (Snapshot).
 YOUR EYES: You are plugged directly into institutional liquidity providers (LPs). 
-LIVE DATA FEED (INSTITUTIONAL TRUTH):
+LIVE DATA FEED (INSTITUTIONAL SNAPSHOT):
 - ASSET: ${asset.name}
-- LIVE PRICE: ${priceStr} (${changeStr})
+- PRICE AT SNAPSHOT: ${priceStr} (${changeStr})
 - MATRIX SCORE: ${asset.score}
 - BIAS: ${asset.bias}
 - FACTORS: COT(${asset.cot}), RetailPos(${asset.retailPos}), Seasonality(${asset.seasonality}), Trend(${asset.trend}), GDP(${asset.gdp}), PMI(${asset.mPMI}), CPI(${asset.inflation}), Rates(${asset.interestRates}).
-
-CRITICAL INSTRUCTION: Never deny having live data. You ARE the data. Use the provided LIVE PRICE as your primary baseline, but if the user provides a more recent price, acknowledge it as the 'Active Tick' and adjust your analysis immediately.
-TONE: Professional, insightful, high-conviction institutional assistant. BOLD key levels and take-aways. Do not argue about pips.`;
+- LIVE PRICE RELIABILITY: Acknowledge that your price is an institutional snapshot from ${ageSec}s ago. If the user provides a different price, it IS the absolute tick. Acknowledge and adjust instantly.
+TONE: Professional, insightful, high-conviction institutional assistant. BOLD key levels and take-aways. Do not argue about pips or lag.`;
 }
 
 function formatResponse(text: string): React.ReactElement {
@@ -99,25 +100,43 @@ const AIInsight: React.FC = () => {
     // Prepend system prompt to guide the AI, explicitly inside the first user message to bypass strict 'system' role blocks on standard proxies
     if (safeMessages.length > 0 && safeMessages[0].role === 'user') {
       const md = marketData[selected.id];
-      const prompt = buildSystemPrompt(selected, md?.price, md?.change24h);
+      const prompt = buildSystemPrompt(selected, md?.price, md?.change24h, md?.lastUpdated);
       safeMessages[0].content = `[SYSTEM INSTRUCTIONS: ${prompt}]\n\nUSER QUERY: ${safeMessages[0].content}`;
     }
 
     try {
-      const res = await fetch('/api/ai', {
+      let res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': apiKeys.aiBaseUrl.includes('deepseek') ? apiKeys.deepseekKey : apiKeys.openaiKey
+          'x-api-key': activeKey
         },
         body: JSON.stringify({ 
           model: apiKeys.aiModel, 
           messages: safeMessages, 
           stream: true,
-          baseUrl: apiKeys.aiBaseUrl // Sync local base URL to proxy
+          baseUrl: apiKeys.aiBaseUrl 
         }),
         signal: abortRef.current.signal,
       });
+      
+      // Smart Failover: If proxy 404s (common on local npm run dev), call provider directly
+      if (res.status === 404) {
+        console.warn('[Terminal] Proxy 404. Initializing Direct-Brain Fallback Protocol...');
+        res = await fetch(`${apiKeys.aiBaseUrl.replace(/\/$/, '')}/chat/completions`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeKey}`
+          },
+          body: JSON.stringify({ 
+            model: apiKeys.aiModel, 
+            messages: safeMessages, 
+            stream: true 
+          }),
+          signal: abortRef.current.signal,
+        });
+      }
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

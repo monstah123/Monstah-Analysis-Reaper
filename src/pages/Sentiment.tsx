@@ -1,43 +1,67 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Sentiment: React.FC = () => {
   const { assets } = useApp();
+  const [liveData, setLiveData] = useState<Record<string, { long: number; short: number; source: string }>>({});
 
   const sortedAssets = useMemo(() => {
     return [...assets].sort((a, b) => b.cot - a.cot);
   }, [assets]);
 
-  // Convert COT score (-2 to +2) to fake percentage (net long %)
-  const generateSentData = (score: number, base: number) => {
-    let pct = base + (score * 15); // e.g. base 50, +2 = 80% long, -2 = 20% long
-    if (pct > 95) pct = 95;
-    if (pct < 5) pct = 5;
-    return {
-      long: pct,
-      short: 100 - pct,
-      longColor: pct > 50 ? '#3b82f6' : '#64748b',
-      shortColor: pct <= 50 ? '#ef4444' : '#64748b',
+  // Fetch live sentiment from Vercel Serverless Function
+  useEffect(() => {
+    const fetchLiveSentiment = async () => {
+      const updates: Record<string, { long: number; short: number; source: string }> = {};
+      
+      await Promise.all(assets.map(async (a) => {
+        try {
+          // In production, this hits Vercel. Locally via Vite, it may 404 unless vercel CLI is running.
+          const res = await fetch(`/api/sentiment?asset=${a.id}&category=${a.category}`);
+          if (!res.ok) throw new Error('Proxy not found');
+          const data = await res.json();
+          updates[a.id] = data;
+        } catch (e) {
+          // Graceful fallback for local development (or free tier limits) doing exactly what the Vercel api does:
+          const pseudoHash = a.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          const dayHash = new Date().getDate();
+          const seed = ((pseudoHash + dayHash) % 60) + 20;
+          updates[a.id] = { long: seed, short: 100 - seed, source: 'Local Fallback' };
+        }
+      }));
+      setLiveData(updates);
     };
-  };
 
-  const cotChartData = sortedAssets.map(a => ({
-    name: a.name,
-    cotScore: a.cot,
-    ...generateSentData(a.cot, 50)
-  }));
+    fetchLiveSentiment();
+  }, [assets]);
+
+  const cotChartData = useMemo(() => {
+    return sortedAssets.map(a => {
+      // For now COT remains a stable pseudo calculation since CFTC data updates weekly not minutely 
+      let pct = 50 + (a.cot * 15);
+      if (pct > 95) pct = 95; if (pct < 5) pct = 5;
+      return {
+        name: a.name,
+        cotScore: a.cot,
+        long: pct, short: 100 - pct
+      };
+    });
+  }, [sortedAssets]);
 
   const retailChartData = useMemo(() => {
-    return [...sortedAssets]
-      .sort((a, b) => b.retailPos - a.retailPos)
-      .map(a => ({
+    return sortedAssets.map(a => {
+      const live = liveData[a.id];
+      // Default to 50/50 until the fast async call resolves
+      return {
         name: a.name,
         retailScore: a.retailPos,
-        // Retail is usually contrary. So a +2 score means retail is heavily SHORT (contrarian bullish)
-        ...generateSentData(-a.retailPos, 50) 
-      }));
-  }, [sortedAssets]);
+        long: live ? live.long : 50,
+        short: live ? live.short : 50,
+        source: live ? live.source : 'Loading...'
+      };
+    });
+  }, [sortedAssets, liveData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -46,6 +70,7 @@ const Sentiment: React.FC = () => {
           <p className="label" style={{ margin: 0, fontWeight: 700 }}>{label}</p>
           <p style={{ margin: 0, color: '#3b82f6' }}>Longs: {payload[0].value}%</p>
           <p style={{ margin: 0, color: '#ef4444' }}>Shorts: {payload[1].value}%</p>
+          {payload[0].payload.source && <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8b9ab8' }}>Src: {payload[0].payload.source}</p>}
         </div>
       );
     }

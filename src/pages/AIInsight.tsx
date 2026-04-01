@@ -73,8 +73,9 @@ const AIInsight: React.FC = () => {
   }, [messages, loading]);
 
   const streamChat = async (newMessages: Message[]) => {
-    if (!apiKeys.openai) {
-      setError('No API key set. Go to ⚙️ Settings and add your DeepSeek key.');
+    const activeKey = apiKeys.aiBaseUrl.includes('deepseek') ? apiKeys.deepseekKey : apiKeys.openaiKey;
+    if (!activeKey) {
+      setError('No API key set for this provider. Go to ⚙️ Settings and add your key.');
       return;
     }
     
@@ -107,7 +108,7 @@ const AIInsight: React.FC = () => {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-api-key': apiKeys.openai // Pass local key to proxy securely
+          'x-api-key': apiKeys.aiBaseUrl.includes('deepseek') ? apiKeys.deepseekKey : apiKeys.openaiKey
         },
         body: JSON.stringify({ 
           model: apiKeys.aiModel, 

@@ -29,11 +29,19 @@ const FIELDS: FieldConfig[] = [
     type: 'password',
   },
   {
-    key: 'openai',
-    label: 'AI API Key (OpenAI or DeepSeek)',
-    placeholder: 'sk-… or deepseek-…',
-    hint: 'Used for AI Market Insight analysis.',
+    key: 'openaiKey',
+    label: 'OpenAI API Key (Primary)',
+    placeholder: 'sk-proj-…',
+    hint: 'Main high-performance reasoning engine.',
     link: { label: 'OpenAI keys', url: 'https://platform.openai.com/api-keys' },
+    type: 'password',
+  },
+  {
+    key: 'deepseekKey',
+    label: 'DeepSeek API Key (Secondary)',
+    placeholder: 'sk-…',
+    hint: 'Backup reasoning model.',
+    link: { label: 'DeepSeek keys', url: 'https://platform.deepseek.com/api_keys' },
     type: 'password',
   },
 ];
@@ -63,10 +71,19 @@ const Settings: React.FC = () => {
     setTimeout(() => setSaved(false), 2500);
   };
 
+  const onProviderChange = (url: string) => {
+    const isDeepSeek = url.includes('deepseek');
+    setLocal(prev => ({
+      ...prev,
+      aiBaseUrl: url,
+      aiModel: isDeepSeek ? 'deepseek-reasoner' : 'gpt-4o'
+    }));
+  };
+
   return (
     <div className="page-container">
       <h1 className="page-title">⚙️ Settings</h1>
-      <p className="page-sub">Configure API keys and AI preferences. All keys are stored locally in your browser.</p>
+      <p className="page-sub">Configure API keys and AI preferences. OpenAI is now the primary driver. LFG.</p>
 
       {/* API Keys */}
       <div className="settings-card">
@@ -87,7 +104,7 @@ const Settings: React.FC = () => {
                 type={visible[f.key] ? 'text' : (f.type ?? 'text')}
                 className="settings-input"
                 placeholder={f.placeholder}
-                value={local[f.key] as string}
+                value={(local[f.key] as string) || ''}
                 onChange={(e) => setLocal((p) => ({ ...p, [f.key]: e.target.value }))}
               />
               {f.type === 'password' && (
@@ -115,7 +132,7 @@ const Settings: React.FC = () => {
               id="settings-base-url"
               className="sort-select settings-select"
               value={local.aiBaseUrl}
-              onChange={(e) => setLocal((p) => ({ ...p, aiBaseUrl: e.target.value }))}
+              onChange={(e) => onProviderChange(e.target.value)}
             >
               {AI_BASES.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
             </select>
@@ -134,26 +151,6 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* Live Data Info */}
-      <div className="settings-card settings-info-card">
-        <h2 className="settings-section-title">📡 Live Data Sources</h2>
-        <div className="settings-data-sources">
-          {[
-            { name: 'CoinGecko', desc: 'Crypto prices & history', status: 'free', detail: 'Auto-connected — no key needed' },
-            { name: 'Alpha Vantage', desc: 'Forex rates & history', status: apiKeys.alphaVantage ? 'connected' : 'key-needed', detail: apiKeys.alphaVantage ? 'Connected ✓' : 'Add key above' },
-            { name: 'FRED', desc: 'US macro economic data', status: apiKeys.fred ? 'connected' : 'key-needed', detail: apiKeys.fred ? 'Connected ✓' : 'Add key above' },
-          ].map((src) => (
-            <div key={src.name} className="data-source-row">
-              <div>
-                <span className="data-source-name">{src.name}</span>
-                <span className="data-source-desc">{src.desc}</span>
-              </div>
-              <span className={`data-source-status status-${src.status}`}>{src.detail}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="settings-actions">
         <button id="btn-save-settings" className="btn btn-primary" onClick={handleSave}>
           {saved ? '✓ Saved!' : '💾 Save Settings'}
@@ -161,7 +158,7 @@ const Settings: React.FC = () => {
       </div>
 
       <div className="settings-footer">
-        <p>Monstah Analysis Reaper <span className="accent">v1.0.0-beta</span> · Built to dethrone EdgeFinder 🗡️</p>
+        <p>Monstah Analysis Reaper <span className="accent">v1.1.0</span> · Dual-Brain Architecture Implemented 🗡️</p>
       </div>
     </div>
   );

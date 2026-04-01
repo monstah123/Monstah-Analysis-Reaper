@@ -9,9 +9,10 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 export interface ApiKeys {
   alphaVantage: string;
   fred: string;
-  openai: string;
   aiBaseUrl: string;
   aiModel: string;
+  openaiKey: string;
+  deepseekKey: string;
 }
 
 export interface AssetMarketData {
@@ -49,9 +50,10 @@ export const useApp = () => {
 const DEFAULT_KEYS: ApiKeys = {
   alphaVantage: import.meta.env.VITE_ALPHA_VANTAGE_KEY || '',
   fred: import.meta.env.VITE_FRED_KEY || '',
-  openai: import.meta.env.VITE_DEEPSEEK_API_KEY || import.meta.env.VITE_OPENAI_KEY || '',
-  aiBaseUrl: import.meta.env.VITE_DEEPSEEK_BASE_URL || import.meta.env.VITE_AI_BASE_URL || 'https://api.openai.com/v1',
+  aiBaseUrl: import.meta.env.VITE_AI_BASE_URL || 'https://api.openai.com/v1',
   aiModel: import.meta.env.VITE_AI_MODEL || 'gpt-4o',
+  openaiKey: import.meta.env.VITE_OPENAI_KEY || '',
+  deepseekKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '',
 };
 
 const CACHE_TTL = 1 * 60 * 1000; // 1 minute (Institutional Frequency)
@@ -63,9 +65,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const apiKeys: ApiKeys = {
     alphaVantage: apiKeysRaw.alphaVantage || DEFAULT_KEYS.alphaVantage,
     fred: apiKeysRaw.fred || DEFAULT_KEYS.fred,
-    openai: apiKeysRaw.openai || DEFAULT_KEYS.openai,
     aiBaseUrl: apiKeysRaw.aiBaseUrl || DEFAULT_KEYS.aiBaseUrl,
     aiModel: apiKeysRaw.aiModel || DEFAULT_KEYS.aiModel,
+    openaiKey: apiKeysRaw.openaiKey || DEFAULT_KEYS.openaiKey,
+    deepseekKey: apiKeysRaw.deepseekKey || DEFAULT_KEYS.deepseekKey,
   };
   const [assets, setAssets] = useState<AssetData[]>(mockAssets);
   const [marketData, setMarketData] = useState<Record<string, AssetMarketData>>({});

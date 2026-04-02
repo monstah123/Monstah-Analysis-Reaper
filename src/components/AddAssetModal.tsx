@@ -52,8 +52,8 @@ const AddAssetModal: React.FC<AddAssetModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="drawer-overlay visible" style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="settings-card" style={{ width: '400px', padding: '2rem', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', animation: 'slideIn 0.3s ease-out' }}>
+    <div className="drawer-overlay visible" style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div className="settings-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', animation: 'slideIn 0.3s ease-out' }}>
         <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 800 }}>➕ Add New Asset</h2>
         <form onSubmit={handleSubmit}>
           <div className="settings-field">

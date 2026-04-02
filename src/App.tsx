@@ -1,6 +1,7 @@
 import { AppProvider, useApp } from './contexts/AppContext';
 import Sidebar from './components/Sidebar';
 import AssetDrawer from './components/AssetDrawer';
+import MobileNav from './components/MobileNav';
 import Dashboard from './pages/Dashboard';
 import Sentiment from './pages/Sentiment';
 import Fundamental from './pages/Fundamental';
@@ -32,8 +33,13 @@ function AppContent() {
 
   return (
     <div className="app-container">
-      <Sidebar activeView={activeView} onNavChange={setActiveView} />
-      <main className="main-content">{renderPage()}</main>
+      <div className="desktop-sidebar-wrapper">
+        <Sidebar activeView={activeView} onNavChange={setActiveView} />
+      </div>
+      <div className="app-body">
+        <MobileNav />
+        <main className="main-content">{renderPage()}</main>
+      </div>
       <AssetDrawer />
     </div>
   );

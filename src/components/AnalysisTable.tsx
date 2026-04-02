@@ -1,10 +1,6 @@
 import React from 'react';
 import type { AssetData } from '../data/mockData';
 
-interface MetricCellProps {
-  value: number;
-}
-
 const getValueClass = (value: number): string => {
   if (value >= 2) return 'val-pos-high';
   if (value === 1) return 'val-pos-mid';
@@ -24,32 +20,24 @@ const getBiasClass = (bias: AssetData['bias']): string => {
   return map[bias];
 };
 
-const MetricCell: React.FC<MetricCellProps> = ({ value }) => (
-  <td className="metric-cell">
-    <span className={`metric-pill ${getValueClass(value)}`}>
-      {value > 0 ? `+${value}` : value}
-    </span>
-  </td>
-);
-
 interface AnalysisTableProps {
   assets: AssetData[];
   onRowClick?: (asset: AssetData) => void;
 }
 
 const columns = [
-  { key: 'cot', label: 'COT' },
-  { key: 'retailPos', label: 'Retail' },
-  { key: 'seasonality', label: 'Season' },
-  { key: 'trend', label: 'Trend' },
-  { key: 'gdp', label: 'GDP' },
-  { key: 'mPMI', label: 'mPMI' },
-  { key: 'sPMI', label: 'sPMI' },
-  { key: 'retailSales', label: 'R.Sales' },
-  { key: 'inflation', label: 'CPI' },
-  { key: 'employmentChange', label: 'Employ.' },
-  { key: 'unemploymentRate', label: 'Unemp.' },
-  { key: 'interestRates', label: 'Rates' },
+  { key: 'cot', label: 'COT', hideMobile: false },
+  { key: 'retailPos', label: 'Retail', hideMobile: false },
+  { key: 'seasonality', label: 'Season', hideMobile: false },
+  { key: 'trend', label: 'Trend', hideMobile: false },
+  { key: 'gdp', label: 'GDP', hideMobile: true },
+  { key: 'mPMI', label: 'mPMI', hideMobile: true },
+  { key: 'sPMI', label: 'sPMI', hideMobile: true },
+  { key: 'retailSales', label: 'R.Sales', hideMobile: true },
+  { key: 'inflation', label: 'CPI', hideMobile: true },
+  { key: 'employmentChange', label: 'Employ.', hideMobile: true },
+  { key: 'unemploymentRate', label: 'Unemp.', hideMobile: true },
+  { key: 'interestRates', label: 'Rates', hideMobile: true },
 ];
 
 const getScoreColor = (score: number): string => {
@@ -72,7 +60,7 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
               <th className="th-bias">Bias</th>
               <th className="th-score">Score</th>
               {columns.map((col) => (
-                <th key={col.key} className="th-metric">
+                <th key={col.key} className={`th-metric ${col.hideMobile ? 'hide-mobile' : ''}`}>
                   {col.label}
                 </th>
               ))}
@@ -103,7 +91,11 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
                   </span>
                 </td>
                 {columns.map((col) => (
-                  <MetricCell key={col.key} value={asset[col.key as keyof AssetData] as number} />
+                  <td key={col.key} className={`metric-cell ${col.hideMobile ? 'hide-mobile' : ''}`}>
+                    <span className={`metric-pill ${getValueClass(asset[col.key as keyof AssetData] as number)}`}>
+                      {(asset[col.key as keyof AssetData] as number) > 0 ? `+${asset[col.key as keyof AssetData]}` : asset[col.key as keyof AssetData]}
+                    </span>
+                  </td>
                 ))}
               </tr>
             ))}

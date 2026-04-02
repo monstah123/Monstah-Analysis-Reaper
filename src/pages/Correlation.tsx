@@ -54,14 +54,22 @@ const Correlation: React.FC = () => {
               <th style={{ minWidth: '80px', background: 'transparent' }}></th>
               {trackedAssets.map((a) => (
                 <th key={a.id} style={{ 
-                  writingMode: 'vertical-rl', 
-                  transform: 'rotate(180deg)', 
-                  paddingBottom: '10px', 
-                  fontSize: '0.75rem', 
-                  fontWeight: 800,
-                  opacity: 0.8
+                  height: '100px',
+                  verticalAlign: 'bottom',
+                  paddingBottom: '10px'
                 }}>
-                  {a.name}
+                  <div style={{
+                    transform: 'translateX(10px) rotate(-45deg)',
+                    transformOrigin: 'left bottom',
+                    width: '30px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    whiteSpace: 'nowrap',
+                    opacity: 0.8,
+                    textAlign: 'left'
+                  }}>
+                    {a.name}
+                  </div>
                 </th>
               ))}
             </tr>

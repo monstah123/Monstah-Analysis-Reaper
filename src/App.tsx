@@ -10,6 +10,9 @@ import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
 import './index.css';
 
+import Correlation from './pages/Correlation';
+import COTDeepDive from './pages/COTDeepDive';
+
 function AppContent() {
   const { activeView, setActiveView } = useApp();
 
@@ -20,6 +23,8 @@ function AppContent() {
       case 'technical': return <Technical />;
       case 'ai-insight': return <AIInsight />;
       case 'calendar': return <Calendar />;
+      case 'correlation': return <Correlation />;
+      case 'cot-deep-dive': return <COTDeepDive />;
       case 'settings': return <Settings />;
       default: return <Dashboard />;
     }

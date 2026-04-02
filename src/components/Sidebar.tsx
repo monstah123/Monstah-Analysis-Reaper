@@ -5,10 +5,11 @@ const analysisItems = [
   { id: 'fundamental', label: 'Fundamental', icon: '📊' },
   { id: 'sentiment', label: 'Sentiment', icon: '📡' },
   { id: 'technical', label: 'Technical', icon: '📈' },
+  { id: 'yield-spreads', label: 'Yield Spreads', icon: '🏛️' },
   { id: 'ai-insight', label: 'AI Insight', icon: '🤖' },
   { id: 'calendar', label: 'Calendar', icon: '📅' },
   { id: 'correlation', label: 'Correlation', icon: '🌡️' },
-  { id: 'cot-deep-dive', label: 'COT Deep-Dive', icon: '🏛️' },
+  { id: 'cot-deep-dive', label: 'COT Deep-Dive', icon: '🗳️' },
 ];
 
 const marketItems = [

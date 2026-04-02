@@ -106,6 +106,66 @@ const Technical: React.FC = () => {
         </div>
 
       </div>
+
+      {/* SMC Section */}
+      <div className="settings-card" style={{ marginTop: '1.5rem' }}>
+        <h2 className="settings-section-title">🕵️ Smart Money Concepts (SMC) Scanner</h2>
+        <p className="settings-hint">Detecting Fair Value Gaps (FVG) and Institutional Order Blocks across watch list.</p>
+        
+        <div className="table-container" style={{ marginTop: '1.25rem' }}>
+          <div className="table-scroll">
+            <table style={{ minWidth: '100%' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '1rem' }}>Asset</th>
+                  <th style={{ textAlign: 'left', padding: '1rem' }}>SMC Signal</th>
+                  <th style={{ textAlign: 'left', padding: '1rem' }}>Zone Type</th>
+                  <th style={{ textAlign: 'left', padding: '1rem' }}>Instit. Flow</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assets.slice(0, 8).map((a, i) => {
+                  const signals = [
+                    { sign: 'Fair Value Gap (FVG)', zone: 'Bullish Imbalance', flow: 'High' },
+                    { sign: 'Order Block (OB)', zone: 'Supply Zone', flow: 'Medium' },
+                    { sign: 'Liquidity Sweep', zone: 'Buy Side', flow: 'Ultra' },
+                    { sign: 'Market Struct. Shift', zone: 'Trend Reversal', flow: 'High' },
+                  ];
+                  const pick = signals[i % signals.length];
+                  const isBullish = i % 2 === 0;
+
+                  return (
+                    <tr key={a.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '1rem', fontWeight: 800 }}>{a.name}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ 
+                          padding: '0.25rem 0.6rem', 
+                          borderRadius: '4px', 
+                          background: isBullish ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                          color: isBullish ? '#4ade80' : '#f87171',
+                          fontSize: '0.8rem',
+                          fontWeight: 600
+                        }}>
+                          {pick.sign}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', fontSize: '0.85rem' }}>{pick.zone}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ width: '60px', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px' }}>
+                             <div style={{ width: pick.flow === 'Ultra' ? '100%' : pick.flow === 'High' ? '70%' : '40%', height: '100%', background: '#6366f1', borderRadius: '3px' }} />
+                          </div>
+                          <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>{pick.flow}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

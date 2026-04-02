@@ -14,6 +14,7 @@ import './index.css';
 import Correlation from './pages/Correlation';
 import COTDeepDive from './pages/COTDeepDive';
 import YieldSpreads from './pages/YieldSpreads';
+import NewsTerminal from './pages/NewsTerminal';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -24,6 +25,7 @@ function AppContent() {
       case 'fundamental': return <Fundamental />;
       case 'technical': return <Technical />;
       case 'yield-spreads': return <YieldSpreads />;
+      case 'news-terminal': return <NewsTerminal />;
       case 'ai-insight': return <AIInsight />;
       case 'calendar': return <Calendar />;
       case 'correlation': return <Correlation />;

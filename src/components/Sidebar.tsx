@@ -6,6 +6,7 @@ const analysisItems = [
   { id: 'sentiment', label: 'Sentiment', icon: '📡' },
   { id: 'technical', label: 'Technical', icon: '📈' },
   { id: 'yield-spreads', label: 'Yield Spreads', icon: '🏛️' },
+  { id: 'news-terminal', label: 'News Terminal', icon: '📻' },
   { id: 'ai-insight', label: 'AI Insight', icon: '🤖' },
   { id: 'calendar', label: 'Calendar', icon: '📅' },
   { id: 'correlation', label: 'Correlation', icon: '🌡️' },

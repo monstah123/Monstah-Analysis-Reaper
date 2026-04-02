@@ -38,6 +38,8 @@ interface AppContextType {
   aiInsightAsset: AssetData | null;
   setAiInsightAsset: (a: AssetData | null) => void;
   updateMarketPrice: (id: string, price: number) => void;
+  addAsset: (asset: AssetData) => void;
+  removeAsset: (id: string) => void;
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -71,7 +73,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     openaiKey: apiKeysRaw.openaiKey || DEFAULT_KEYS.openaiKey,
     deepseekKey: apiKeysRaw.deepseekKey || DEFAULT_KEYS.deepseekKey,
   };
-  const [assets, setAssets] = useState<AssetData[]>(mockAssets);
+  const [assets, setAssets] = useLocalStorage<AssetData[]>('mar_assets', mockAssets);
   const [marketData, setMarketData] = useState<Record<string, AssetMarketData>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -92,7 +94,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updates: Record<string, AssetMarketData> = {};
 
     // Crypto via CoinGecko (no key needed)
-    const cryptoAssets = mockAssets.filter((a) => a.coingeckoId && a.category === 'Crypto');
+    const cryptoAssets = assets.filter((a) => a.coingeckoId && a.category === 'Crypto');
     if (cryptoAssets.length) {
       try {
         const ids = cryptoAssets.map((a) => a.coingeckoId!);
@@ -115,7 +117,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // Forex via Frankfurter (No key needed)
-    const forexAssets = mockAssets.filter((a) => a.avFrom && a.avTo);
+    const forexAssets = assets.filter((a) => a.avFrom && a.avTo);
     for (const a of forexAssets) {
       try {
         const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
@@ -135,7 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Fallback sparklines for assets without live data
     // 3. Fetch US Macro Fundamentals via FRED
-    let updatedAssets = [...mockAssets]; // Reset to base config to clear old state, then apply new score overrides
+    let updatedAssets = [...assets]; // Reset to current config to clear old state, then apply new score overrides
     
     if (apiKeys.fred) {
       try {
@@ -203,6 +205,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   }, []);
 
+  const addAsset = useCallback((asset: AssetData) => {
+    setAssets((prev) => {
+      if (prev.find(a => a.id === asset.id)) return prev;
+      return [...prev, asset];
+    });
+  }, [setAssets]);
+
+  const removeAsset = useCallback((id: string) => {
+    setAssets((prev) => prev.filter(a => a.id !== id));
+  }, [setAssets]);
+
   // Initial load + 15-min auto-refresh
   useEffect(() => {
     fetchMarketData();
@@ -222,6 +235,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeView, setActiveView,
         aiInsightAsset, setAiInsightAsset,
         updateMarketPrice,
+        addAsset,
+        removeAsset,
       }}
     >
       {children}

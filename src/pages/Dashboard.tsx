@@ -11,6 +11,8 @@ type FilterCat = 'All' | AssetData['category'];
 const BIAS_FILTERS: FilterBias[] = ['All', 'Very Bullish', 'Bullish', 'Neutral', 'Bearish', 'Very Bearish'];
 const CAT_FILTERS: FilterCat[] = ['All', 'Forex', 'Indices', 'Commodities', 'Crypto'];
 
+import AddAssetModal from '../components/AddAssetModal';
+
 const Dashboard: React.FC = () => {
   const { assets, isRefreshing, lastRefresh, refreshData, setSelectedAsset, activeView, setActiveView } = useApp();
   const [sortKey, setSortKey] = useState<SortKey>('score');
@@ -18,6 +20,7 @@ const Dashboard: React.FC = () => {
   const [filterBias, setFilterBias] = useState<FilterBias>('All');
   const [filterCat, setFilterCat] = useState<FilterCat>('All');
   const [search, setSearch] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Sync Sidebar navigation to Local Dashboard Filters
   useEffect(() => {
@@ -50,7 +53,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      <header className="header">
+      <header className="header" style={{ position: 'relative' }}>
         <div className="header-title">
           <h1>Market Dashboard</h1>
           <p>Multi-factor analysis across {assets.length} global markets</p>
@@ -60,11 +63,16 @@ const Dashboard: React.FC = () => {
             <span className={`pulse-dot${isRefreshing ? ' pulsing' : ''}`} />
             {isRefreshing ? 'Refreshing…' : lastRefresh ? `Updated ${lastRefresh.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}` : 'Loading…'}
           </div>
+          <button id="btn-add-asset" className="btn btn-secondary btn-sm" onClick={() => setShowAddModal(true)} style={{ marginRight: '0.5rem', background: '#3b82f622', color: '#3b82f6', border: '1px solid #3b82f644' }}>
+            ➕ Add Market
+          </button>
           <button id="btn-refresh" className="btn btn-primary" onClick={refreshData} disabled={isRefreshing}>
             ↻ Refresh
           </button>
         </div>
       </header>
+
+      {showAddModal && <AddAssetModal onClose={() => setShowAddModal(false)} />}
 
       <StatsBar assets={processed} />
 

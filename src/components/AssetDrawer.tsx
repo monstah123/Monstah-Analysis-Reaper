@@ -40,7 +40,7 @@ const getTvSymbol = (id: string): string | null => {
   return map[id] || null;
 };
 const AssetDrawer: React.FC = () => {
-  const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing } = useApp();
+  const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing, removeAsset } = useApp();
   const [isFullscreenChart, setIsFullscreenChart] = useState(false);
   const open = !!selectedAsset;
 
@@ -89,7 +89,22 @@ const AssetDrawer: React.FC = () => {
             <h2 className="drawer-asset-name">{selectedAsset.name}</h2>
             <span className={`bias-badge ${getBiasClass(selectedAsset.bias)}`}>{selectedAsset.bias}</span>
           </div>
-          <button className="drawer-close" onClick={() => setSelectedAsset(null)} aria-label="Close">✕</button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+              className="drawer-close" 
+              onClick={() => {
+                if (window.confirm(`Remove ${selectedAsset.name} from watchlist?`)) {
+                  removeAsset(selectedAsset.id);
+                  setSelectedAsset(null);
+                }
+              }} 
+              title="Remove from watchlist"
+              style={{ fontSize: '1rem', opacity: 0.5 }}
+            >
+              🗑️
+            </button>
+            <button className="drawer-close" onClick={() => setSelectedAsset(null)} aria-label="Close">✕</button>
+          </div>
         </div>
 
         {/* Score + Category */}

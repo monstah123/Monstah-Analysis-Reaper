@@ -16,12 +16,20 @@ const marketItems = [
   { id: 'crypto', label: 'Crypto', icon: '₿' },
 ];
 
+import { useApp } from '../contexts/AppContext';
+
 interface SidebarProps {
   activeView: string;
   onNavChange: (id: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
+  const { assets, setSelectedAsset } = useApp();
+  
+  const topReaps = [...assets]
+    .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
+    .slice(0, 3);
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -30,6 +38,26 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
           Monstah <span>Reaper</span>
         </span>
       </div>
+
+      <nav className="nav-group">
+        <p className="nav-title">Top Reaps (Confluence)</p>
+        {topReaps.map((asset) => (
+          <button
+            key={asset.id}
+            className="nav-item reap-item"
+            onClick={() => setSelectedAsset(asset)}
+            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', opacity: 0.8 }}
+          >
+            <span className="nav-icon" style={{ fontSize: '1rem' }}>{asset.score > 0 ? '📈' : '📉'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span style={{ fontWeight: 700 }}>{asset.name}</span>
+              <span style={{ fontSize: '0.7rem', color: asset.score > 0 ? '#3b82f6' : '#ef4444' }}>
+                Score: {asset.score > 0 ? `+${asset.score}` : asset.score}
+              </span>
+            </div>
+          </button>
+        ))}
+      </nav>
 
       <nav className="nav-group">
         <p className="nav-title">Analysis</p>

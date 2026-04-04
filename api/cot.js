@@ -24,53 +24,63 @@ export default async function handler(req, res) {
       { id: 'AUDUSD', name: 'AUSTRALIAN DOLLAR' },
       { id: 'USDCAD', name: 'CANADIAN DOLLAR' },
       { id: 'NZDUSD', name: 'NZ DOLLAR' },
-      { id: 'GOLD', name: 'GOLD' },
-      { id: 'SP500', name: 'S&P 500' },
-      { id: 'NASDAQ', name: 'NASDAQ 100' },
-      { id: 'DOW', name: 'DJIA' }
+      { id: 'SP500', name: 'S&P 500 STOCK INDEX' },
+      { id: 'NASDAQ', name: 'NASDAQ 100 STOCK INDEX' },
+      { id: 'DOW', name: 'DOW JONES INDUSTRIAL' }
     ];
 
     const results = {};
 
     mappings.forEach(m => {
-       const assetIndex = txt.indexOf(m.name);
+       const uName = m.name.toUpperCase();
+       const assetIndex = txt.toUpperCase().indexOf(uName);
        if (assetIndex !== -1) {
-          // Extract a 1000-char block around the asset name to find the "Leverage Funds" section
-          const block = txt.substring(assetIndex, assetIndex + 1500);
+          const block = txt.substring(assetIndex, assetIndex + 2000);
+          const lines = block.split('\n');
           
-          // The report format has headers "Leveraged Funds" and columns for Long/Short
-          // We look for the "Leveraged Funds" row numbers
-          // Format sample: Leveraged Funds       123,456  23,456
-          const leveragedRegex = /Leveraged Funds\s+([\d,]+)\s+([\d,]+)/;
-          const match = block.match(leveragedRegex);
-          
-          if (match) {
-             results[m.id] = {
-                long: parseInt(match[1].replace(/,/g, '')),
-                short: parseInt(match[2].replace(/,/g, '')),
-                source: 'CFTC TFF Report'
-             };
+          // TFF Report (Financial) - Find the row that starts with 'Positions' (Case Insensitive)
+          const posRow = lines.find(l => l.trim().toUpperCase().startsWith('POSITIONS'));
+          if (posRow) {
+             // Columns in TFF (approx): [POSITIONS] [OI] [AssetMgr L] [S] [LevFunds L] [S]
+             // We need columns 4 and 5 (0-indexed: 4 and 5 if 1 is OI)
+             const cols = posRow.trim().split(/\s+/);
+             if (cols.length >= 6) {
+                results[m.id] = {
+                   long: parseInt(cols[4].replace(/,/g, '')),
+                   short: parseInt(cols[5].replace(/,/g, '')),
+                   source: 'CFTC TFF Report'
+                };
+             }
           }
        }
     });
 
-    // 3. Fallback for commodities (Legacy Report) if TFF doesn't have it
+    // 3. Fallback for commodities (Legacy Report) - GOLD
     if (!results.GOLD) {
-       const legacyRes = await axios.get('https://www.cftc.gov/dea/newcot/deafut.txt', { timeout: 5000 });
-       const ltxt = legacyRes.data;
-       const goldIdx = ltxt.indexOf('GOLD');
-       if (goldIdx !== -1) {
-          const gBlock = ltxt.substring(goldIdx, goldIdx + 1000);
-          // Look for Non-Commercial row
-          const gMatch = gBlock.match(/Non-Commercial\s+([\d,]+)\s+([\d,]+)/);
-          if (gMatch) {
-             results.GOLD = {
-                long: parseInt(gMatch[1].replace(/,/g, '')),
-                short: parseInt(gMatch[2].replace(/,/g, '')),
-                source: 'CFTC Legacy Report'
-             };
+       try {
+          const legacyRes = await axios.get('https://www.cftc.gov/dea/newcot/deafut.txt', { 
+            timeout: 5000,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0' }
+          });
+          const ltxt = legacyRes.data;
+          const goldIdx = ltxt.toUpperCase().indexOf('GOLD');
+          if (goldIdx !== -1) {
+             const gBlock = ltxt.substring(goldIdx, goldIdx + 1500);
+             const lines = gBlock.split('\n');
+             // In Legacy: Non-Commercial row
+             const ncRow = lines.find(l => l.trim().toUpperCase().startsWith('NON-COMMERCIAL'));
+             if (ncRow) {
+                const cols = ncRow.trim().split(/\s+/);
+                if (cols.length >= 3) {
+                   results.GOLD = {
+                      long: parseInt(cols[1].replace(/,/g, '')),
+                      short: parseInt(cols[2].replace(/,/g, '')),
+                      source: 'CFTC Legacy Report'
+                   };
+                }
+             }
           }
-       }
+       } catch (e) {}
     }
 
     res.status(200).json({ success: true, cot: results });

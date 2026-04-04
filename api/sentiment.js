@@ -11,7 +11,8 @@ export default async function handler(req, res) {
     if (category === 'Crypto' && asset) {
       const binanceSym = asset.replace(/[^A-Z]/g, '') + 'USDT';
       const response = await axios.get(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio`, {
-        params: { symbol: binanceSym, period: '1d', limit: 1 }
+        params: { symbol: binanceSym, period: '1d', limit: 1 },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0' }
       });
 
       if (response.data && response.data.length > 0) {

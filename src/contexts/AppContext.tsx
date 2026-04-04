@@ -164,16 +164,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // --- 4. Official Institutional COT Positioning (Via Pure CFTC Proxy) ---
-    // This is INDEPENDENT of FRED/Alpha keys
     let cotData: Record<string, any> = {};
     try {
-      const cotRes = await fetch('/api/cot');
+      const cotRes = await fetch(`/api/cot?t=${Date.now()}`);
       if (cotRes.ok) {
         const cotJson = await cotRes.json();
         if (cotJson.success) cotData = cotJson.cot;
       }
     } catch (e) {
-      console.warn('[AppContext] COT Feed (CFTC) not available locally.');
+      console.warn('[AppContext] COT Feed (CFTC) not available.');
     }
 
     // Apply all layers of data to assets using functional update to avoid loop

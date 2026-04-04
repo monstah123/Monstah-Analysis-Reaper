@@ -40,6 +40,7 @@ interface AppContextType {
   updateMarketPrice: (id: string, price: number) => void;
   addAsset: (asset: AssetData) => void;
   removeAsset: (id: string) => void;
+  macroData: Record<string, any>;
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -80,6 +81,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedAsset, setSelectedAsset] = useState<AssetData | null>(null);
   const [activeView, setActiveView] = useState('dashboard');
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
+  const [macroData, setMacroData] = useState<Record<string, any>>({});
   const refreshRef = useRef(false);
 
   const setApiKeys = useCallback((partial: Partial<ApiKeys>) => {
@@ -182,6 +184,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
         });
 
+        setMacroData({
+          gdp: gdpV,
+          inflation: cpiV,
+          unemployment: unempV,
+          fedFunds: ratesV,
+          payrolls: jobsV, // this is the change in k
+          retailSales: fredData.RETAIL_SALES?.[0]?.value || 0
+        });
+
       } catch (e) {
         console.warn('[AppContext] FRED fetch failed:', e);
       }
@@ -237,6 +248,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateMarketPrice,
         addAsset,
         removeAsset,
+        macroData,
       }}
     >
       {children}

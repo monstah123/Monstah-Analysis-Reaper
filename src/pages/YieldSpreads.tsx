@@ -1,39 +1,65 @@
-import React, { useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
-
-// Mock yield spread data: 10Y Bond Yield Differential
-const YIELD_DATA = [
-  { pair: 'EUR/USD', spread: -1.2, bias: 'Bearish', desc: 'US yields > German yields' },
-  { pair: 'GBP/USD', spread: -0.8, bias: 'Bearish', desc: 'US yields > UK yields' },
-  { pair: 'AUD/USD', spread: -0.4, bias: 'Neutral', desc: 'Small gap' },
-  { pair: 'USD/JPY', spread: 4.1, bias: 'Very Bullish', desc: 'Huge gap (Carry Trade)' },
-  { pair: 'USD/CAD', spread: 0.3, bias: 'Neutral', desc: 'Small gap' },
-];
-
-const generateSpreadHistory = (baseSpread: number) => {
-  const days = 30;
-  return Array.from({ length: days }, (_, i) => ({
-    date: `Day ${i + 1}`,
-    spread: parseFloat((baseSpread + Math.sin(i / 5) * 0.2 + (Math.random() - 0.5) * 0.1).toFixed(2))
-  }));
-};
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, BarChart, Bar } from 'recharts';
+import { useApp } from '../contexts/AppContext';
 
 const YieldSpreads: React.FC = () => {
-  const activeSpreads = useMemo(() => {
-    return YIELD_DATA.map(d => ({
-      ...d,
-      history: generateSpreadHistory(d.spread)
-    }));
-  }, []);
+  const { apiKeys } = useApp();
+  const [liveYields, setLiveYields] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const fetchYields = useCallback(async () => {
+    if (!apiKeys.fred) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/yields?t=${Date.now()}`);
+      const data = await res.json();
+      if (data.success) {
+        setLiveYields(data.spreads);
+      }
+    } catch (e) {
+      console.warn('[Yields] Sync failed:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiKeys.fred]);
+
+  useEffect(() => {
+    fetchYields();
+    const interval = setInterval(fetchYields, 300000); // 5-min refresh
+    return () => clearInterval(interval);
+  }, [fetchYields]);
+
+  const recessionIndicator = useMemo(() => {
+    if (!liveYields) return { status: 'SCANNING', color: '#8b9ab8', val: '0.00' };
+    const spread = parseFloat(liveYields.T10Y2Y?.value || '0');
+    return {
+      status: spread < 0 ? '⚠️ INVERTED (RECESSION)' : '✅ NORMAL (STABLE)',
+      color: spread < 0 ? '#ef4444' : '#22c55e',
+      val: spread.toFixed(2)
+    };
+  }, [liveYields]);
+
+  // Main Chart Data (Current Snapshot)
+  const chartData = useMemo(() => {
+    if (!liveYields) return [];
+    return [
+      { name: '10Y-2Y', value: parseFloat(liveYields.T10Y2Y?.value || '0'), desc: 'Main Curve' },
+      { name: '10Y-3M', value: parseFloat(liveYields.T10Y3M?.value || '0'), desc: 'Short Term' },
+      { name: '10Y Rate', value: parseFloat(liveYields.DGS10?.value || '0'), desc: 'Benchmark' },
+      { name: '2Y Rate', value: parseFloat(liveYields.DGS2?.value || '0'), desc: 'Fed Policy' },
+      { name: '30Y Rate', value: parseFloat(liveYields.DGS30?.value || '0'), desc: 'Housing/Mortgage' }
+    ];
+  }, [liveYields]);
+
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div style={{ background: '#0f1623', border: '1px solid #1e2d48', padding: '10px', borderRadius: '6px' }}>
-          <p style={{ margin: 0, fontWeight: 700, color: '#f0f4ff' }}>{label}</p>
+          <p style={{ margin: 0, fontWeight: 700, color: '#f0f4ff' }}>{payload[0].payload.name}</p>
           <p style={{ margin: 0, color: payload[0].value >= 0 ? '#3b82f6' : '#ef4444' }}>
-            Spread: {payload[0].value}%
+            {payload[0].value}%
           </p>
+          <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8b9ab8' }}>Status: {payload[0].payload.desc}</p>
         </div>
       );
     }
@@ -44,87 +70,84 @@ const YieldSpreads: React.FC = () => {
     <div className="page-container">
        <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
-          <h1>🏛️ Yield Spread Analysis</h1>
-          <p>Institutional bond yield differentials (10Y) - The #1 driver of Currency Flow</p>
+          <h1>🏛️ Recession Monitor: Yield Curve</h1>
+          <p>Institutional bond yield spreads (The #1 Economic Heartbeat)</p>
         </div>
       </header>
 
+      {!apiKeys.fred && (
+         <div className="settings-card" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid #ef4444', marginBottom: '1.5rem' }}>
+            <p style={{ color: '#ef4444', fontWeight: 600, margin: 0 }}>⚠️ Please add your FRED API Key in Settings to enable Live Yield Spreads.</p>
+         </div>
+      )}
+
       <div className="stats-bar" style={{ padding: '1.5rem 0' }}>
-        <div className="stat-card">
-          <div className="stat-icon">🏦</div>
-          <div className="stat-body">
-            <span className="stat-label">Strongest Carry</span>
-            <span className="stat-value" style={{ color: '#22c55e' }}>USD/JPY</span>
-            <span className="stat-sub">+4.1% Differential</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">📉</div>
-          <div className="stat-body">
-            <span className="stat-label">Weakest Yield</span>
-            <span className="stat-value" style={{ color: '#ef4444' }}>EUR/USD</span>
-            <span className="stat-sub">-1.2% Differential</span>
-          </div>
-        </div>
         <div className="stat-card">
           <div className="stat-icon">⚖️</div>
           <div className="stat-body">
-            <span className="stat-label">Mean Reversion</span>
-            <span className="stat-value">AUD/USD</span>
-            <span className="stat-sub">Neutral Spread</span>
+            <span className="stat-label">10Y-2Y Spread</span>
+            <span className="stat-value" style={{ color: recessionIndicator.color }}>{recessionIndicator.val}%</span>
+            <span className="stat-sub">{recessionIndicator.status}</span>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">⛓️</div>
+          <div className="stat-body">
+            <span className="stat-label">3-Month Edge</span>
+            <span className="stat-value">{liveYields?.T10Y3M?.value || '0.00'}%</span>
+            <span className="stat-sub">Short-term liquidity gap</span>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🏛️</div>
+          <div className="stat-body">
+            <span className="stat-label">30Y Benchmark</span>
+            <span className="stat-value" style={{ color: '#3b82f6' }}>{liveYields?.DGS30?.value || '0.00'}%</span>
+            <span className="stat-sub">Long-term debt anchor</span>
           </div>
         </div>
       </div>
 
-      <div className="settings-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>💡 Why Yield Spreads Matter for Smart Money</h3>
-        <p style={{ fontSize: '0.875rem', color: '#8b9ab8', lineHeight: 1.6 }}>
-          Banks move billions based on the **Interest Rate Parity**. If the US 10-Year yield is significantly higher than the Japanese 10-Year yield, institutions will borrow JPY (cheap) and buy USD (yield) to capture the spread (Carry Trade). 
-          <br /><br />
-          When the spread **diverges** from the price, it signals a massive institutional entry or exit.
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
-        {activeSpreads.map((s) => (
-          <div key={s.pair} className="settings-card" style={{ height: '320px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h2 className="settings-section-title">{s.pair} 10Y Yield Spread</h2>
-                <p className="settings-hint">{s.desc}</p>
-              </div>
-              <div className={`bias-badge ${s.bias.toLowerCase().includes('bullish') ? 'bias-very-bullish' : s.bias.toLowerCase().includes('bearish') ? 'bias-very-bearish' : 'bias-neutral'}`}>
-                {s.bias}
-              </div>
-            </div>
-            
+      <div className="settings-row-2">
+         {/* Yield Histogram */}
+         <div className="settings-card" style={{ height: '400px' }}>
+           <h2 className="settings-section-title" style={{ fontSize: '1.1rem', margin: 0 }}>📊 Institutional Yield Stack</h2>
+           <span style={{ fontSize: '0.7rem', color: '#8b9ab8' }}>Syncing: {isLoading ? 'Working...' : 'Live'}</span>
             <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={s.history}>
-                  <defs>
-                    <linearGradient id={`gap-${s.pair}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={s.spread >= 0 ? '#3b82f6' : '#ef4444'} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={s.spread >= 0 ? '#3b82f6' : '#ef4444'} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
+                <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e2d48" vertical={false} />
-                  <XAxis dataKey="date" hide />
-                  <YAxis domain={['auto', 'auto']} tick={{ fill: '#8b9ab8', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8b9ab8', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8b9ab8', fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
                   <ReferenceLine y={0} stroke="#4a5775" />
-                  <Area 
-                    type="monotone" 
-                    dataKey="spread" 
-                    stroke={s.spread >= 0 ? '#3b82f6' : '#ef4444'} 
-                    strokeWidth={2}
-                    fillOpacity={1} 
-                    fill={`url(#gap-${s.pair})`} 
-                  />
-                </AreaChart>
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <rect key={`cell-${index}`} fill={entry.value < 0 ? '#ef4444' : '#3b82f6'} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        ))}
+         </div>
+
+         {/* Context Column */}
+         <div className="settings-card">
+            <h2 className="settings-section-title">💡 The Institutional Driver</h2>
+            <div style={{ color: '#8b9ab8', fontSize: '0.85rem', lineHeight: 1.6 }}>
+               <p style={{ marginBottom: '1rem' }}>
+                  The **10Y-2Y Spread** is the world's most accurate recession indicator. Normally, longer-term bonds pay higher interest than shorter-term bonds (Normal Curve).
+               </p>
+               <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)', marginBottom: '1rem' }}>
+                  <span style={{ fontWeight: 700, color: '#f0f4ff', display: 'block', marginBottom: '0.2rem' }}>Normal (Bullish)</span>
+                  If 10Y yields are HIGHER than 2Y, the economy is growing and institutions are taking long-term risks.
+               </div>
+               <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                  <span style={{ fontWeight: 700, color: '#f0f4ff', display: 'block', marginBottom: '0.2rem' }}>Inverted (Bearish)</span>
+                  If 2Y yields are HIGHER than 10Y, the market is bracing for a crash and the Fed is being too aggressive. This has predicted nearly every recession for the last 50 years.
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );

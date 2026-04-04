@@ -13,27 +13,19 @@ const Sentiment: React.FC = () => {
   // Fetch live sentiment from Vercel Serverless Function
   useEffect(() => {
     const fetchLiveSentiment = async () => {
-      const updates: Record<string, { long: number; short: number; source: string }> = {};
-      
-      await Promise.all(assets.map(async (a, index) => {
-        // Stagger for Safari
-        await new Promise(r => setTimeout(r, index * 60)); 
+      try {
+        const res = await fetch('/api/sentiment?batch=true', {
+          headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+        });
+        if (!res.ok) throw new Error('Sentiment Batch Offline');
+        const data = await res.json();
         
-        try {
-          const res = await fetch(`/api/sentiment?asset=${a.id}&category=${a.category}`, {
-            headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-          });
-          const data = await res.json();
-          updates[a.id] = data;
-        } catch (e) {
-          // Graceful fallback for local development (or free tier limits) doing exactly what the Vercel api does:
-          const pseudoHash = a.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-          const dayHash = new Date().getDate();
-          const seed = ((pseudoHash + dayHash) % 60) + 20;
-          updates[a.id] = { long: seed, short: 100 - seed, source: 'Local Fallback' };
+        if (data.success && data.batch) {
+          setLiveData(data.batch);
         }
-      }));
-      setLiveData(updates);
+      } catch (e) {
+        console.warn('[Sentiment] Pulse failed:', e);
+      }
     };
 
     fetchLiveSentiment();

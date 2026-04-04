@@ -139,6 +139,41 @@ tr:hover td { background: rgba(255,255,255,0.025); }
 .val-neg-mid  { background: rgba(220,38,38,0.35);  color: #fca5a5; }
 .val-neutral  { background: rgba(75,85,99,0.25);   color: var(--text-muted); }
 
+/* ─── Calendar Specific Results ──────────────────────── */
+.result-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #ffffff;
+  min-width: 50px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.result-box:hover {
+  transform: scale(1.05);
+}
+
+.result-box.better {
+  background: #3b52e1; /* Institutional Dark Blue */
+  box-shadow: 0 0 10px rgba(59, 82, 225, 0.2);
+}
+
+.result-box.worse {
+  background: #f15d5d; /* Institutional Red */
+  box-shadow: 0 0 10px rgba(241, 93, 93, 0.2);
+}
+
+.result-box.inline {
+  background: #4a5568; /* Neutral Grey */
+}
+
+/* ─────────────────────────────────────────────────── */
+
 /* ─── Bias Badges ────────────────────────────────────── */
 .bias-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; border: 1px solid transparent; }
 .bias-very-bullish { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #4ade80 !important; }

@@ -56,9 +56,51 @@ export async function fetchForexHistory(
   
   const entries = Object.entries(series);
   return entries
-    .slice(-days)
     .map(([date, rates]: [string, any]) => ({
       date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       value: rates[to] as number,
     }));
+}
+
+export interface NewsHeadline {
+  id: string;
+  time: string;
+  title: string;
+  summary: string;
+  url: string;
+  source: string;
+  sentiment: string;
+  sentimentScore: number;
+}
+
+/** Fetch news sentiment via Alpha Vantage */
+export async function fetchNewsSentiment(apiKey: string, limit = 20): Promise<NewsHeadline[]> {
+  const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&limit=${limit}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`News Feed error ${res.status}`);
+  const json = await res.json();
+  const feed = json.feed ?? [];
+  
+  return feed.map((item: any, idx: number) => {
+    // Parser for Alpha Vantage time: 20240404T133012 -> 13:30:12
+    const rawTime = item.time_published ?? '';
+    let timeDisplay = rawTime;
+    if (rawTime.length >= 15) {
+      const h = rawTime.substring(9, 11);
+      const m = rawTime.substring(11, 13);
+      const s = rawTime.substring(13, 15);
+      timeDisplay = `${h}:${m}:${s}`;
+    }
+    
+    return {
+      id: `${idx}-${rawTime}`,
+      time: timeDisplay,
+      title: item.title,
+      summary: item.summary,
+      url: item.url,
+      source: item.source,
+      sentiment: item.overall_sentiment_label,
+      sentimentScore: item.overall_sentiment_score,
+    };
+  });
 }

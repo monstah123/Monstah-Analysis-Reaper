@@ -1,28 +1,42 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-
-interface SquawkHeadline {
-  id: string;
-  time: string;
-  content: string;
-  priority: 'low' | 'medium' | 'high';
-  impact: string;
-}
-
-const MOCK_SQUAWKS: SquawkHeadline[] = [
-  { id: '1', time: '13:30:12', content: 'ECB\'s Lagarde: "We are considering all options for June meeting."', priority: 'high', impact: 'EUR Bullish' },
-  { id: '2', time: '13:28:45', content: 'USD Index (DXY) testing 104.50 level. Safe-haven inflows noted.', priority: 'medium', impact: 'USD Bullish' },
-  { id: '3', time: '13:25:10', content: 'Japanese Finance Minister Suzuki: "Close monitoring of FX movements with sense of urgency."', priority: 'high', impact: 'JPY Bullish' },
-  { id: '4', time: '13:22:01', content: 'WTI Oil futures drop 1.2% on reports of inventory builds.', priority: 'medium', impact: 'CAD Bearish' },
-  { id: '5', time: '13:18:55', content: 'UK Manufacturing PMI beats expectations at 51.2 vs 50.8 forecasted.', priority: 'high', impact: 'GBP Bullish' },
-  { id: '6', time: '13:15:30', content: 'Bitcoin (BTC) whales moving large quantities to cold storage. Accumulation phase?', priority: 'low', impact: 'Crypto Neutral' },
-  { id: '7', time: '13:10:05', content: 'RBNZ Governor Orr: "No rush to cut rates until inflation is within 1-3% target band."', priority: 'medium', impact: 'NZD Bullish' },
-];
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useApp } from '../contexts/AppContext';
+import { fetchNewsSentiment, type NewsHeadline } from '../services/alphaVantage';
 
 const NewsTerminal: React.FC = () => {
+  const { apiKeys } = useApp();
   const newsContainerRef = useRef<HTMLDivElement>(null);
-  const [squawks] = useState<SquawkHeadline[]>(MOCK_SQUAWKS);
+  const [headlines, setHeadlines] = useState<NewsHeadline[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load TradingView News Widget
+  const fetchLiveNews = useCallback(async () => {
+    if (!apiKeys.alphaVantage) {
+      setError('Alpha Vantage Key Required');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const data = await fetchNewsSentiment(apiKeys.alphaVantage, 25);
+      setHeadlines(data);
+      setError(null);
+    } catch (err) {
+      console.error('[News] Sync failed:', err);
+      // Don't set error on auto-refresh if we already have some data
+      if (headlines.length === 0) setError('Institutional Feed Offline');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiKeys.alphaVantage, headlines.length]);
+
+  // Initial load + Auto-refresh
+  useEffect(() => {
+    fetchLiveNews();
+    const interval = setInterval(fetchLiveNews, 60000); // 1-minute auto-refresh
+    return () => clearInterval(interval);
+  }, [fetchLiveNews]);
+
+  // Load TradingView News Widget (Institutional Stream)
   useEffect(() => {
     if (!newsContainerRef.current) return;
     newsContainerRef.current.innerHTML = '';
@@ -43,15 +57,20 @@ const NewsTerminal: React.FC = () => {
     newsContainerRef.current.appendChild(script);
   }, []);
 
-  // AI Narrative Analysis (Simple Mock but Institutional Feel)
+  // Use real sentiment data to determine global mood
   const currentNarrative = useMemo(() => {
+    if (headlines.length === 0) return { mood: 'Syncing...', reason: 'Market data is being processed.', topAsset: 'Scan Pending...', riskFactor: 'N/A' };
+    
+    // Simple logic: Calc avg sentiment score
+    const avg = headlines.reduce((sum, h) => sum + h.sentimentScore, 0) / headlines.length;
+    
     return {
-      mood: 'Risk-Off / Safe Haven',
-      reason: 'Central Bank hawkishness and geopolitical tensions are driving capital into USD and Gold.',
-      topAsset: 'USD',
-      riskFactor: 'Escalating conflict in the Middle East causing Oil volatility.'
+      mood: avg > 0.15 ? 'Institutional Bullish' : avg < -0.15 ? 'Institutional Bearish' : 'Neutral / Mixed',
+      reason: 'Automated sentiment analysis based on late-breaking institutional headlines.',
+      topAsset: headlines[0]?.title.split(' ')[0] || 'FX', // First word of newest headline as a rough'top asset'
+      riskFactor: 'Volatily in sentiment readings indicates market uncertainty.'
     };
-  }, []);
+  }, [headlines]);
 
   return (
     <div className="page-container">
@@ -62,8 +81,10 @@ const NewsTerminal: React.FC = () => {
         </div>
         <div className="header-actions">
            <div className="status-indicator">
-              <span className="status-dot live" />
-              <span style={{ fontSize: '0.8rem', color: '#4ade80', fontWeight: 700 }}>SQUAWK LIVE</span>
+              <span className={`status-dot ${error ? 'offline' : 'live'}`} style={{ backgroundColor: error ? '#ef4444' : '#4ade80' }} />
+              <span style={{ fontSize: '0.8rem', color: error ? '#ef4444' : '#4ade80', fontWeight: 700 }}>
+                {error ? 'FEED OFFLINE' : 'SQUAWK LIVE'}
+              </span>
            </div>
         </div>
       </header>
@@ -71,21 +92,23 @@ const NewsTerminal: React.FC = () => {
       {/* Institutional Narrative Section */}
       <div className="settings-card" style={{ marginTop: '1.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.02) 100%)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-           <h2 className="settings-section-title" style={{ fontSize: '1.1rem', margin: 0 }}>🧠 AI-Curated Market Narrative</h2>
-           <span style={{ fontSize: '0.7rem', color: '#8b9ab8' }}>Refreshed 2m ago</span>
+           <h2 className="settings-section-title" style={{ fontSize: '1.1rem', margin: 0 }}>🧠 AI Sentiment Analysis</h2>
+           <span style={{ fontSize: '0.7rem', color: '#8b9ab8' }}>Syncing: {isLoading ? 'Working...' : 'Live'}</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
            <div>
-              <span style={{ fontSize: '0.65rem', color: '#8b9ab8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Mood</span>
-              <p style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fca5a5' }}>{currentNarrative.mood}</p>
+              <span style={{ fontSize: '0.65rem', color: '#8b9ab8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Market Sentiment</span>
+              <p style={{ fontSize: '1.1rem', fontWeight: 800, color: currentNarrative.mood.includes('Bullish') ? '#4ade80' : currentNarrative.mood.includes('Bearish') ? '#fca5a5' : '#8b9ab8' }}>
+                {currentNarrative.mood}
+              </p>
            </div>
            <div style={{ gridColumn: 'span 2' }}>
-              <span style={{ fontSize: '0.65rem', color: '#8b9ab8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Market Driver</span>
-              <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>{currentNarrative.reason}</p>
+              <span style={{ fontSize: '0.65rem', color: '#8b9ab8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Institutional Driver</span>
+              <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>{currentNarrative.reason}</p>
            </div>
            <div>
-              <span style={{ fontSize: '0.65rem', color: '#8b9ab8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Watch</span>
-              <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#4ade80' }}>{currentNarrative.topAsset}</p>
+              <span style={{ fontSize: '0.65rem', color: '#8b9ab8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Latest Focus</span>
+              <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#3b82f6' }}>{currentNarrative.topAsset}</p>
            </div>
         </div>
       </div>
@@ -96,32 +119,44 @@ const NewsTerminal: React.FC = () => {
         <div className="settings-card" style={{ display: 'flex', flexDirection: 'column', padding: 0 }}>
           <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 className="settings-section-title" style={{ margin: 0 }}>Institutional Headlines</h2>
-            <button className="btn btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}>Filter Alerts</button>
+            <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)' }}>LIVE TICKER</span>
           </div>
+          
           <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-            {squawks.map((s) => (
-              <div key={s.id} style={{ 
-                padding: '1rem', 
-                borderBottom: '1px solid rgba(255,255,255,0.03)', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '0.5rem',
-                borderLeft: s.priority === 'high' ? '3px solid #ef4444' : '3px solid transparent'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                  <span style={{ color: '#8b9ab8', fontFamily: 'monospace' }}>[{s.time} UTC]</span>
-                  <span style={{ 
-                     color: s.impact.includes('Bullish') ? '#4ade80' : s.impact.includes('Bearish') ? '#f87171' : '#8b9ab8', 
-                     fontWeight: 700, 
-                     fontSize: '0.7rem', 
-                     textTransform: 'uppercase' 
-                  }}>
-                    {s.impact}
-                  </span>
+            {isLoading && headlines.length === 0 ? (
+               <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.5, fontStyle: 'italic' }}>Initializing secure news link...</div>
+            ) : error ? (
+               <div style={{ padding: '2rem', textAlign: 'center', color: '#fca5a5' }}>
+                  {error === 'Alpha Vantage Key Required' 
+                    ? '⚠️ Please add your Alpha Vantage API Key in Settings to enable Live Squawk.' 
+                    : error}
+               </div>
+            ) : (
+              headlines.map((h) => (
+                <div key={h.id} style={{ 
+                  padding: '1rem', 
+                  borderBottom: '1px solid rgba(255,255,255,0.03)', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '0.5rem',
+                  borderLeft: Math.abs(h.sentimentScore) > 0.4 ? '3px solid var(--accent)' : '3px solid transparent'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                    <span style={{ color: '#8b9ab8', fontFamily: 'monospace' }}>[{h.time}] — {h.source}</span>
+                    <span style={{ 
+                       color: h.sentiment.includes('Bullish') ? '#4ade80' : h.sentiment.includes('Bearish') ? '#f87171' : '#8b9ab8', 
+                       fontWeight: 700, 
+                       textTransform: 'uppercase' 
+                    }}>
+                      {h.sentiment}
+                    </span>
+                  </div>
+                  <a href={h.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.5, fontWeight: Math.abs(h.sentimentScore) > 0.3 ? 700 : 400 }}>{h.title}</p>
+                  </a>
                 </div>
-                <p style={{ fontSize: '0.9rem', lineHeight: 1.5, fontWeight: s.priority === 'high' ? 700 : 400 }}>{s.content}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

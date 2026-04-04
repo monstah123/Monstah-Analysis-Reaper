@@ -38,13 +38,20 @@ const Sentiment: React.FC = () => {
 
   const cotChartData = useMemo(() => {
     return sortedAssets.map(a => {
-      // For now COT remains a stable pseudo calculation since CFTC data updates weekly not minutely 
-      let pct = 50 + (a.cot * 15);
-      if (pct > 95) pct = 95; if (pct < 5) pct = 5;
+      const total = (a.cotLong || 0) + (a.cotShort || 0);
+      let longPct = 50;
+      let shortPct = 50;
+      
+      if (total > 0) {
+        longPct = Math.round(((a.cotLong || 0) / total) * 100);
+        shortPct = 100 - longPct;
+      }
+      
       return {
         name: a.name,
         cotScore: a.cot,
-        long: pct, short: 100 - pct
+        long: longPct, 
+        short: shortPct
       };
     });
   }, [sortedAssets]);

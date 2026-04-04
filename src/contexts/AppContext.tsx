@@ -135,95 +135,80 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // Fallback sparklines for assets without live data
     // 3. Fetch US Macro Fundamentals via FRED
-    let updatedAssets = [...assets]; // Reset to current config to clear old state, then apply new score overrides
-    
+    let scores = { gdp: 0, inflation: 0, interestRates: 0, employmentChange: 0, unemploymentRate: 0 };
     if (apiKeys.fred) {
       try {
         const fredData = await fetchAllFredData(apiKeys.fred);
-        
-        // Extract latest data points
         const gdpV = fredData.GDP_GROWTH?.[0]?.value ?? 2.0; 
-        const cpiV = fredData.CPI?.[0]?.value ?? 3.0; // pc1 (YoY %)
+        const cpiV = fredData.CPI?.[0]?.value ?? 3.0;
         const unempV = fredData.UNEMPLOYMENT?.[0]?.value ?? 4.0;
         const ratesV = fredData.FED_FUNDS?.[0]?.value ?? 5.25;
-        // Nonfarm payrolls are gross levels; diff them for "change" in thousands
-        const currJobs = fredData.NONFARM_PAYROLLS?.[0]?.value || 0;
-        const prevJobs = fredData.NONFARM_PAYROLLS?.[1]?.value || 0;
-        const jobsV = currJobs - prevJobs;
+        const jobsV = (fredData.NONFARM_PAYROLLS?.[0]?.value || 0) - (fredData.NONFARM_PAYROLLS?.[1]?.value || 0);
 
-        // Convert raw fundamental economic numbers into -2 to +2 scores (EdgeFinder style logic)
         const getGdpScore = (v: number) => v >= 3 ? 2 : v >= 2 ? 1 : v < 0 ? -2 : v < 1 ? -1 : 0;
-        const getCpiScore = (v: number) => v >= 4.5 ? -2 : v >= 3.5 ? -1 : v <= 2.5 ? 2 : 0; // high inflation = bearish for equities
+        const getCpiScore = (v: number) => v >= 4.5 ? -2 : v >= 3.5 ? -1 : v <= 2.5 ? 2 : 0;
         const getRatesScore = (v: number) => v >= 5.0 ? -1 : v <= 2.5 ? 1 : 0;
-        const getJobsScore = (v: number) => v >= 250 ? 2 : v >= 150 ? 1 : v < 50 ? -2 : 0; // +250k jobs is highly bullish
+        const getJobsScore = (v: number) => v >= 250 ? 2 : v >= 150 ? 1 : v < 50 ? -2 : 0;
 
-        const scores = {
+        scores = {
           gdp: getGdpScore(gdpV),
           inflation: getCpiScore(cpiV),
           interestRates: getRatesScore(ratesV),
           employmentChange: getJobsScore(jobsV),
           unemploymentRate: unempV > 4.2 ? -1 : unempV < 3.8 ? 1 : 0
         };
-
-        // --- 4. Official Institutional COT Positioning (Via Pure CFTC Proxy) ---
-        let cotData: Record<string, any> = {};
-        try {
-          const cotRes = await fetch('/api/cot');
-          if (cotRes.ok) {
-            const cotJson = await cotRes.json();
-            if (cotJson.success) cotData = cotJson.cot;
-          }
-        } catch (e) {
-          console.warn('[AppContext] COT Feed (CFTC) not available locally.');
-        }
-
-        // Apply these fundamental scores and official COT data to all assets
-        updatedAssets = updatedAssets.map(a => {
-          const cot = cotData[a.id];
-          
-          // Calculate Institutional Impact Score (-2 to +2)
-          let cotImpact = 0;
-          let cotL = a.cotLong; 
-          let cotS = a.cotShort;
-
-          if (cot) {
-             const total = cot.long + cot.short;
-             const longPct = total > 0 ? cot.long / total : 0.5;
-             cotImpact = longPct >= 0.75 ? 2 : longPct >= 0.60 ? 1 : longPct <= 0.25 ? -2 : longPct <= 0.40 ? -1 : 0;
-             cotL = Math.round(cot.long / 1000); // UI displays in thousands
-             cotS = Math.round(cot.short / 1000);
-          }
-
-          // Complete Smart Money Score calculation!
-          const newTotals = (a.trend || 0) + cotImpact + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
-          
-          return {
-            ...a,
-            gdp: scores.gdp,
-            inflation: scores.inflation,
-            interestRates: scores.interestRates,
-            employmentChange: scores.employmentChange,
-            unemploymentRate: scores.unemploymentRate,
-            cotLong: cotL,
-            cotShort: cotS,
-            cot: cotImpact,
-            score: newTotals
-          };
-        });
-
       } catch (e) {
         console.warn('[AppContext] FRED fetch failed:', e);
       }
     }
+
+    // --- 4. Official Institutional COT Positioning (Via Pure CFTC Proxy) ---
+    // This is INDEPENDENT of FRED/Alpha keys
+    let cotData: Record<string, any> = {};
+    try {
+      const cotRes = await fetch('/api/cot');
+      if (cotRes.ok) {
+        const cotJson = await cotRes.json();
+        if (cotJson.success) cotData = cotJson.cot;
+      }
+    } catch (e) {
+      console.warn('[AppContext] COT Feed (CFTC) not available locally.');
+    }
+
+    // Apply all layers of data to assets
+    const updatedAssets = assets.map(a => {
+      const cot = cotData[a.id];
+      let cotImpact = a.cot || 0;
+      let cotL = a.cotLong; 
+      let cotS = a.cotShort;
+
+      if (cot) {
+        const total = cot.long + cot.short;
+        const longPct = total > 0 ? cot.long / total : 0.5;
+        cotImpact = longPct >= 0.70 ? 2 : longPct >= 0.55 ? 1 : longPct <= 0.30 ? -2 : longPct <= 0.45 ? -1 : 0;
+        cotL = Math.round(cot.long / 1000);
+        cotS = Math.round(cot.short / 1000);
+      }
+
+      const newTotals = (a.trend || 0) + cotImpact + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+      
+      return {
+        ...a,
+        ...scores,
+        cotLong: cotL,
+        cotShort: cotS,
+        cot: cotImpact,
+        score: newTotals
+      };
+    });
 
     setAssets(updatedAssets);
     setMarketData((prev) => ({ ...prev, ...updates }));
     setLastRefresh(new Date());
     setIsRefreshing(false);
     refreshRef.current = false;
-  }, [apiKeys.alphaVantage, apiKeys.fred]);
+  }, [apiKeys.alphaVantage, apiKeys.fred, assets]);
 
   const updateMarketPrice = useCallback((assetId: string, p: number) => {
     setMarketData((prev) => ({

@@ -166,7 +166,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // --- 4. Official Institutional COT Positioning (Via Pure CFTC Proxy) ---
     let cotData: Record<string, any> = {};
     try {
-      const cotRes = await fetch(`/api/cot?t=${Date.now()}`);
+      const cotRes = await fetch('/api/cot', {
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
       if (cotRes.ok) {
         const cotJson = await cotRes.json();
         if (cotJson.success) cotData = cotJson.cot;

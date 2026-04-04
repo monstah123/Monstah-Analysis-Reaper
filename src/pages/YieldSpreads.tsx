@@ -10,7 +10,9 @@ const YieldSpreads: React.FC = () => {
   const fetchYields = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/yields?t=${Date.now()}`);
+      const res = await fetch('/api/yields', {
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
       if (!res.ok) throw new Error('FRED Proxy Offline');
       const data = await res.json();
       if (data.success) {

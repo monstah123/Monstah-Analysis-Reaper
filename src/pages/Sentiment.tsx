@@ -15,11 +15,14 @@ const Sentiment: React.FC = () => {
     const fetchLiveSentiment = async () => {
       const updates: Record<string, { long: number; short: number; source: string }> = {};
       
-      await Promise.all(assets.map(async (a) => {
+      await Promise.all(assets.map(async (a, index) => {
+        // Stagger for Safari
+        await new Promise(r => setTimeout(r, index * 60)); 
+        
         try {
-          // In production, this hits Vercel. Locally via Vite, it may 404 unless vercel CLI is running.
-          const res = await fetch(`/api/sentiment?asset=${a.id}&category=${a.category}`);
-          if (!res.ok) throw new Error('Proxy not found');
+          const res = await fetch(`/api/sentiment?asset=${a.id}&category=${a.category}`, {
+            headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+          });
           const data = await res.json();
           updates[a.id] = data;
         } catch (e) {

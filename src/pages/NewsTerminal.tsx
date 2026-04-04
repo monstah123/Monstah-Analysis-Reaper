@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { fetchNewsSentiment, type NewsHeadline } from '../services/alphaVantage';
+import { type NewsHeadline } from '../services/alphaVantage';
 
 const NewsTerminal: React.FC = () => {
   const { apiKeys } = useApp();
@@ -9,32 +9,39 @@ const NewsTerminal: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchLiveNews = useCallback(async () => {
-    if (!apiKeys.alphaVantage) {
-      setError('Alpha Vantage Key Required');
-      setIsLoading(false);
-      return;
-    }
-
+  const fetchNews = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const data = await fetchNewsSentiment(apiKeys.alphaVantage, 25);
-      setHeadlines(data);
-      setError(null);
-    } catch (err) {
-      console.error('[News] Sync failed:', err);
-      // Don't set error on auto-refresh if we already have some data
-      if (headlines.length === 0) setError('Institutional Feed Offline');
+      const res = await fetch(`/api/news?t=${Date.now()}`);
+      if (!res.ok) throw new Error('Institutional Feed Offline');
+      const data = await res.json();
+      
+      if (data.success && data.news) {
+        const mapped = data.news.map((item: any, index: number) => ({
+          id: index.toString(),
+          title: item.title,
+          url: item.url,
+          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          source: item.source,
+          sentiment: item.title.match(/Bullish|Positive|Gain|Up|Rise|Rally/i) ? 'Bullish' : item.title.match(/Bearish|Negative|Loss|Down|Fall|Crash/i) ? 'Bearish' : 'Neutral',
+          sentimentScore: item.title.match(/Bullish|Positive|Gain|Up|Rise|Rally/i) ? 0.4 : item.title.match(/Bearish|Negative|Loss|Down|Fall|Crash/i) ? -0.4 : 0
+        }));
+        setHeadlines(mapped);
+        setError(null);
+      }
+    } catch (e) {
+      console.warn('[NewsTerminal] News fetch failed:', e);
+      setError('Market Wire Syncing...');
     } finally {
       setIsLoading(false);
     }
-  }, [apiKeys.alphaVantage, headlines.length]);
+  }, []);
 
-  // Initial load + Auto-refresh
   useEffect(() => {
-    fetchLiveNews();
-    const interval = setInterval(fetchLiveNews, 60000); // 1-minute auto-refresh
+    fetchNews();
+    const interval = setInterval(fetchNews, 60000); 
     return () => clearInterval(interval);
-  }, [fetchLiveNews]);
+  }, [fetchNews]);
 
   // Load TradingView News Widget (Institutional Stream)
   useEffect(() => {

@@ -172,8 +172,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (cotRes.ok) {
         const cotJson = await cotRes.json();
         if (cotJson.success) cotData = cotJson.cot;
+      } else {
+        throw new Error('COT Proxy Offline');
       }
     } catch (e) {
+      if (window.location.hostname === 'localhost') {
+        cotData = {
+          'DOW': { long: 68, short: 32 },
+          'NIKKEI': { long: 71, short: 29 },
+          'GOLD': { long: 65, short: 35 },
+          'COPPER': { long: 48, short: 52 },
+          'SILVER': { long: 45, short: 55 },
+          'GBP/JPY': { long: 42, short: 58 },
+          'DAX': { long: 52, short: 48 },
+          'GBP/NZD': { long: 40, short: 60 },
+          'USOIL': { long: 55, short: 45 },
+          'EUR/USD': { long: 48, short: 52 },
+          'AUD/USD': { long: 42, short: 58 },
+          'ETHEREUM': { long: 58, short: 42 },
+          'USD/JPY': { long: 32, short: 68 },
+          'S&P 500': { long: 42, short: 58 },
+          'NASDAQ': { long: 45, short: 55 },
+          'BITCOIN': { long: 62, short: 38 },
+          'SOLANA': { long: 55, short: 45 },
+          'NZD/USD': { long: 38, short: 62 }
+        };
+      }
       console.warn('[AppContext] COT Feed (CFTC) not available.');
     }
 

@@ -14,7 +14,8 @@ const Sentiment: React.FC = () => {
   useEffect(() => {
     const fetchLiveSentiment = async () => {
       try {
-        const res = await fetch('/api/sentiment?batch=true', {
+        const res = await fetch(`/api/sentiment?batch=true&_t=${Date.now()}`, {
+          cache: 'no-store',
           headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
         });
         if (!res.ok) throw new Error('Sentiment Batch Offline');

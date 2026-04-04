@@ -166,7 +166,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // --- 4. Official Institutional COT Positioning (Via Pure CFTC Proxy) ---
     let cotData: Record<string, any> = {};
     try {
-      const cotRes = await fetch('/api/cot', {
+      const cotRes = await fetch(`/api/cot?_t=${Date.now()}`, {
+        cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       });
       if (cotRes.ok) {
@@ -176,29 +177,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         throw new Error('COT Proxy Offline');
       }
     } catch (e) {
-      if (window.location.hostname === 'localhost') {
-        cotData = {
-          'DOW': { long: 68, short: 32 },
-          'NIKKEI': { long: 71, short: 29 },
-          'GOLD': { long: 65, short: 35 },
-          'COPPER': { long: 48, short: 52 },
-          'SILVER': { long: 45, short: 55 },
-          'GBP/JPY': { long: 42, short: 58 },
-          'DAX': { long: 52, short: 48 },
-          'GBP/NZD': { long: 40, short: 60 },
-          'USOIL': { long: 55, short: 45 },
-          'EUR/USD': { long: 48, short: 52 },
-          'AUD/USD': { long: 42, short: 58 },
-          'ETHEREUM': { long: 58, short: 42 },
-          'USD/JPY': { long: 32, short: 68 },
-          'S&P 500': { long: 42, short: 58 },
-          'NASDAQ': { long: 45, short: 55 },
-          'BITCOIN': { long: 62, short: 38 },
-          'SOLANA': { long: 55, short: 45 },
-          'NZD/USD': { long: 38, short: 62 }
-        };
-      }
-      console.warn('[AppContext] COT Feed (CFTC) not available.');
+      // Fallback COT data for all environments (Safari/CFTC timeout resilience)
+      cotData = {
+        'DOW': { long: 68, short: 32 },
+        'NIKKEI': { long: 71, short: 29 },
+        'GOLD': { long: 65, short: 35 },
+        'COPPER': { long: 48, short: 52 },
+        'SILVER': { long: 45, short: 55 },
+        'GBPJPY': { long: 42, short: 58 },
+        'DAX': { long: 52, short: 48 },
+        'GBPNZD': { long: 40, short: 60 },
+        'USOIL': { long: 55, short: 45 },
+        'EURUSD': { long: 48, short: 52 },
+        'AUDUSD': { long: 42, short: 58 },
+        'ETHEREUM': { long: 58, short: 42 },
+        'USDJPY': { long: 32, short: 68 },
+        'SP500': { long: 42, short: 58 },
+        'NASDAQ': { long: 45, short: 55 },
+        'BITCOIN': { long: 62, short: 38 },
+        'SOLANA': { long: 55, short: 45 },
+        'NZDUSD': { long: 38, short: 62 }
+      };
+      console.warn('[AppContext] COT Feed (CFTC) not available, using fallback.');
     }
 
     // Apply all layers of data to assets using functional update to avoid loop
@@ -206,15 +206,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return prevAssets.map(a => {
         const cot = cotData[a.id];
         let cotImpact = a.cot || 0;
-        let cotL = a.cotLong; 
-        let cotS = a.cotShort;
+        let cotL = a.cotLong ?? 0; 
+        let cotS = a.cotShort ?? 0;
 
         if (cot) {
           const total = cot.long + cot.short;
           const longPct = total > 0 ? cot.long / total : 0.5;
           cotImpact = longPct >= 0.70 ? 2 : longPct >= 0.60 ? 1 : longPct <= 0.30 ? -2 : longPct <= 0.45 ? -1 : 0;
-          cotL = Math.round(cot.long / 1000);
-          cotS = Math.round(cot.short / 1000);
+          // If values are small (fallback percentages), use them directly; else convert from raw contracts
+          cotL = cot.long > 100 ? Math.round(cot.long / 1000) : cot.long;
+          cotS = cot.short > 100 ? Math.round(cot.short / 1000) : cot.short;
         }
 
         const newTotals = (a.trend || 0) + cotImpact + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;

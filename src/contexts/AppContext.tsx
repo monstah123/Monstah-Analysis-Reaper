@@ -176,39 +176,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('[AppContext] COT Feed (CFTC) not available locally.');
     }
 
-    // Apply all layers of data to assets
-    const updatedAssets = assets.map(a => {
-      const cot = cotData[a.id];
-      let cotImpact = a.cot || 0;
-      let cotL = a.cotLong; 
-      let cotS = a.cotShort;
+    // Apply all layers of data to assets using functional update to avoid loop
+    setAssets(prevAssets => {
+      return prevAssets.map(a => {
+        const cot = cotData[a.id];
+        let cotImpact = a.cot || 0;
+        let cotL = a.cotLong; 
+        let cotS = a.cotShort;
 
-      if (cot) {
-        const total = cot.long + cot.short;
-        const longPct = total > 0 ? cot.long / total : 0.5;
-        cotImpact = longPct >= 0.70 ? 2 : longPct >= 0.55 ? 1 : longPct <= 0.30 ? -2 : longPct <= 0.45 ? -1 : 0;
-        cotL = Math.round(cot.long / 1000);
-        cotS = Math.round(cot.short / 1000);
-      }
+        if (cot) {
+          const total = cot.long + cot.short;
+          const longPct = total > 0 ? cot.long / total : 0.5;
+          cotImpact = longPct >= 0.70 ? 2 : longPct >= 0.60 ? 1 : longPct <= 0.30 ? -2 : longPct <= 0.45 ? -1 : 0;
+          cotL = Math.round(cot.long / 1000);
+          cotS = Math.round(cot.short / 1000);
+        }
 
-      const newTotals = (a.trend || 0) + cotImpact + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
-      
-      return {
-        ...a,
-        ...scores,
-        cotLong: cotL,
-        cotShort: cotS,
-        cot: cotImpact,
-        score: newTotals
-      };
+        const newTotals = (a.trend || 0) + cotImpact + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+        
+        return {
+          ...a,
+          ...scores,
+          cotLong: cotL,
+          cotShort: cotS,
+          cot: cotImpact,
+          score: newTotals
+        };
+      });
     });
 
-    setAssets(updatedAssets);
     setMarketData((prev) => ({ ...prev, ...updates }));
     setLastRefresh(new Date());
     setIsRefreshing(false);
     refreshRef.current = false;
-  }, [apiKeys.alphaVantage, apiKeys.fred, assets]);
+  }, [apiKeys.alphaVantage, apiKeys.fred]);
 
   const updateMarketPrice = useCallback((assetId: string, p: number) => {
     setMarketData((prev) => ({

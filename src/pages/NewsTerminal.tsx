@@ -3,7 +3,7 @@ import { useApp } from '../contexts/AppContext';
 import { type NewsHeadline } from '../services/alphaVantage';
 
 const NewsTerminal: React.FC = () => {
-  const { apiKeys } = useApp();
+  const { } = useApp();
   const newsContainerRef = useRef<HTMLDivElement>(null);
   const [headlines, setHeadlines] = useState<NewsHeadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);

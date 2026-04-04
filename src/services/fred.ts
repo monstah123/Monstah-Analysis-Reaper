@@ -8,6 +8,17 @@ export const FRED_SERIES = {
   FED_FUNDS: 'FEDFUNDS',            // Federal Funds Rate (monthly)
   RETAIL_SALES: 'RSAFS',            // Advance Retail Sales (monthly)
   NONFARM_PAYROLLS: 'PAYEMS',       // Nonfarm Payroll Employment (monthly)
+  // Institutional COT (Non-Commercial Speculative Positions)
+  COT_EUR_L: 'CFTC_103601_F_L_NC', 
+  COT_EUR_S: 'CFTC_103601_F_S_NC',
+  COT_GBP_L: 'CFTC_133741_F_L_NC',
+  COT_GBP_S: 'CFTC_133741_F_S_NC',
+  COT_JPY_L: 'CFTC_097741_F_L_NC',
+  COT_JPY_S: 'CFTC_097741_F_S_NC',
+  COT_AUD_L: 'CFTC_232741_F_L_NC',
+  COT_AUD_S: 'CFTC_232741_F_S_NC',
+  COT_GOLD_L: 'CFTC_088691_F_L_NC',
+  COT_GOLD_S: 'CFTC_088691_F_S_NC',
 } as const;
 
 export type FredSeriesKey = keyof typeof FRED_SERIES;

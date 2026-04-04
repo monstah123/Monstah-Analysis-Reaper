@@ -3,7 +3,7 @@ import type { AssetData } from '../data/mockData';
 import { mockAssets, generateMockSparkline } from '../data/mockData';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
 import { fetchForexRate, fetchForexHistory } from '../services/alphaVantage';
-import { fetchAllFredData } from '../services/fred';
+import { fetchAllFredData, FRED_SERIES } from '../services/fred';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface ApiKeys {
@@ -167,10 +167,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           unemploymentRate: unempV > 4.2 ? -1 : unempV < 3.8 ? 1 : 0
         };
 
-        // Apply these fundamental scores to all assets globally (for simplistic US-dominant MVP)
+        // COT Mapping Logic
+        const getCot = (lKey: keyof typeof FRED_SERIES, sKey: keyof typeof FRED_SERIES) => {
+          const l = fredData[lKey]?.[0]?.value || 0;
+          const s = fredData[sKey]?.[0]?.value || 0;
+          return { long: l, short: s };
+        };
+
+        const cotMap: Record<string, { long: number; short: number }> = {
+          'EURUSD': getCot('COT_EUR_L', 'COT_EUR_S'),
+          'GBPUSD': getCot('COT_GBP_L', 'COT_GBP_S'),
+          'AUDUSD': getCot('COT_AUD_L', 'COT_AUD_S'),
+          'USDJPY': getCot('COT_JPY_L', 'COT_JPY_S'),
+          'GOLD': getCot('COT_GOLD_L', 'COT_GOLD_S'),
+        };
+
+        // Apply these fundamental scores and COT data to all assets
         updatedAssets = updatedAssets.map(a => {
-          // Calculate newly compounded Total Score!
-          const newTotals = a.trend + a.cot + a.retailPos + a.seasonality + a.mPMI + a.sPMI + a.retailSales + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+          const cot = cotMap[a.id];
+          
+          // Calculate COT impact (-2 to +2)
+          let cotImpact = 0;
+          if (cot) {
+             const total = cot.long + cot.short;
+             const longPct = total > 0 ? cot.long / total : 0.5;
+             cotImpact = longPct >= 0.65 ? 2 : longPct >= 0.55 ? 1 : longPct <= 0.35 ? -2 : longPct <= 0.45 ? -1 : 0;
+          }
+
+          // Total Score calculation!
+          const newTotals = (a.trend || 0) + cotImpact + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+          
           return {
             ...a,
             gdp: scores.gdp,
@@ -178,6 +204,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             interestRates: scores.interestRates,
             employmentChange: scores.employmentChange,
             unemploymentRate: scores.unemploymentRate,
+            cotLong: cot ? Math.round(cot.long / 1000) : a.cotLong, // Normalize to thousands
+            cotShort: cot ? Math.round(cot.short / 1000) : a.cotShort,
+            cot: cotImpact,
             score: newTotals
           };
         });

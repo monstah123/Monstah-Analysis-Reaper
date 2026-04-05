@@ -90,11 +90,13 @@ async function fetchLiveOutlook() {
       params: { session: newSession },
       timeout: 8000,
     });
-    if (retry.data.error) throw new Error('Myfxbook outlook failed after re-auth');
+    if (retry.data.error) throw new Error(`Myfxbook outlook failed after re-auth: ${retry.data.message}`);
     cachedData = retry.data;
     cacheTimestamp = Date.now();
     return { data: retry.data, fromCache: false };
   }
+
+  if (res.data.error) throw new Error(`Myfxbook outlook failed: ${res.data.message}`);
 
   cachedData = res.data;
   cacheTimestamp = Date.now();

@@ -1,4 +1,4 @@
-const BASE = 'https://api.stlouisfed.org/fred/series/observations';
+// Base URL is no longer used directly because we proxy via Vercel
 
 /** Key FRED series IDs for US macro data */
 export const FRED_SERIES = {
@@ -31,11 +31,11 @@ export interface FredObservation {
 /** Fetch latest N observations for a FRED series */
 export async function fetchFredSeries(
   seriesId: string,
-  apiKey: string,
+  _apiKey?: string, // Kept for interface compatibility, but backend handles it now
   limit = 2,
   units = 'lin' // 'lin' = levels, 'pc1' = % change from year ago
 ): Promise<FredObservation[]> {
-  const url = `${BASE}?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=${limit}&units=${units}`;
+  const url = `/api/fred?series_id=${seriesId}&limit=${limit}&units=${units}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`FRED error ${res.status}`);
   const json = await res.json();

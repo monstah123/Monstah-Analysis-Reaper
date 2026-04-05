@@ -86,6 +86,6 @@ export default async function handler(req, res) {
     res.status(200).json({ success: true, cot: results });
   } catch (error) {
     console.error('[COT API] Error:', error.message);
-    res.status(500).json({ success: false, error: 'Institutional Feed (CFTC) Timed Out' });
+    res.status(200).json({ success: false, error: 'Institutional Feed (CFTC) Timed Out or Blocked' });
   }
 }

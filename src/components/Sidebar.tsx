@@ -1,26 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useApp } from '../contexts/AppContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useWatchlist } from '../contexts/WatchlistContext';
 
 const analysisItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: '⚡' },
-  { id: 'fundamental', label: 'Fundamental', icon: '📊' },
-  { id: 'sentiment', label: 'Sentiment', icon: '📡' },
-  { id: 'technical', label: 'Technical', icon: '📈' },
-  { id: 'yield-spreads', label: 'Yield Spreads', icon: '🏛️' },
-  { id: 'news-terminal', label: 'News Terminal', icon: '📻' },
-  { id: 'ai-insight', label: 'AI Insight', icon: '🤖' },
-  { id: 'calendar', label: 'Calendar', icon: '📅' },
-  { id: 'correlation', label: 'Correlation', icon: '🌡️' },
-  { id: 'cot-deep-dive', label: 'COT Deep-Dive', icon: '🗳️' },
+  { id: 'dashboard',    label: 'Dashboard',    icon: '⚡' },
+  { id: 'watchlist',   label: 'Watchlist',    icon: '⭐' },
+  { id: 'fundamental', label: 'Fundamental',  icon: '📊' },
+  { id: 'sentiment',   label: 'Sentiment',    icon: '📡' },
+  { id: 'technical',   label: 'Technical',    icon: '📈' },
+  { id: 'yield-spreads',  label: 'Yield Spreads',  icon: '🏛️' },
+  { id: 'news-terminal',  label: 'News Terminal',  icon: '📻' },
+  { id: 'ai-insight',     label: 'AI Insight',     icon: '🤖' },
+  { id: 'calendar',       label: 'Calendar',       icon: '📅' },
+  { id: 'correlation',    label: 'Correlation',    icon: '🌡️' },
+  { id: 'cot-deep-dive',  label: 'COT Deep-Dive',  icon: '🗳️' },
 ];
 
 const marketItems = [
-  { id: 'forex', label: 'Forex', icon: '💱' },
-  { id: 'indices', label: 'Indices', icon: '🏦' },
+  { id: 'forex',       label: 'Forex',       icon: '💱' },
+  { id: 'indices',     label: 'Indices',     icon: '🏦' },
   { id: 'commodities', label: 'Commodities', icon: '🛢️' },
-  { id: 'crypto', label: 'Crypto', icon: '₿' },
+  { id: 'crypto',      label: 'Crypto',      icon: '₿'  },
 ];
-
-import { useApp } from '../contexts/AppContext';
 
 interface SidebarProps {
   activeView: string;
@@ -29,7 +31,10 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
   const { assets, setSelectedAsset } = useApp();
-  
+  const { user, logout }             = useAuth();
+  const { watchlist }                = useWatchlist();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
   const topReaps = [...assets]
     .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
     .slice(0, 3);
@@ -42,6 +47,30 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
           Monstah <span>Reaper</span>
         </span>
       </div>
+
+      {/* ── User profile strip ─────────────────────────────────── */}
+      {user && (
+        <div className="sidebar-user" onClick={() => setShowUserMenu((p) => !p)}>
+          <img
+            src={user.photoURL ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName ?? 'U')}&background=3b82f6&color=fff`}
+            alt="avatar"
+            className="sidebar-avatar"
+          />
+          <div className="sidebar-user-info">
+            <span className="sidebar-user-name">{user.displayName ?? 'User'}</span>
+            <span className="sidebar-user-email">{user.email}</span>
+          </div>
+          <span className="sidebar-user-chevron">{showUserMenu ? '▲' : '▼'}</span>
+
+          {showUserMenu && (
+            <div className="sidebar-user-menu">
+              <button className="sidebar-user-menu-item" onClick={(e) => { e.stopPropagation(); logout(); }}>
+                <span>🚪</span> Sign Out
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <nav className="nav-group">
         <p className="nav-title">Top Reaps (Confluence)</p>
@@ -74,6 +103,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
           >
             <span className="nav-icon">{item.icon}</span>
             {item.label}
+            {/* Watchlist badge */}
+            {item.id === 'watchlist' && watchlist.length > 0 && (
+              <span className="nav-watchlist-badge">{watchlist.length}</span>
+            )}
           </button>
         ))}
       </nav>

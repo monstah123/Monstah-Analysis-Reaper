@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { AssetData } from '../data/mockData';
 import { useApp } from '../contexts/AppContext';
+import { useWatchlist } from '../contexts/WatchlistContext';
 import InteractiveChart from './InteractiveChart';
 import ScoreBreakdown from './ScoreBreakdown';
 import TradingViewPrice from './TradingViewPrice';
@@ -41,6 +42,7 @@ const getTvSymbol = (id: string): string | null => {
 };
 const AssetDrawer: React.FC = () => {
   const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing, removeAsset } = useApp();
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
   const [isFullscreenChart, setIsFullscreenChart] = useState(false);
   const open = !!selectedAsset;
 
@@ -89,16 +91,29 @@ const AssetDrawer: React.FC = () => {
             <h2 className="drawer-asset-name">{selectedAsset.name}</h2>
             <span className={`bias-badge ${getBiasClass(selectedAsset.bias)}`}>{selectedAsset.bias}</span>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <button
+              className={`watchlist-star-btn ${isInWatchlist(selectedAsset.id) ? 'starred' : ''}`}
+              onClick={() => {
+                if (isInWatchlist(selectedAsset.id)) {
+                  removeFromWatchlist(selectedAsset.id);
+                } else {
+                  addToWatchlist({ id: selectedAsset.id, name: selectedAsset.name, category: selectedAsset.category, addedAt: Date.now() });
+                }
+              }}
+              title={isInWatchlist(selectedAsset.id) ? 'Remove from watchlist' : 'Add to watchlist'}
+            >
+              {isInWatchlist(selectedAsset.id) ? '⭐ Watching' : '☆ Watch'}
+            </button>
             <button 
               className="drawer-close" 
               onClick={() => {
-                if (window.confirm(`Remove ${selectedAsset.name} from watchlist?`)) {
+                if (window.confirm(`Remove ${selectedAsset.name} from your asset list?`)) {
                   removeAsset(selectedAsset.id);
                   setSelectedAsset(null);
                 }
               }} 
-              title="Remove from watchlist"
+              title="Remove asset"
               style={{ fontSize: '1rem', opacity: 0.5 }}
             >
               🗑️

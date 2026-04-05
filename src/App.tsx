@@ -1,3 +1,5 @@
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { WatchlistProvider } from './contexts/WatchlistContext';
 import { AppProvider, useApp } from './contexts/AppContext';
 import Sidebar from './components/Sidebar';
 import AssetDrawer from './components/AssetDrawer';
@@ -9,6 +11,8 @@ import Technical from './pages/Technical';
 import AIInsight from './pages/AIInsight';
 import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
+import Watchlist from './pages/Watchlist';
+import LoginPage from './pages/LoginPage';
 import './index.css';
 
 import Correlation from './pages/Correlation';
@@ -21,17 +25,18 @@ function AppContent() {
 
   const renderPage = () => {
     switch (activeView) {
-      case 'sentiment': return <Sentiment />;
-      case 'fundamental': return <Fundamental />;
-      case 'technical': return <Technical />;
-      case 'yield-spreads': return <YieldSpreads />;
-      case 'news-terminal': return <NewsTerminal />;
-      case 'ai-insight': return <AIInsight />;
-      case 'calendar': return <Calendar />;
-      case 'correlation': return <Correlation />;
-      case 'cot-deep-dive': return <COTDeepDive />;
-      case 'settings': return <Settings />;
-      default: return <Dashboard />;
+      case 'watchlist':    return <Watchlist />;
+      case 'sentiment':    return <Sentiment />;
+      case 'fundamental':  return <Fundamental />;
+      case 'technical':    return <Technical />;
+      case 'yield-spreads':  return <YieldSpreads />;
+      case 'news-terminal':  return <NewsTerminal />;
+      case 'ai-insight':     return <AIInsight />;
+      case 'calendar':       return <Calendar />;
+      case 'correlation':    return <Correlation />;
+      case 'cot-deep-dive':  return <COTDeepDive />;
+      case 'settings':       return <Settings />;
+      default:               return <Dashboard />;
     }
   };
 
@@ -49,11 +54,37 @@ function AppContent() {
   );
 }
 
-function App() {
+// Gates the full app behind auth
+function AuthGate() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="auth-loading-screen">
+        <div className="loading-spinner" />
+        <p>Loading Monstah Reaper…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
   return (
     <AppProvider>
-      <AppContent />
+      <WatchlistProvider>
+        <AppContent />
+      </WatchlistProvider>
     </AppProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   );
 }
 

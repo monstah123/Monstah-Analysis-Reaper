@@ -58,6 +58,10 @@ async function getSession() {
     params: { email, password },
     timeout: 8000,
     httpsAgent,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+    }
   });
 
   if (res.data.error) {
@@ -81,6 +85,10 @@ async function fetchLiveOutlook() {
     params: { session },
     timeout: 8000,
     httpsAgent,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+    }
   });
 
   if (res.data.error) {
@@ -91,6 +99,10 @@ async function fetchLiveOutlook() {
       params: { session: newSession },
       timeout: 8000,
       httpsAgent,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+      }
     });
     if (retry.data.error) throw new Error(`Myfxbook outlook failed after re-auth: ${retry.data.message}`);
     cachedData = retry.data;

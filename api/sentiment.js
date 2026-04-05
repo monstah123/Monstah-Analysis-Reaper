@@ -174,7 +174,8 @@ export default async function handler(req, res) {
 
     res.status(500).json({
       success: false,
-      error: 'Sentiment feed offline. Ensure MYFXBOOK_EMAIL and MYFXBOOK_PASSWORD are set in Vercel env vars.',
+      error: error.message || 'Sentiment feed offline',
+      hint: !process.env.MYFXBOOK_EMAIL ? 'MYFXBOOK_EMAIL is missing' : !process.env.MYFXBOOK_PASSWORD ? 'MYFXBOOK_PASSWORD is missing' : 'Credentials are set but login failed — check email/password',
     });
   }
 }

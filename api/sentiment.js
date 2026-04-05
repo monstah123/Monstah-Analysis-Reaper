@@ -1,20 +1,21 @@
 
 import axios from 'axios';
+import https from 'https';
 
 /**
  * LIVE Retail Sentiment Engine (Myfxbook Community Outlook)
- * Fetches REAL retail positioning data from Myfxbook's 100k+ trader community.
- * Sessions are IP-bound (Vercel), cached, and valid for 1 month.
- * Free tier: 100 requests/day — we cache aggressively to stay under.
+ * ...
  */
 
-// In-memory cache (persists across warm Vercel invocations)
+const httpsAgent = new https.Agent({ keepAlive: true });
+
+// In-memory cache
 let cachedSession = null;
 let cachedData = null;
 let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes — keeps us well under 100 req/day
+const CACHE_TTL = 5 * 60 * 1000;
 
-// Map Myfxbook symbol names to our app's asset IDs
+// Symbol map ...
 const SYMBOL_MAP = {
   'EURUSD': 'EURUSD',
   'GBPJPY': 'GBPJPY',
@@ -39,13 +40,11 @@ const SYMBOL_MAP = {
   'ETHUSD': 'ETHEREUM',
   'SOLUSD': 'SOLANA',
   'COPPER': 'COPPER',
-  // Common alternate names
   'GOLD':   'GOLD',
   'SILVER': 'SILVER',
 };
 
 async function getSession() {
-  // Return cached session if available
   if (cachedSession) return cachedSession;
 
   const email = process.env.MYFXBOOK_EMAIL;
@@ -58,6 +57,7 @@ async function getSession() {
   const res = await axios.get('https://www.myfxbook.com/api/login.json', {
     params: { email, password },
     timeout: 8000,
+    httpsAgent,
   });
 
   if (res.data.error) {
@@ -80,6 +80,7 @@ async function fetchLiveOutlook() {
   const res = await axios.get('https://www.myfxbook.com/api/get-community-outlook.json', {
     params: { session },
     timeout: 8000,
+    httpsAgent,
   });
 
   if (res.data.error) {
@@ -89,6 +90,7 @@ async function fetchLiveOutlook() {
     const retry = await axios.get('https://www.myfxbook.com/api/get-community-outlook.json', {
       params: { session: newSession },
       timeout: 8000,
+      httpsAgent,
     });
     if (retry.data.error) throw new Error(`Myfxbook outlook failed after re-auth: ${retry.data.message}`);
     cachedData = retry.data;

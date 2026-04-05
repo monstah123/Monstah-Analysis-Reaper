@@ -1,4 +1,4 @@
-const BASE = 'https://api.frankfurter.app';
+const BASE = 'https://api.frankfurter.dev/v1';
 
 export interface ForexRate {
   rate: number;

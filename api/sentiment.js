@@ -65,8 +65,8 @@ export default async function handler(req, res) {
       const str10 = tenDaysAgo.toISOString().split('T')[0];
       
       const [latestRes, pastRes] = await Promise.all([
-        axios.get('https://api.frankfurter.app/latest?from=USD', { timeout: 3000 }),
-        axios.get(`https://api.frankfurter.app/${str10}?from=USD`, { timeout: 3000 })
+        axios.get('https://api.frankfurter.dev/v1/latest?from=USD', { timeout: 3000 }),
+        axios.get(`https://api.frankfurter.dev/v1/${str10}?from=USD`, { timeout: 3000 })
       ]);
       const curr = latestRes.data.rates;
       const past = pastRes.data.rates;

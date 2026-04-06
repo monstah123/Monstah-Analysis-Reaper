@@ -15,7 +15,7 @@ const FX_ONLY = {
   'GBPJPY': { base: 'GBP', quote: 'JPY' }
 };
 
-const CACHE_DELAY = 30 * 1000; // 30s for live tuning
+const CACHE_DELAY = 5 * 60 * 1000; // 5m Production Cache
 let cachedData = null;
 let lastFetch = 0;
 
@@ -62,8 +62,8 @@ export default async function handler(req, res) {
         
         if (cRate && pRate) {
           const drift = ((cRate - pRate) / pRate) * 100;
-          // 44.5 baseline + 22.5x multiplier for absolute Myfxbook parity
-          const retailLong = Math.max(10, Math.min(90, Math.round(44.5 - (drift * 22.5))));
+          // 44 baseline + 34.5x multiplier for high-intensity retail herd tracking
+          const retailLong = Math.max(8, Math.min(92, Math.round(44 - (drift * 34.5))));
           results[id] = { long: retailLong, short: 100 - retailLong };
         }
       }

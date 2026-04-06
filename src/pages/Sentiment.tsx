@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const Sentiment: React.FC = () => {
   const { assets } = useApp();
@@ -140,7 +141,7 @@ const Sentiment: React.FC = () => {
 
         <div className="settings-card" style={{ height: '700px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 className="settings-section-title" style={{ margin: 0 }}>Retail Positioning (IG Index)</h2>
+            <h2 className="settings-section-title" style={{ margin: 0 }}>Retail Positioning (Official Feed)</h2>
             <span style={{ 
               display: 'inline-flex', alignItems: 'center', gap: '6px',
               fontSize: '0.7rem', color: symbolCount > 0 ? '#22c55e' : '#f59e0b',
@@ -153,10 +154,10 @@ const Sentiment: React.FC = () => {
                 animation: 'pulse-dot 2s infinite',
                 boxShadow: symbolCount > 0 ? '0 0 6px #22c55e' : '0 0 6px #f59e0b' 
               }} />
-              {symbolCount > 0 ? `LIVE · ${symbolCount} pairs` : sentimentSource}
+              {symbolCount > 0 ? `LIVE SYNC · ${symbolCount} pairs` : sentimentSource}
             </span>
           </div>
-          <p className="settings-hint">Live retail client positioning from IG Index. High long ratio = bearish contrarian signal.</p>
+          <p className="settings-hint">Live retail client positioning from official Myfxbook sources. High long ratio = bearish contrarian signal.</p>
           <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={retailChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
@@ -168,6 +169,24 @@ const Sentiment: React.FC = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </div>
+
+      {/* Official Myfxbook Outlook Widget Section */}
+      <div className="settings-card" style={{ marginTop: '2rem', minHeight: '400px', background: '#0f1623' }}>
+        <div id="myfxbook_visual_container" style={{ 
+          background: '#1a2333', 
+          padding: '20px', 
+          borderRadius: '8px',
+          border: '1px solid #1e2d48',
+          overflow: 'hidden'
+        }}>
+          <MyfxbookWidget />
+        </div>
+        <div style={{ marginTop: '10px', fontSize: '10px', opacity: 0.6 }}>
+          <a href="https://www.myfxbook.com" className="myfxbookLink" target="_blank" rel="noopener noreferrer">
+            Powered by Myfxbook.com
+          </a>
         </div>
       </div>
     </div>

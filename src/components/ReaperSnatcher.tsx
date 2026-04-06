@@ -1,10 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-/**
- * MyfxbookBridge: Provides the 100% official Myfxbook Retail Sentiment
- * by rendering the official widget and "snatching" the DOM data to sync the dashboard.
- */
-const MyfxbookBridge: React.FC = () => {
+const ReaperSnatcher: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const snatcherRef = useRef<any>(null);
 
@@ -66,10 +62,8 @@ const MyfxbookBridge: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ display: 'none' }} id="myfxbook_stealth_container" ref={containerRef}>
-      {/* Hidden container for the Myfxbook widget */}
-    </div>
+    <div id="reaper_snatcher_stealth" ref={containerRef} style={{ display: 'none' }}></div>
   );
 };
 
-export default MyfxbookBridge;
+export default ReaperSnatcher;

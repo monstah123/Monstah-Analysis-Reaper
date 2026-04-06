@@ -62,8 +62,8 @@ export default async function handler(req, res) {
         
         if (cRate && pRate) {
           const drift = ((cRate - pRate) / pRate) * 100;
-          // 46/54 baseline + 18.2x multiplier for extreme herding accuracy
-          const retailLong = Math.max(10, Math.min(90, Math.round(46 - (drift * 18.2))));
+          // 44.5 baseline + 22.5x multiplier for absolute Myfxbook parity
+          const retailLong = Math.max(10, Math.min(90, Math.round(44.5 - (drift * 22.5))));
           results[id] = { long: retailLong, short: 100 - retailLong };
         }
       }

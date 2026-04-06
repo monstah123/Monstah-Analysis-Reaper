@@ -19,6 +19,7 @@ import Correlation from './pages/Correlation';
 import COTDeepDive from './pages/COTDeepDive';
 import YieldSpreads from './pages/YieldSpreads';
 import NewsTerminal from './pages/NewsTerminal';
+import MyfxbookBridge from './components/MyfxbookBridge';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -74,6 +75,7 @@ function AuthGate() {
   return (
     <AppProvider>
       <WatchlistProvider>
+        <MyfxbookBridge />
         <AppContent />
       </WatchlistProvider>
     </AppProvider>

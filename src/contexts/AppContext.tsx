@@ -286,6 +286,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
+  // --- 6. Live Myfxbook Sync Listener ---
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const batch = e.detail;
+      if (!batch) return;
+      
+      setAssets((prev) => prev.map(a => {
+        const official = batch[a.id] || batch[a.id.replace('/', '')];
+        if (official) {
+          const rLong = official.long;
+          const rShort = official.short;
+          // Standard Reaper "Fade" Impact (if retail is 70% long, bias is -2)
+          const retailImpact = rLong >= 75 ? -2 : rLong >= 60 ? -1 : rLong <= 25 ? 2 : rLong <= 40 ? 1 : 0;
+          
+          return {
+            ...a,
+            retailLong: rLong,
+            retailShort: rShort,
+            retailPos: retailImpact,
+            score: (a.trend || 0) + (a.cot || 0) + retailImpact + (a.seasonality || 0) + (a.gdp || 0) + (a.inflation || 0) + (a.interestRates || 0) + (a.employmentChange || 0) + (a.unemploymentRate || 0)
+          };
+        }
+        return a;
+      }));
+    };
+
+    window.addEventListener('myfxbook_sync', handleSync);
+    return () => window.removeEventListener('myfxbook_sync', handleSync);
+  }, []);
+
   return (
     <Ctx.Provider
       value={{

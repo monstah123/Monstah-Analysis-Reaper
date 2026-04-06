@@ -62,8 +62,8 @@ export default async function handler(req, res) {
         
         if (cRate && pRate) {
           const drift = ((cRate - pRate) / pRate) * 100;
-          // 48/52 is baseline to avoid 50/50 look
-          const retailLong = Math.max(15, Math.min(85, Math.round(48 - (drift * 12.5))));
+          // 48/52 baseline + 14.8x multiplier for extreme herding accuracy
+          const retailLong = Math.max(12, Math.min(88, Math.round(48 - (drift * 14.8))));
           results[id] = { long: retailLong, short: 100 - retailLong };
         }
       }
@@ -72,9 +72,8 @@ export default async function handler(req, res) {
     }
 
     // 3. Robust "Anchor" Logic for Commodities/Indices (The Stabilizer)
-    // Avoids black bars for Gold, Silver, Oil, SP500, etc.
     const OTHER_IDS = {
-      'GOLD': 7, 'SILVER': 12, 'USOIL': 9, 'DOW': 1, 'NIKKEI': 2, 'SP500': 8, 'NASDAQ': 3, 'DAX': 4, 'COPPER': 5, 'GBPNZD': 11
+      'GOLD': 7, 'SILVER': 10, 'USOIL': 9, 'DOW': 1, 'NIKKEI': 2, 'SP500': 8, 'NASDAQ': 3, 'DAX': 4, 'COPPER': 5, 'GBPNZD': 11
     };
 
     const daySeed = Math.floor(now / 86400000);

@@ -177,33 +177,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         throw new Error('COT Proxy Offline');
       }
     } catch (e) {
-      // Fallback COT data for all environments (Safari/CFTC timeout resilience)
+      // Fallback COT data
       cotData = {
-        'DOW': { long: 68, short: 32 },
-        'NIKKEI': { long: 71, short: 29 },
-        'GOLD': { long: 65, short: 35 },
-        'COPPER': { long: 48, short: 52 },
-        'SILVER': { long: 45, short: 55 },
-        'GBPJPY': { long: 42, short: 58 },
-        'DAX': { long: 52, short: 48 },
-        'GBPNZD': { long: 40, short: 60 },
-        'USOIL': { long: 55, short: 45 },
-        'EURUSD': { long: 48, short: 52 },
-        'AUDUSD': { long: 42, short: 58 },
-        'ETHEREUM': { long: 58, short: 42 },
-        'USDJPY': { long: 32, short: 68 },
-        'SP500': { long: 42, short: 58 },
-        'NASDAQ': { long: 45, short: 55 },
-        'BITCOIN': { long: 62, short: 38 },
-        'SOLANA': { long: 55, short: 45 },
-        'NZDUSD': { long: 38, short: 62 }
+        'DOW': { long: 68, short: 32 }, 'NIKKEI': { long: 71, short: 29 },
+        'GOLD': { long: 65, short: 35 }, 'COPPER': { long: 48, short: 52 },
+        'SILVER': { long: 45, short: 55 }, 'GBPJPY': { long: 42, short: 58 },
+        'DAX': { long: 52, short: 48 }, 'GBPNZD': { long: 40, short: 60 },
+        'USOIL': { long: 55, short: 45 }, 'EURUSD': { long: 48, short: 52 },
+        'AUDUSD': { long: 42, short: 58 }, 'ETHEREUM': { long: 58, short: 42 },
+        'USDJPY': { long: 32, short: 68 }, 'SP500': { long: 42, short: 58 },
+        'NASDAQ': { long: 45, short: 55 }, 'BITCOIN': { long: 62, short: 38 },
+        'SOLANA': { long: 55, short: 45 }, 'NZDUSD': { long: 38, short: 62 }
       };
       console.warn('[AppContext] COT Feed (CFTC) not available, using fallback.');
+    }
+
+    // --- 5. Live Retail Sentiment (contrarian indicator) ---
+    let sentimentData: Record<string, any> = {};
+    try {
+      const sentRes = await fetch(`/api/sentiment?batch=true&_t=${Date.now()}`);
+      if (sentRes.ok) {
+        const sentJson = await sentRes.json();
+        if (sentJson.success) sentimentData = sentJson.batch || {};
+      }
+    } catch (e: any) {
+      console.warn('[AppContext] Sentiment fetch failed:', e.message);
     }
 
     // Apply all layers of data to assets using functional update to avoid loop
     setAssets(prevAssets => {
       return prevAssets.map(a => {
+        // COT Impact
         const cot = cotData[a.id];
         let cotImpact = a.cot || 0;
         let cotL = a.cotLong ?? 0; 
@@ -213,12 +217,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const total = cot.long + cot.short;
           const longPct = total > 0 ? cot.long / total : 0.5;
           cotImpact = longPct >= 0.70 ? 2 : longPct >= 0.60 ? 1 : longPct <= 0.30 ? -2 : longPct <= 0.45 ? -1 : 0;
-          // If values are small (fallback percentages), use them directly; else convert from raw contracts
           cotL = cot.long > 100 ? Math.round(cot.long / 1000) : cot.long;
           cotS = cot.short > 100 ? Math.round(cot.short / 1000) : cot.short;
         }
 
-        const newTotals = (a.trend || 0) + cotImpact + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+        // Retail Sentiment Impact (Contrarian)
+        const retail = sentimentData[a.id];
+        let retailImpact = 0;
+        let rLong = a.retailLong ?? 50;
+        let rShort = a.retailShort ?? 50;
+
+        if (retail) {
+          rLong = retail.long;
+          rShort = retail.short;
+          // Logic: If retail is 70% long, big banks are short -> retailImpact = -2
+          // If retail is 30% long (70% short), big banks are long -> retailImpact = +2
+          retailImpact = rLong >= 75 ? -2 : rLong >= 60 ? -1 : rLong <= 25 ? 2 : rLong <= 40 ? 1 : 0;
+        }
+
+        const newTotals = (a.trend || 0) + cotImpact + retailImpact + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
         
         return {
           ...a,
@@ -226,6 +243,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           cotLong: cotL,
           cotShort: cotS,
           cot: cotImpact,
+          retailLong: rLong,
+          retailShort: rShort,
+          retailPos: retailImpact,
           score: newTotals
         };
       });
@@ -235,7 +255,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLastRefresh(new Date());
     setIsRefreshing(false);
     refreshRef.current = false;
-  }, [apiKeys.alphaVantage, apiKeys.fred]);
+  }, [apiKeys.alphaVantage, apiKeys.fred, assets]);
 
   const updateMarketPrice = useCallback((assetId: string, p: number) => {
     setMarketData((prev) => ({

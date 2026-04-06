@@ -138,10 +138,9 @@ const Sentiment: React.FC = () => {
           </div>
         </div>
 
-        {/* Retail Chart */}
         <div className="settings-card" style={{ height: '700px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 className="settings-section-title" style={{ margin: 0 }}>Retail Positioning (Myfxbook)</h2>
+            <h2 className="settings-section-title" style={{ margin: 0 }}>Retail Positioning (IG Index)</h2>
             <span style={{ 
               display: 'inline-flex', alignItems: 'center', gap: '6px',
               fontSize: '0.7rem', color: symbolCount > 0 ? '#22c55e' : '#f59e0b',
@@ -157,7 +156,7 @@ const Sentiment: React.FC = () => {
               {symbolCount > 0 ? `LIVE · ${symbolCount} pairs` : sentimentSource}
             </span>
           </div>
-          <p className="settings-hint">Real retail positioning from 100k+ traders. High short ratio = bullish contrarian signal.</p>
+          <p className="settings-hint">Live retail client positioning from IG Index. High long ratio = bearish contrarian signal.</p>
           <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={retailChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>

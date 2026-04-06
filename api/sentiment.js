@@ -15,7 +15,7 @@ const FX_ONLY = {
   'GBPJPY': { base: 'GBP', quote: 'JPY' }
 };
 
-const CACHE_DELAY = 5 * 60 * 1000;
+const CACHE_DELAY = 30 * 1000; // 30s for live tuning
 let cachedData = null;
 let lastFetch = 0;
 
@@ -62,8 +62,8 @@ export default async function handler(req, res) {
         
         if (cRate && pRate) {
           const drift = ((cRate - pRate) / pRate) * 100;
-          // 48/52 baseline + 14.8x multiplier for extreme herding accuracy
-          const retailLong = Math.max(12, Math.min(88, Math.round(48 - (drift * 14.8))));
+          // 46/54 baseline + 18.2x multiplier for extreme herding accuracy
+          const retailLong = Math.max(10, Math.min(90, Math.round(46 - (drift * 18.2))));
           results[id] = { long: retailLong, short: 100 - retailLong };
         }
       }

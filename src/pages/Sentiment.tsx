@@ -48,7 +48,7 @@ const Sentiment: React.FC = () => {
       }
       
       return {
-        name: a.name || a.id,
+        name: a.name || a.id || 'Unknown',
         cotScore: a.cot,
         long: longPct, 
         short: shortPct
@@ -61,7 +61,7 @@ const Sentiment: React.FC = () => {
       const live = liveData[a.id];
       // Default to 50/50 until the fast async call resolves
       return {
-        name: a.name || a.id,
+        name: a.name || a.id || 'Unknown',
         retailScore: a.retailPos,
         long: live ? live.long : 50,
         short: live ? live.short : 50,
@@ -127,12 +127,12 @@ const Sentiment: React.FC = () => {
           <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
           <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#8b9ab8', fontSize: 13, fontWeight: 600 }} />
+                <YAxis dataKey="name" type="category" width={120} tick={{ fill: '#f8fafc', fontSize: 11, fontWeight: 700 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="long" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="short" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="long" stackId="a" fill="#22c55e" radius={[2, 0, 0, 2]} />
+                <Bar dataKey="short" stackId="a" fill="#ef4444" radius={[0, 2, 2, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -159,12 +159,12 @@ const Sentiment: React.FC = () => {
           <p className="settings-hint">Live retail client positioning from IG Index. High long ratio = bearish contrarian signal.</p>
           <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={retailChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={retailChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#8b9ab8', fontSize: 13, fontWeight: 600 }} />
+                <YAxis dataKey="name" type="category" width={120} tick={{ fill: '#f8fafc', fontSize: 11, fontWeight: 700 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="long" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="short" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="long" stackId="a" fill="#22c55e" radius={[2, 0, 0, 2]} />
+                <Bar dataKey="short" stackId="a" fill="#ef4444" radius={[0, 2, 2, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

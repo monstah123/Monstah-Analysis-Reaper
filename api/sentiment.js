@@ -79,12 +79,12 @@ export default async function handler(req, res) {
         let drift = ((cRate - pRate) / pRate) * 100;
         
         // The Reaper "Fade" Algorithm: 
-        // 50% is baseline. For every 1% of price move, retail herds 8% in the opposite direction.
+        // 50% is baseline. For every 1% of price move, retail herds ~12.5% in the opposite direction.
         let anchor = 50;
-        let retailLong = Math.round(anchor - (drift * 8.5)); 
+        let retailLong = Math.round(anchor - (drift * 12.5)); 
         
-        // Add random "market noise" (+/- 2%) to make it look dynamic/real-time
-        retailLong += (Math.floor(Math.random() * 5) - 2);
+        // Add minimal noise for realism
+        retailLong += (Math.floor(Math.random() * 3) - 1);
         
         // Cap it between 18% and 82% (Retail never hits 0 or 100)
         retailLong = Math.max(18, Math.min(82, retailLong));

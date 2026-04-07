@@ -180,22 +180,31 @@ const Sentiment: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
           <div>
             <h2 className="settings-section-title" style={{ margin: 0 }}>📡 Official Myfxbook Live Feed</h2>
-            <p className="settings-hint">Direct institutional source. Check "WallStreet" for DOW and "XAU/USD" for GOLD.</p>
+            <p className="settings-hint">Direct institutional source. (Table is secure, use the search above to find pairs in Reaper Charts).</p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
              <input 
               type="text" 
-              placeholder="Quick Find (e.g. WallStreet, Gold)..." 
+              placeholder="Jump to Reaper Chart (e.g. Gold, DOW)..." 
               style={{
                 background: '#141b2d', border: '1px solid #1e2d48', borderRadius: '4px',
-                padding: '6px 12px', color: 'white', fontSize: '12px', width: '220px'
+                padding: '6px 12px', color: 'white', fontSize: '12px', width: '250px'
               }}
               onInput={(e) => {
-                const val = (e.target as HTMLInputElement).value.toLowerCase();
-                const rows = document.querySelectorAll('#myfxbook_visual_container tr');
-                rows.forEach((row: any) => {
-                  const text = row.innerText.toLowerCase();
-                  row.style.display = text.includes(val) ? '' : 'none';
+                const val = (e.target as HTMLInputElement).value.toUpperCase();
+                if (!val) return;
+                // Find and pulse the corresponding label in our charts
+                const labels = document.querySelectorAll('.recharts-cartesian-axis-tick-value');
+                labels.forEach((node: any) => {
+                  if (node.textContent.toUpperCase().includes(val)) {
+                    node.style.fill = '#22c55e';
+                    node.style.fontWeight = '900';
+                    node.style.fontSize = '14px';
+                  } else {
+                    node.style.fill = '#f8fafc';
+                    node.style.fontWeight = '700';
+                    node.style.fontSize = '11px';
+                  }
                 });
               }}
              />

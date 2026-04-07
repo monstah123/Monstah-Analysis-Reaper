@@ -92,7 +92,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const updates: Record<string, AssetMarketData> = {};
 
-    // 1. Logic for market prices...
+    // 1. Fetch market prices...
     const cryptoAssets = assets.filter((a) => a.coingeckoId && a.category === 'Crypto');
     if (cryptoAssets.length) {
       try {
@@ -122,45 +122,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (apiKeys.fred) {
       try {
         const fredData = await fetchAllFredData(apiKeys.fred);
-        const gdpV = fredData.GDP_GROWTH?.[0]?.value ?? 2.0; 
-        const cpiV = fredData.CPI?.[0]?.value ?? 3.0;
-        scores.gdp = gdpV >= 3 ? 2 : gdpV >= 2 ? 1 : 0;
-        scores.inflation = cpiV >= 4.5 ? -2 : cpiV >= 3.5 ? -1 : 0;
+        scores.gdp = (fredData.GDP_GROWTH?.[0]?.value || 0) >= 3 ? 2 : 0;
+        scores.inflation = (fredData.CPI?.[0]?.value || 0) >= 4.5 ? -2 : 0;
       } catch (e) {}
     }
 
-    // --- 4. Official Institutional Neural COT (Direct AI Sync) ---
-    let aiCot: Record<string, any> = {};
+    // --- 4. Official Institutional & Retail Neural Sync (Total Parity) ---
+    let neuralData: Record<string, any> = {};
     try {
-      const cotRes = await fetch(`/api/sentiment?_t=${Date.now()}`);
-      if (cotRes.ok) {
-        const cotJson = await cotRes.json();
-        if (cotJson.success) aiCot = cotJson.batch || {};
+      const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) neuralData = json.batch || {};
       }
     } catch (e) {}
 
     setAssets(prevAssets => {
       return prevAssets.map(a => {
-        const aiData = aiCot[a.id];
+        const data = neuralData[a.id];
+        let rL = a.retailLong ?? 50;
         let cL = a.cotLong ?? 50;
-        let cS = a.cotShort ?? 50;
+        let rP = a.retailPos || 0;
         let cI = a.cot || 0;
 
-        if (aiData && aiData.iLong !== undefined) {
-           cL = aiData.iLong || 50;
-           cS = 100 - cL;
-           // Smart Money Bias Impact
-           cI = cL >= 75 ? 2 : cL >= 60 ? 1 : cL <= 30 ? -2 : cL <= 45 ? -1 : 0;
+        if (data) {
+          // Absolute AI-Driven Parity for both sides
+          rL = data.long ?? 50;
+          cL = data.iLong ?? 50;
+          rP = rL >= 75 ? -2 : rL <= 25 ? 2 : 0;
+          cI = cL >= 75 ? 2 : cL <= 35 ? -2 : 0;
         }
 
-        const newTotals = (a.trend || 0) + cI + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+        const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
         
         return {
-          ...a,
-          ...scores,
-          cotLong: cL,
-          cotShort: cS,
-          cot: cI,
+          ...a, ...scores,
+          retailLong: rL, retailShort: 100 - rL, retailPos: rP,
+          cotLong: cL, cotShort: 100 - cL, cot: cI,
           score: newTotals
         };
       });
@@ -193,7 +191,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
-  // Priority Live Sync Listener (The Retail Snatcher - Don't touch!)
+  // Keep the 'Live Snatcher' for Currency/Gold pulse, but AI takes the lead
   useEffect(() => {
     const handleSync = (e: any) => {
       const batch = e.detail;
@@ -201,15 +199,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAssets((prev) => prev.map(a => {
         const official = batch[a.id] || batch[a.id.replace('/', '')];
         if (official) {
-          const rLong = official.long;
-          const retailImpact = rLong >= 75 ? -2 : rLong <= 25 ? 2 : 0;
-          return { 
-            ...a, 
-            retailLong: rLong, 
-            retailShort: 100 - rLong, 
-            retailPos: retailImpact,
-            score: (a.trend || 0) + (a.cot || 0) + retailImpact + (a.seasonality || 0) + (a.gdp || 0) + (a.inflation || 0) + (a.interestRates || 0) + (a.employmentChange || 0) + (a.unemploymentRate || 0)
-          };
+          return { ...a, retailLong: official.long, retailShort: official.short };
         }
         return a;
       }));

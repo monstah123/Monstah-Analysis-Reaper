@@ -37,43 +37,42 @@ const Sentiment: React.FC = () => {
     fetchLiveSentiment();
   }, [assets]);
 
+  // Reaper 8.3 - Dual Dynamic Squad Sorting (Institutional Side)
   const cotChartData = useMemo(() => {
-    return sortedAssets.map(a => {
-      const total = (a.cotLong || 0) + (a.cotShort || 0);
-      let longPct = 50;
-      let shortPct = 50;
-      
-      if (total > 0) {
-        longPct = Math.round(((a.cotLong || 0) / total) * 100);
-        shortPct = 100 - longPct;
-      }
-      
-      return {
-        name: a.name || a.id || 'Unknown',
-        cotScore: a.cot,
-        long: longPct, 
-        short: shortPct
-      };
-    });
+    return sortedAssets
+      .map(a => {
+        const total = (a.cotLong || 0) + (a.cotShort || 0);
+        let longPct = 50;
+        if (total > 0) {
+          longPct = Math.round(((a.cotLong || 0) / total) * 100);
+        }
+        const rankScore = Math.abs(longPct - 50);
+        return {
+          name: a.id,
+          cotScore: a.cot,
+          long: longPct, 
+          short: 100 - longPct,
+          rankScore
+        };
+      })
+      .sort((a, b) => b.rankScore - a.rankScore); // Extreme First
   }, [sortedAssets]);
 
-  // Reaper 8.2 - Dynamic Leaderboard Sorting
+  // Reaper 8.3 - Dual Dynamic Squad Sorting (Retail Side)
   const retailChartData = useMemo(() => {
     return Object.entries(liveData)
       .map(([key, data]) => {
         const long = data.long || 50;
-        const short = 100 - long;
         const rankScore = Math.abs(long - 50);
         return {
           name: key,
           long,
-          short,
+          short: 100 - long,
           rankScore,
           source: data.source || 'Neural Matrix'
         };
       })
-      .sort((a, b) => b.rankScore - a.rankScore)
-      .slice(0, 15);
+      .sort((a, b) => b.rankScore - a.rankScore); // Extreme First
   }, [liveData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -128,23 +127,38 @@ const Sentiment: React.FC = () => {
 
       <div className="settings-row-2">
         {/* COT Chart */}
-        <div className="settings-card" style={{ height: '700px' }}>
+        <div className="settings-card" style={{ minHeight: `${cotChartData.length * 45 + 150}px` }}>
           <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
           <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
           <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={120} tick={{ fill: '#f8fafc', fontSize: 11, fontWeight: 700 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="long" stackId="a" fill="#22c55e" radius={[2, 0, 0, 2]} />
-                <Bar dataKey="short" stackId="a" fill="#ef4444" radius={[0, 2, 2, 0]} />
+              <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }} barSize={28}>
+                <XAxis type="number" hide domain={[0, 100]} />
+                <YAxis dataKey="name" type="category" width={120} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                <Bar 
+                  dataKey="long" 
+                  stackId="a" 
+                  fill="#22c55e" 
+                  radius={[4, 0, 0, 4]} 
+                  isAnimationActive={true}
+                  animationDuration={1500}
+                />
+                <Bar 
+                  dataKey="short" 
+                  stackId="a" 
+                  fill="#ef4444" 
+                  radius={[0, 4, 4, 0]} 
+                  isAnimationActive={true}
+                  animationDuration={1500}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="settings-card" style={{ height: '700px' }}>
+        {/* Retail Chart */}
+        <div className="settings-card" style={{ minHeight: `${retailChartData.length * 45 + 150}px` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h2 className="settings-section-title" style={{ margin: 0 }}>Retail Positioning (Official Feed)</h2>
             <span style={{ 
@@ -169,17 +183,10 @@ const Sentiment: React.FC = () => {
                 data={retailChartData}
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
-                barSize={24}
+                barSize={28}
               >
                 <XAxis type="number" hide domain={[0, 100]} />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }}
-                  width={100}
-                  axisLine={false}
-                  tickLine={false}
-                />
+                <YAxis dataKey="name" type="category" tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} width={100} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                 <Bar 
                   dataKey="long" 
@@ -188,7 +195,6 @@ const Sentiment: React.FC = () => {
                   radius={[4, 0, 0, 4]} 
                   isAnimationActive={true}
                   animationDuration={1500}
-                  animationEasing="ease-in-out"
                 />
                 <Bar 
                   dataKey="short" 
@@ -197,7 +203,6 @@ const Sentiment: React.FC = () => {
                   radius={[0, 4, 4, 0]} 
                   isAnimationActive={true}
                   animationDuration={1500}
-                  animationEasing="ease-in-out"
                 />
               </BarChart>
             </ResponsiveContainer>

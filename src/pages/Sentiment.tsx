@@ -177,12 +177,38 @@ const Sentiment: React.FC = () => {
 
       {/* Official Myfxbook Outlook Widget Section */}
       <div className="settings-card" style={{ marginTop: '2rem', minHeight: '400px', background: '#0f1623' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+          <div>
+            <h2 className="settings-section-title" style={{ margin: 0 }}>📡 Official Myfxbook Live Feed</h2>
+            <p className="settings-hint">Direct institutional source. Check "WallStreet" for DOW and "XAU/USD" for GOLD.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+             <input 
+              type="text" 
+              placeholder="Quick Find (e.g. WallStreet, Gold)..." 
+              style={{
+                background: '#141b2d', border: '1px solid #1e2d48', borderRadius: '4px',
+                padding: '6px 12px', color: 'white', fontSize: '12px', width: '220px'
+              }}
+              onInput={(e) => {
+                const val = (e.target as HTMLInputElement).value.toLowerCase();
+                const rows = document.querySelectorAll('#myfxbook_visual_container tr');
+                rows.forEach((row: any) => {
+                  const text = row.innerText.toLowerCase();
+                  row.style.display = text.includes(val) ? '' : 'none';
+                });
+              }}
+             />
+          </div>
+        </div>
+        
         <div id="myfxbook_visual_container" style={{ 
           background: '#1a2333', 
           padding: '20px', 
           borderRadius: '8px',
           border: '1px solid #1e2d48',
-          overflow: 'hidden'
+          maxHeight: '600px',
+          overflowY: 'auto'
         }}>
           <MyfxbookWidget />
         </div>

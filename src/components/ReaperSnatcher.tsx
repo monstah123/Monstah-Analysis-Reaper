@@ -31,14 +31,32 @@ const ReaperSnatcher: React.FC = () => {
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
         if (cells.length >= 3) {
-          const rawSymbol = cells[0].innerText.trim().replace('/', ''); 
+          let rawSymbol = cells[0].innerText.trim().replace('/', '').toUpperCase(); 
+          
+          // Map Myfxbook Official Symbols to Reaper Terminal IDs
+          const symbolMap: Record<string, string> = {
+            'XAUUSD': 'GOLD',
+            'XAGUSD': 'SILVER',
+            'USDOLLAR': 'DXY',
+            'WALLSTREET': 'DOW',
+            'US30': 'DOW',
+            'US500': 'SP500',
+            'USA500': 'SP500',
+            'US100': 'NASDAQ',
+            'GER30': 'DAX',
+            'DE30': 'DAX',
+            'UK100': 'FTSE',
+            'JPN225': 'NIKKEI'
+          };
+
+          const targetId = symbolMap[rawSymbol] || rawSymbol;
           const shortText = cells[2].innerText.replace('%', '').trim();
           // const longText = cells[3]?.innerText.replace('%', '').trim(); 
 
-          if (rawSymbol && shortText) {
+          if (targetId && shortText) {
             const shortVal = parseInt(shortText);
             if (!isNaN(shortVal)) {
-              batch[rawSymbol] = { 
+              batch[targetId] = { 
                 short: shortVal, 
                 long: 100 - shortVal 
               };

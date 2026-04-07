@@ -81,7 +81,8 @@ export default async function handler(req, res) {
       ]);
 
       finalYields = { y2, y10, y30, y3m };
-      finalMacro.FedRate = effr;
+      finalMacro.FedRate = effr || finalMacro.FedRate;
+      finalMacro.CPI = cpi || finalMacro.CPI;
       // Note: Full FRED integration completed for available real-time series
     } catch (e) {
       console.error('FRED Error:', e.message);
@@ -99,8 +100,8 @@ export default async function handler(req, res) {
       const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       const prompt = `Return a strict JSON object with current LIVE Market Sentiment and US Macro Fundamentals. Date: ${dateStr}.
       Assets: GOLD, NASDAQ, SILVER, SP500, COPPER, DOW, USDJPY, DAX, USOIL, NIKKEI, GBPNZD, GBPJPY, BITCOIN, EURUSD, SOLANA, AUDUSD, NZDUSD, ETHEREUM, GBPUSD.
-      Format: { "sentiment": { "ASSET_ID": { "iL": number, "rL": number } } }
-      Benchmarks: Provide Institutional (iL) COT Non-Commercial estimates and Retail (rL) Myfxbook estimates for these pairs. Calculate iS=100-iL, rS=100-rL. No markdown.`;
+      Format: { "sentiment": { "ASSET_ID": { "iL": number, "rL": number } }, "macro": { "GDP": number, "NFP": number, "PMI": number } }
+      Benchmarks: Provide Institutional (iL) COT Non-Commercial estimates and Retail (rL) Myfxbook estimates for these pairs. Also provide latest US GDP growth (%), NFP (raw number), and Manufacturing PMI. No markdown.`;
 
       const aiRes = await axios.post(baseUrl, {
         model,
@@ -113,6 +114,14 @@ export default async function handler(req, res) {
       });
 
       const data = JSON.parse(aiRes.data.choices[0].message.content);
+      
+      // Update Macro from Neural
+      if (data.macro) {
+        finalMacro.GDP = data.macro.GDP || finalMacro.GDP;
+        finalMacro.NFP = data.macro.NFP || finalMacro.NFP;
+        finalMacro.PMI = data.macro.PMI || finalMacro.PMI;
+      }
+
       for (const [id, s] of Object.entries(data.sentiment)) {
         if (!finalBatch[id]) {
           // If we have no CFTC data, fallback to neural for BOTH

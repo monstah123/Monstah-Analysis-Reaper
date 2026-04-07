@@ -96,7 +96,8 @@ export default async function handler(req, res) {
     const model = isDeepSeek ? "deepseek-chat" : "gpt-4o-mini";
 
     try {
-      const prompt = `Return a strict JSON object with current LIVE Market Sentiment and US Macro Fundamentals. Date: April 6, 2026.
+      const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const prompt = `Return a strict JSON object with current LIVE Market Sentiment and US Macro Fundamentals. Date: ${dateStr}.
       Assets: GOLD, NASDAQ, SILVER, SP500, COPPER, DOW, USDJPY, DAX, USOIL, NIKKEI, GBPNZD, GBPJPY, BITCOIN, EURUSD, SOLANA, AUDUSD, NZDUSD, ETHEREUM, GBPUSD.
       Format: { "sentiment": { "ASSET_ID": { "iL": number, "rL": number } } }
       Benchmarks: Provide Institutional (iL) COT Non-Commercial estimates and Retail (rL) Myfxbook estimates for these pairs. Calculate iS=100-iL, rS=100-rL. No markdown.`;

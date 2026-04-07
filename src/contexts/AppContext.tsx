@@ -71,7 +71,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeView, setActiveView] = useState('dashboard');
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
   const refreshRef = useRef(false);
-  const [liveSentiment, setLiveSentiment] = useState<Record<string, any>>({});
 
   const apiKeys: ApiKeys = {
     alphaVantage: apiKeysRaw.alphaVantage || DEFAULT_KEYS.alphaVantage,
@@ -85,18 +84,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setApiKeys = useCallback((partial: Partial<ApiKeys>) => {
     setApiKeysRaw((prev) => ({ ...prev, ...partial }));
   }, [setApiKeysRaw]);
-
-  const syncSentiment = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
-      const data = await res.json();
-      if (data.success && data.batch) {
-        setLiveSentiment(data.batch);
-      }
-    } catch (error) {
-      console.warn('[Reaper] Sentiment Sync Failed:', error);
-    }
-  }, []);
 
   const fetchMarketData = useCallback(async () => {
     if (refreshRef.current) return;
@@ -142,61 +129,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
     }
 
-    // --- 4. Official Institutional COT ---
-    let cotData: Record<string, any> = {};
+    // --- 4. Official Institutional Neural COT (Direct AI Sync) ---
+    let aiCot: Record<string, any> = {};
     try {
-      const cotRes = await fetch(`/api/cot?_t=${Date.now()}`);
+      const cotRes = await fetch(`/api/sentiment?_t=${Date.now()}`);
       if (cotRes.ok) {
         const cotJson = await cotRes.json();
-        if (cotJson.success) cotData = cotJson.cot;
+        if (cotJson.success) aiCot = cotJson.batch || {};
       }
     } catch (e) {}
 
-    // --- 5. Live Retail Sentiment ---
-    await syncSentiment();
-    const sentimentSnapshot = liveSentiment;
-
     setAssets(prevAssets => {
       return prevAssets.map(a => {
-        const cot = cotData[a.id];
-        let cotImpact = a.cot || 0;
-        if (cot) {
-          const longPct = cot.long / (cot.long + cot.short || 1);
-          cotImpact = longPct >= 0.70 ? 2 : longPct <= 0.35 ? -2 : 0;
+        const aiData = aiCot[a.id];
+        let cL = a.cotLong ?? 50;
+        let cS = a.cotShort ?? 50;
+        let cI = a.cot || 0;
+
+        if (aiData && aiData.iLong !== undefined) {
+           cL = aiData.iLong || 50;
+           cS = 100 - cL;
+           // Smart Money Bias Impact
+           cI = cL >= 75 ? 2 : cL >= 60 ? 1 : cL <= 30 ? -2 : cL <= 45 ? -1 : 0;
         }
 
-        const retail = sentimentSnapshot[a.id];
-        let rLong = a.retailLong ?? 50;
-        let rShort = a.retailShort ?? 50;
-        let retailImpact = a.retailPos || 0;
-        
-        let targetCotLong = a.cotLong || 0;
-        let targetCotShort = a.cotShort || 0;
-        let targetCotImpact = cotImpact;
-
-        if (retail) {
-          rLong = retail.long;
-          rShort = retail.short;
-          retailImpact = rLong >= 75 ? -2 : rLong >= 60 ? -1 : rLong <= 25 ? 2 : rLong <= 40 ? 1 : 0;
-          
-          if (retail.iLong !== undefined) {
-             targetCotLong = retail.iLong;
-             targetCotShort = 100 - retail.iLong;
-             targetCotImpact = targetCotLong >= 75 ? 2 : targetCotLong >= 60 ? 1 : targetCotLong <= 35 ? -2 : 0;
-          }
-        }
-
-        const newTotals = (a.trend || 0) + targetCotImpact + retailImpact + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+        const newTotals = (a.trend || 0) + cI + (a.retailPos || 0) + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
         
         return {
           ...a,
           ...scores,
-          retailLong: rLong,
-          retailShort: rShort,
-          retailPos: retailImpact,
-          cotLong: targetCotLong,
-          cotShort: targetCotShort,
-          cot: targetCotImpact,
+          cotLong: cL,
+          cotShort: cS,
+          cot: cI,
           score: newTotals
         };
       });
@@ -206,7 +170,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLastRefresh(new Date());
     setIsRefreshing(false);
     refreshRef.current = false;
-  }, [apiKeys.alphaVantage, apiKeys.fred, assets, syncSentiment, liveSentiment]);
+  }, [apiKeys.alphaVantage, apiKeys.fred, assets]);
 
   const updateMarketPrice = useCallback((assetId: string, p: number) => {
     setMarketData((prev) => ({
@@ -229,7 +193,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
-  // Priority Live Sync Listener
+  // Priority Live Sync Listener (The Retail Snatcher - Don't touch!)
   useEffect(() => {
     const handleSync = (e: any) => {
       const batch = e.detail;
@@ -239,7 +203,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (official) {
           const rLong = official.long;
           const retailImpact = rLong >= 75 ? -2 : rLong <= 25 ? 2 : 0;
-          return { ...a, retailLong: rLong, retailShort: 100 - rLong, retailPos: retailImpact };
+          return { 
+            ...a, 
+            retailLong: rLong, 
+            retailShort: 100 - rLong, 
+            retailPos: retailImpact,
+            score: (a.trend || 0) + (a.cot || 0) + retailImpact + (a.seasonality || 0) + (a.gdp || 0) + (a.inflation || 0) + (a.interestRates || 0) + (a.employmentChange || 0) + (a.unemploymentRate || 0)
+          };
         }
         return a;
       }));

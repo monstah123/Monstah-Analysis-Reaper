@@ -57,22 +57,24 @@ const Sentiment: React.FC = () => {
     });
   }, [sortedAssets]);
 
+  // Reaper 8.2 - Dynamic Leaderboard Sorting
   const retailChartData = useMemo(() => {
-    return sortedAssets.map(a => {
-      const live = liveData[a.id];
-      // Default to 50/50 and ensure it’s always a valid number to prevent 'black bars'
-      const longVal = live && typeof live.long === 'number' && !isNaN(live.long) ? live.long : 50;
-      const shortVal = 100 - longVal;
-      
-      return {
-        name: a.name || a.id || 'Unknown',
-        retailScore: a.retailPos || 0,
-        long: longVal,
-        short: shortVal,
-        source: live ? (live.source || 'Sync') : 'Auto-Estimate'
-      };
-    });
-  }, [sortedAssets, liveData]);
+    return Object.entries(liveData)
+      .map(([key, data]) => {
+        const long = data.long || 50;
+        const short = 100 - long;
+        const rankScore = Math.abs(long - 50);
+        return {
+          name: key,
+          long,
+          short,
+          rankScore,
+          source: data.source || 'Neural Matrix'
+        };
+      })
+      .sort((a, b) => b.rankScore - a.rankScore)
+      .slice(0, 15);
+  }, [liveData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

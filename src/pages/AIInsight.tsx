@@ -5,25 +5,31 @@ import type { AssetData } from '../data/mockData';
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  reasoning?: string; // Reaper 12.1 - Support for DeepSeek R1 Reasoning
 }
 
 function buildSystemPrompt(asset: AssetData, price?: number, change?: number, lastUpdated?: number): string {
-  const priceStr = price ? price.toLocaleString() : '1.15820'; // Current market floor
+  const priceStr = price ? price.toLocaleString() : '1.15820';
   const changeStr = change !== undefined ? `${change > 0 ? '+' : ''}${change.toFixed(2)}%` : 'N/A';
   const ageSec = lastUpdated ? Math.floor((Date.now() - lastUpdated) / 1000) : 0;
   
-  return `YOU ARE THE MONSTAH TERMINAL DATA CORE.
-DATE: April 1st, 2026.
-DATA AGE: ${ageSec} seconds (Snapshot).
-YOUR EYES: You are plugged directly into institutional liquidity providers (LPs). 
-LIVE DATA FEED (INSTITUTIONAL SNAPSHOT):
-- ASSET: ${asset.name}
-- PRICE AT SNAPSHOT: ${priceStr} (${changeStr})
-- MATRIX SCORE: ${asset.score}
-- BIAS: ${asset.bias}
-- FACTORS: COT(${asset.cot}), RetailPos(${asset.retailPos}), Seasonality(${asset.seasonality}), Trend(${asset.trend}), GDP(${asset.gdp}), PMI(${asset.mPMI}), CPI(${asset.inflation}), Rates(${asset.interestRates}).
-- LIVE PRICE RELIABILITY: Acknowledge that your price is an institutional snapshot from ${ageSec}s ago. If the user provides a different price, it IS the absolute tick. Acknowledge and adjust instantly.
-TONE: Professional, insightful, high-conviction institutional assistant. BOLD key levels and take-aways. Do not argue about pips or lag.`;
+  return `YOU ARE THE MONSTAH TERMINAL REASONER (R1).
+DATE: April 7th, 2026.
+YOUR MISSION: Perform a high-conviction institutional analysis using step-by-step reasoning.
+
+LIVE DATA FEED:
+- ASSET: ${asset.name} (${asset.id})
+- PRICE: ${priceStr} (${changeStr})
+- SENTIMENT: Institutional ${asset.cotLong}% vs Retail ${asset.retailLong}%.
+- MACRO PULSE: GDP ${asset.gdp}, CPI ${asset.inflation}, Rates ${asset.interestRates}.
+
+REASONING PROTOCOL:
+1. Analyze the institutional vs retail divergence.
+2. Cross-reference the macro pulse with the current trend.
+3. Identify the "Liquidity Trap" for retail traders.
+4. Deliver a high-fidelity institutional verdict.
+
+TONE: Senior Market Strategist. BOLD key levels. Precise. Calculated.`;
 }
 
 function formatResponse(text: string): React.ReactElement {
@@ -42,13 +48,13 @@ function formatResponse(text: string): React.ReactElement {
     <div className="ai-response">
       {lines.map((line, i) => {
         if (line.startsWith('**') && line.endsWith('**') && !line.includes(':')) {
-          return <h3 key={i} className="ai-section-heading" style={{ margin: '10px 0 5px' }}>{line.replace(/\*\*/g, '')}</h3>;
+          return <h3 key={i} className="ai-section-heading" style={{ margin: '15px 0 8px', fontSize: '1.1rem', color: '#6366f1' }}>{line.replace(/\*\*/g, '')}</h3>;
         }
         if (line.startsWith('• ') || line.startsWith('- ')) {
-          return <p key={i} className="ai-bullet" style={{ margin: '4px 0', paddingLeft: '15px' }}>{parseInline(line)}</p>;
+          return <p key={i} className="ai-bullet" style={{ margin: '6px 0', paddingLeft: '15px', color: '#cbd5e1' }}>{parseInline(line)}</p>;
         }
         if (line.trim() === '') return <br key={i} />;
-        return <p key={i} className="ai-para" style={{ margin: '6px 0' }}>{parseInline(line)}</p>;
+        return <p key={i} className="ai-para" style={{ margin: '8px 0', lineHeight: '1.6' }}>{parseInline(line)}</p>;
       })}
     </div>
   );
@@ -168,10 +174,17 @@ const AIInsight: React.FC = () => {
           try {
             const chunk = JSON.parse(data);
             const delta = chunk.choices?.[0]?.delta?.content ?? '';
+            const reasoning = chunk.choices?.[0]?.delta?.reasoning_content ?? ''; // Reaper 12.2 - R1 Support
+            
             setMessages((prev) => {
               const newMsgs = [...prev];
               const lastIdx = newMsgs.length - 1;
-              newMsgs[lastIdx] = { ...newMsgs[lastIdx], content: newMsgs[lastIdx].content + delta };
+              const current = newMsgs[lastIdx];
+              newMsgs[lastIdx] = { 
+                ...current, 
+                content: current.content + delta,
+                reasoning: (current.reasoning || '') + reasoning
+              };
               return newMsgs;
             });
           } catch { /* skip */ }
@@ -292,6 +305,25 @@ const AIInsight: React.FC = () => {
             flexDirection: 'column',
             alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start'
           }}>
+            {msg.role === 'assistant' && msg.reasoning && (
+              <div style={{
+                maxWidth: '80%',
+                marginBottom: '8px',
+                padding: '12px',
+                backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                borderLeft: '2px solid #3b82f6',
+                borderRadius: '4px',
+                fontSize: '0.8rem',
+                color: '#94a3b8',
+                lineHeight: '1.4',
+                fontStyle: 'italic'
+              }}>
+                <div style={{ fontWeight: 800, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: '#3b82f6' }}>
+                  🧠 Neural Reasoning Process
+                </div>
+                {msg.reasoning}
+              </div>
+            )}
             <div style={{
               maxWidth: '85%',
               padding: '12px 16px',

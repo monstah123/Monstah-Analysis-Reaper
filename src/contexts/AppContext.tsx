@@ -3,7 +3,6 @@ import type { AssetData } from '../data/mockData';
 import { mockAssets, generateMockSparkline } from '../data/mockData';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
 import { fetchForexRate, fetchForexHistory } from '../services/alphaVantage';
-import { fetchAllFredData } from '../services/fred';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface ApiKeys {

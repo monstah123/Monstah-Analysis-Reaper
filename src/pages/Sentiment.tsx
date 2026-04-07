@@ -66,12 +66,21 @@ const Sentiment: React.FC = () => {
         // Mirror the roster: Use live data OR default to 50%
         const long = (live && typeof live.long === 'number') ? live.long : 50;
         const rankScore = Math.abs(long - 50);
+        
+        // Fix: Retail data is always Neural Matrix unless it's explicitly stated otherwise
+        let rSource = 'Neural Matrix';
+        if (live && live.source && live.source.includes('Official CFTC')) {
+          rSource = 'Neural Fallback (DeepSeek)';
+        } else if (live && live.source) {
+          rSource = live.source;
+        }
+
         return {
           name: a.id,
           long,
           short: 100 - long,
           rankScore,
-          source: live ? (live.source || 'Neural Matrix') : 'Neutral Hold'
+          source: rSource
         };
       })
       .sort((a, b) => b.rankScore - a.rankScore); // Extreme First

@@ -39,6 +39,7 @@ interface AppContextType {
   updateMarketPrice: (id: string, price: number) => void;
   addAsset: (asset: AssetData) => void;
   removeAsset: (id: string) => void;
+  yields: { y2: number; y10: number; y30: number; y3m: number };
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -69,6 +70,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedAsset, setSelectedAsset] = useState<AssetData | null>(null);
   const [activeView, setActiveView] = useState('landing');
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
+  const [yields, setYields] = useState({ y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 });
   const refreshRef = useRef(false);
 
   const apiKeys: ApiKeys = {
@@ -123,6 +125,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // --- 4. Official Institutional, Retail & Macro Neural Sync (Total Parity) ---
       let neuralData: Record<string, any> = {};
       let neuralMacro: any = null;
+      let neuralYields: any = null;
       try {
         const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
         if (res.ok) {
@@ -130,9 +133,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (json.success) {
             neuralData = json.batch || {};
             neuralMacro = json.macro || null;
+            neuralYields = json.yields || null;
           }
         }
       } catch (e) {}
+
+      if (neuralYields) {
+        setYields(neuralYields);
+      }
 
       // Update global Macro scores from Neural Matrix 9.0
       if (neuralMacro) {
@@ -219,7 +227,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
       refreshData: fetchMarketData, selectedAsset, setSelectedAsset,
       activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
-      updateMarketPrice, addAsset, removeAsset
+      updateMarketPrice, addAsset, removeAsset, yields
     }}>
       {children}
     </Ctx.Provider>

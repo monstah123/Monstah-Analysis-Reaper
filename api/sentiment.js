@@ -104,7 +104,8 @@ export default async function handler(req, res) {
       const aiRes = await axios.post(baseUrl, {
         model,
         messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        temperature: 0
       }, {
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         timeout: 15000

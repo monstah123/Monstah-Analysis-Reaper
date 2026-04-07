@@ -161,9 +161,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           let cI = a.cot || 0;
 
           if (data) {
-            // Neural Overwrite (Stay live, fall back to existing if partial)
-            rL = data.long ?? a.retailLong ?? 50;
-            rS = 100 - rL;
+            // Neural Overwrite ONLY for Institutional (COT). 
+            // ReaperSnatcher (Myfxbook Plugin) owns the Retail data, so never overwrite rL/rS!
             cL = data.iLong ?? a.cotLong ?? 50;
             cS = 100 - cL;
           }

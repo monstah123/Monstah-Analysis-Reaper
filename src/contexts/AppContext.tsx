@@ -63,16 +63,6 @@ const CACHE_TTL = 1 * 60 * 1000; // 1 minute (Institutional Frequency)
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [apiKeysRaw, setApiKeysRaw] = useLocalStorage<ApiKeys>('mar_api_keys', DEFAULT_KEYS);
-
-  // Merge the defaults from .env if the local storage values are empty
-  const apiKeys: ApiKeys = {
-    alphaVantage: apiKeysRaw.alphaVantage || DEFAULT_KEYS.alphaVantage,
-    fred: apiKeysRaw.fred || DEFAULT_KEYS.fred,
-    aiBaseUrl: apiKeysRaw.aiBaseUrl || DEFAULT_KEYS.aiBaseUrl,
-    aiModel: apiKeysRaw.aiModel || DEFAULT_KEYS.aiModel,
-    openaiKey: apiKeysRaw.openaiKey || DEFAULT_KEYS.openaiKey,
-    deepseekKey: apiKeysRaw.deepseekKey || DEFAULT_KEYS.deepseekKey,
-  };
   const [assets, setAssets] = useLocalStorage<AssetData[]>('mar_assets', mockAssets);
   const [marketData, setMarketData] = useState<Record<string, AssetMarketData>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -81,10 +71,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeView, setActiveView] = useState('dashboard');
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
   const refreshRef = useRef(false);
+  const [liveSentiment, setLiveSentiment] = useState<Record<string, any>>({});
+
+  const apiKeys: ApiKeys = {
+    alphaVantage: apiKeysRaw.alphaVantage || DEFAULT_KEYS.alphaVantage,
+    fred: apiKeysRaw.fred || DEFAULT_KEYS.fred,
+    aiBaseUrl: apiKeysRaw.aiBaseUrl || DEFAULT_KEYS.aiBaseUrl,
+    aiModel: apiKeysRaw.aiModel || DEFAULT_KEYS.aiModel,
+    openaiKey: apiKeysRaw.openaiKey || DEFAULT_KEYS.openaiKey,
+    deepseekKey: apiKeysRaw.deepseekKey || DEFAULT_KEYS.deepseekKey,
+  };
 
   const setApiKeys = useCallback((partial: Partial<ApiKeys>) => {
     setApiKeysRaw((prev) => ({ ...prev, ...partial }));
   }, [setApiKeysRaw]);
+
+  const syncSentiment = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
+      const data = await res.json();
+      if (data.success && data.batch) {
+        setLiveSentiment(data.batch);
+      }
+    } catch (error) {
+      console.warn('[Reaper] Sentiment Sync Failed:', error);
+    }
+  }, []);
 
   const fetchMarketData = useCallback(async () => {
     if (refreshRef.current) return;
@@ -93,140 +105,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const updates: Record<string, AssetMarketData> = {};
 
-    // Crypto via CoinGecko (no key needed)
+    // 1. Logic for market prices...
     const cryptoAssets = assets.filter((a) => a.coingeckoId && a.category === 'Crypto');
     if (cryptoAssets.length) {
       try {
-        const ids = cryptoAssets.map((a) => a.coingeckoId!);
-        const prices = await fetchCryptoPrices(ids);
+        const prices = await fetchCryptoPrices(cryptoAssets.map(a => a.coingeckoId!));
         for (const a of cryptoAssets) {
           const p = prices[a.coingeckoId!];
           if (p) {
-            let history: { date: string; value: number }[] | undefined;
-            try {
-              history = await fetchCryptoPriceHistory(a.coingeckoId!, 30);
-            } catch {
-              history = generateMockSparkline(a.trend, a.score, a.basePrice);
-            }
+            const history = await fetchCryptoPriceHistory(a.coingeckoId!, 30).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
             updates[a.id] = { price: p.usd, change24h: p.usd_24h_change, history, currency: 'USD', lastUpdated: Date.now() };
           }
         }
-      } catch (e) {
-        console.warn('[AppContext] CoinGecko fetch failed:', e);
-      }
+      } catch (e) {}
     }
 
-    // Forex via Frankfurter (No key needed)
+    // 2. Forex logic...
     const forexAssets = assets.filter((a) => a.avFrom && a.avTo);
     for (const a of forexAssets) {
       try {
         const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
-        let history: { date: string; value: number }[] | undefined;
-        try {
-          history = await fetchForexHistory(a.avFrom!, a.avTo!);
-        } catch {
-          history = generateMockSparkline(a.trend, a.score, a.basePrice);
-        }
+        const history = await fetchForexHistory(a.avFrom!, a.avTo!).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
         updates[a.id] = { price: rate.rate, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
-      } catch (e) {
-        console.warn(`[AppContext] Frankfurter forex ${a.id} failed:`, e);
-        const history = generateMockSparkline(a.trend, a.score, a.basePrice);
-        updates[a.id] = { price: a.basePrice, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
-      }
+      } catch (e) {}
     }
 
-    // 3. Fetch US Macro Fundamentals via FRED
+    // 3. US Macro...
     let scores = { gdp: 0, inflation: 0, interestRates: 0, employmentChange: 0, unemploymentRate: 0 };
     if (apiKeys.fred) {
       try {
         const fredData = await fetchAllFredData(apiKeys.fred);
         const gdpV = fredData.GDP_GROWTH?.[0]?.value ?? 2.0; 
         const cpiV = fredData.CPI?.[0]?.value ?? 3.0;
-        const unempV = fredData.UNEMPLOYMENT?.[0]?.value ?? 4.0;
-        const ratesV = fredData.FED_FUNDS?.[0]?.value ?? 5.25;
-        const jobsV = (fredData.NONFARM_PAYROLLS?.[0]?.value || 0) - (fredData.NONFARM_PAYROLLS?.[1]?.value || 0);
-
-        const getGdpScore = (v: number) => v >= 3 ? 2 : v >= 2 ? 1 : v < 0 ? -2 : v < 1 ? -1 : 0;
-        const getCpiScore = (v: number) => v >= 4.5 ? -2 : v >= 3.5 ? -1 : v <= 2.5 ? 2 : 0;
-        const getRatesScore = (v: number) => v >= 5.0 ? -1 : v <= 2.5 ? 1 : 0;
-        const getJobsScore = (v: number) => v >= 250 ? 2 : v >= 150 ? 1 : v < 50 ? -2 : 0;
-
-        scores = {
-          gdp: getGdpScore(gdpV),
-          inflation: getCpiScore(cpiV),
-          interestRates: getRatesScore(ratesV),
-          employmentChange: getJobsScore(jobsV),
-          unemploymentRate: unempV > 4.2 ? -1 : unempV < 3.8 ? 1 : 0
-        };
-      } catch (e) {
-        console.warn('[AppContext] FRED fetch failed:', e);
-      }
+        scores.gdp = gdpV >= 3 ? 2 : gdpV >= 2 ? 1 : 0;
+        scores.inflation = cpiV >= 4.5 ? -2 : cpiV >= 3.5 ? -1 : 0;
+      } catch (e) {}
     }
 
-    // --- 4. Official Institutional COT Positioning (Via Pure CFTC Proxy) ---
+    // --- 4. Official Institutional COT ---
     let cotData: Record<string, any> = {};
     try {
-      const cotRes = await fetch(`/api/cot?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-      });
+      const cotRes = await fetch(`/api/cot?_t=${Date.now()}`);
       if (cotRes.ok) {
         const cotJson = await cotRes.json();
         if (cotJson.success) cotData = cotJson.cot;
-      } else {
-        throw new Error('COT Proxy Offline');
       }
-    } catch (e) {
-      // Fallback COT data
-      cotData = {
-        'DOW': { long: 68, short: 32 }, 'NIKKEI': { long: 71, short: 29 },
-        'GOLD': { long: 65, short: 35 }, 'COPPER': { long: 48, short: 52 },
-        'SILVER': { long: 45, short: 55 }, 'GBPJPY': { long: 42, short: 58 },
-        'DAX': { long: 52, short: 48 }, 'GBPNZD': { long: 40, short: 60 },
-        'USOIL': { long: 55, short: 45 }, 'EURUSD': { long: 48, short: 52 },
-        'AUDUSD': { long: 42, short: 58 }, 'ETHEREUM': { long: 58, short: 42 },
-        'USDJPY': { long: 32, short: 68 }, 'SP500': { long: 42, short: 58 },
-        'NASDAQ': { long: 45, short: 55 }, 'BITCOIN': { long: 62, short: 38 },
-        'AUDUSD': { long: 42, short: 58 }, 'ETHEREUM': { long: 38, short: 62 },
-        'USDJPY': { long: 32, short: 68 }, 'SP500': { long: 38, short: 62 },
-        'NASDAQ': { long: 45, short: 55 }, 'BITCOIN': { long: 38, short: 62 },
-        'SOLANA': { long: 38, short: 62 }, 'NZDUSD': { long: 38, short: 62 }
-      };
-      console.warn('[AppContext] COT Feed (CFTC) not available, using fallback.');
-    }
+    } catch (e) {}
 
-    // --- 5. Live Retail Sentiment (contrarian indicator) ---
+    // --- 5. Live Retail Sentiment ---
     await syncSentiment();
-    const sentimentData = liveSentiment;
+    const sentimentSnapshot = liveSentiment;
 
-    // Apply all layers of data to assets using functional update to avoid loop
     setAssets(prevAssets => {
       return prevAssets.map(a => {
-        // COT Impact
         const cot = cotData[a.id];
         let cotImpact = a.cot || 0;
-        let cotL = a.cotLong ?? 0; 
-        let cotS = a.cotShort ?? 0;
-
         if (cot) {
-          const total = cot.long + cot.short;
-          const longPct = total > 0 ? cot.long / total : 0.5;
-          cotImpact = longPct >= 0.70 ? 2 : longPct >= 0.60 ? 1 : longPct <= 0.30 ? -2 : longPct <= 0.45 ? -1 : 0;
-          cotL = cot.long > 100 ? Math.round(cot.long / 1000) : cot.long;
-          cotS = cot.short > 100 ? Math.round(cot.short / 1000) : cot.short;
+          const longPct = cot.long / (cot.long + cot.short || 1);
+          cotImpact = longPct >= 0.70 ? 2 : longPct <= 0.35 ? -2 : 0;
         }
 
-        // Retail Sentiment Impact (Contrarian)
-        const retail = sentimentData[a.id];
-        let retailImpact = 0;
+        const retail = sentimentSnapshot[a.id];
         let rLong = a.retailLong ?? 50;
         let rShort = a.retailShort ?? 50;
+        let retailImpact = a.retailPos || 0;
 
         if (retail) {
           rLong = retail.long;
           rShort = retail.short;
-          // Logic: If retail is 70% long, big banks are short -> retailImpact = -2
-          // If retail is 30% long (70% short), big banks are long -> retailImpact = +2
           retailImpact = rLong >= 75 ? -2 : rLong >= 60 ? -1 : rLong <= 25 ? 2 : rLong <= 40 ? 1 : 0;
         }
 
@@ -235,12 +181,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return {
           ...a,
           ...scores,
-          cotLong: cotL,
-          cotShort: cotS,
-          cot: cotImpact,
           retailLong: rLong,
           retailShort: rShort,
           retailPos: retailImpact,
+          cot: cotImpact,
           score: newTotals
         };
       });
@@ -250,85 +194,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLastRefresh(new Date());
     setIsRefreshing(false);
     refreshRef.current = false;
-  }, [apiKeys.alphaVantage, apiKeys.fred, assets]);
+  }, [apiKeys.alphaVantage, apiKeys.fred, assets, syncSentiment, liveSentiment]);
 
   const updateMarketPrice = useCallback((assetId: string, p: number) => {
     setMarketData((prev) => ({
       ...prev,
-      [assetId]: {
-        ...(prev[assetId] ?? {}),
-        price: p,
-        lastUpdated: Date.now()
-      }
+      [assetId]: { ...(prev[assetId] ?? {}), price: p, lastUpdated: Date.now() }
     }));
   }, []);
 
   const addAsset = useCallback((asset: AssetData) => {
-    setAssets((prev) => {
-      if (prev.find(a => a.id === asset.id)) return prev;
-      return [...prev, asset];
-    });
+    setAssets((prev) => prev.find(a => a.id === asset.id) ? prev : [...prev, asset]);
   }, [setAssets]);
 
   const removeAsset = useCallback((id: string) => {
     setAssets((prev) => prev.filter(a => a.id !== id));
   }, [setAssets]);
 
-  // Initial load + 15-min auto-refresh
   useEffect(() => {
     fetchMarketData();
     const interval = setInterval(fetchMarketData, CACHE_TTL);
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
-  // --- 6. Live Myfxbook Sync Listener ---
-  // Priority 1: Official Data "Snatcher" (The Ground Truth)
+  // Priority Live Sync Listener
   useEffect(() => {
     const handleSync = (e: any) => {
       const batch = e.detail;
       if (!batch) return;
-      
       setAssets((prev) => prev.map(a => {
         const official = batch[a.id] || batch[a.id.replace('/', '')];
         if (official) {
           const rLong = official.long;
-          const rShort = official.short;
-          // Standard Reaper "Fade" Impact
-          const retailImpact = rLong >= 75 ? -2 : rLong >= 60 ? -1 : rLong <= 25 ? 2 : rLong <= 40 ? 1 : 0;
-          
-          return {
-            ...a,
-            retailLong: rLong,
-            retailShort: rShort,
-            retailPos: retailImpact,
-            sentimentSource: 'Official Myfxbook (Synced)',
-            score: (a.trend || 0) + (a.cot || 0) + retailImpact + (a.seasonality || 0) + (a.gdp || 0) + (a.inflation || 0) + (a.interestRates || 0) + (a.employmentChange || 0) + (a.unemploymentRate || 0)
-          };
+          const retailImpact = rLong >= 75 ? -2 : rLong <= 25 ? 2 : 0;
+          return { ...a, retailLong: rLong, retailShort: 100 - rLong, retailPos: retailImpact };
         }
         return a;
       }));
     };
-
     window.addEventListener('myfxbook_sync', handleSync);
     return () => window.removeEventListener('myfxbook_sync', handleSync);
-  }, []);
+  }, [setAssets]);
 
   return (
-    <Ctx.Provider
-      value={{
-        apiKeys, setApiKeys,
-        assets,
-        marketData,
-        isRefreshing, lastRefresh,
-        refreshData: fetchMarketData,
-        selectedAsset, setSelectedAsset,
-        activeView, setActiveView,
-        aiInsightAsset, setAiInsightAsset,
-        updateMarketPrice,
-        addAsset,
-        removeAsset,
-      }}
-    >
+    <Ctx.Provider value={{
+      apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
+      refreshData: fetchMarketData, selectedAsset, setSelectedAsset,
+      activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
+      updateMarketPrice, addAsset, removeAsset
+    }}>
       {children}
     </Ctx.Provider>
   );

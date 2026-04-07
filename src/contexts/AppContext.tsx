@@ -161,10 +161,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           let cI = a.cot || 0;
 
           if (data) {
-            // Neural Overwrite ONLY for Institutional (COT). 
-            // ReaperSnatcher (Myfxbook Plugin) owns the Retail data, so never overwrite rL/rS!
+            // Institutional always comes from the Backend (CFTC or Neural)
             cL = data.iLong ?? a.cotLong ?? 50;
             cS = 100 - cL;
+            
+            // Retail only uses Backend (Neural) if ReaperSnatcher didn't grab it client-side
+            if (!a.snatcherActive) {
+              rL = data.long ?? a.retailLong ?? 50;
+              rS = 100 - rL;
+            }
           }
 
           // Proportion-aware Bias Scoring
@@ -223,7 +228,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAssets((prev) => prev.map(a => {
         const official = batch[a.id] || batch[a.id.replace('/', '')];
         if (official) {
-          return { ...a, retailLong: official.long, retailShort: official.short };
+          return { ...a, retailLong: official.long, retailShort: official.short, snatcherActive: true };
         }
         return a;
       }));

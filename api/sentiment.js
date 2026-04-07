@@ -97,9 +97,9 @@ export default async function handler(req, res) {
 
     try {
       const prompt = `Return a strict JSON object with current LIVE Market Sentiment and US Macro Fundamentals. Date: April 6, 2026.
-      Assets: DAX, GBPNZD, GBPJPY, ETHEREUM, SOLANA.
-      Format: { "sentiment": { "ASSET_ID": { "iL": number } } }
-      Benchmarks: Provide Institutional (iL) COT Non-Commercial estimates for these specific pairs. Calculate iS = 100-iL. No markdown.`;
+      Assets: GOLD, NASDAQ, SILVER, SP500, COPPER, DOW, USDJPY, DAX, USOIL, NIKKEI, GBPNZD, GBPJPY, BITCOIN, EURUSD, SOLANA, AUDUSD, NZDUSD, ETHEREUM, GBPUSD.
+      Format: { "sentiment": { "ASSET_ID": { "iL": number, "rL": number } } }
+      Benchmarks: Provide Institutional (iL) COT Non-Commercial estimates and Retail (rL) Myfxbook estimates for these pairs. Calculate iS=100-iL, rS=100-rL. No markdown.`;
 
       const aiRes = await axios.post(baseUrl, {
         model,
@@ -113,7 +113,12 @@ export default async function handler(req, res) {
       const data = JSON.parse(aiRes.data.choices[0].message.content);
       for (const [id, s] of Object.entries(data.sentiment)) {
         if (!finalBatch[id]) {
-          finalBatch[id] = { iLong: s.iL, iShort: 100 - s.iL, source: `Neural ${isDeepSeek ? 'DeepSeek' : 'OpenAI'}` };
+          // If we have no CFTC data, fallback to neural for BOTH
+          finalBatch[id] = { iLong: s.iL, iShort: 100 - s.iL, long: s.rL, short: 100 - s.rL, source: `Neural ${isDeepSeek ? 'DeepSeek' : 'OpenAI'}` };
+        } else {
+          // If we DO have CFTC data, ONLY fallback retail to neural (preserves the legal Institutional COT)
+          finalBatch[id].long = s.rL;
+          finalBatch[id].short = 100 - s.rL;
         }
       }
       sourceLabel = 'Hybrid Live + Neural';

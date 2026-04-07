@@ -26,6 +26,7 @@ export interface AssetData {
   cotShort?: number; // spec short (k)
   retailLong?: number; // %
   retailShort?: number; // %
+  snatcherActive?: boolean; // True if ReaperSnatcher successfully pulled this client-side
 }
 
 export const mockAssets: AssetData[] = [

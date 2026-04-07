@@ -18,20 +18,13 @@ export default async function handler(req, res) {
 
   try {
     const prompt = `Return a strict JSON object for current Market Sentiment and US Macro Fundamentals. Date: April 6, 2026.
-    
-    1. Assets: NIKKEI, DOW, GOLD, BITCOIN, DAX, COPPER, ETHEREUM, USOIL, SOLANA, EURUSD, GBPUSD, USDJPY, SILVER, GBPJPY, AUDUSD, SP500, NZDUSD, NASDAQ, GBPNZD.
+    Assets: NIKKEI, DOW, GOLD, BITCOIN, DAX, COPPER, ETHEREUM, USOIL, SOLANA, EURUSD, GBPUSD, USDJPY, SILVER, GBPJPY, AUDUSD, SP500, NZDUSD, NASDAQ, GBPNZD.
     Format: { 
       "sentiment": { "ASSET_ID": { "rL": 38, "rS": 62, "iL": 85, "iS": 15 } }, 
       "macro": { "GDP": 2.4, "CPI": 3.2, "FedRate": 5.5, "NFP": 275000, "PMI": 51.5 },
       "yields": { "y2": 4.52, "y10": 4.18, "y30": 4.35, "y3m": 5.25 }
     }
-    
-    Benchmarks:
-    - Sentiment: Use actual current live Institutional (iL/iS) and Retail (rL/rS) positioning percentages for each asset. Ensure the sum in each pair (rL+rS and iL+iS) is exactly 100.
-    - Macro: Latest US Real GDP, CPI YoY, Fed Rate.
-    - Yields: Latest 2Y, 10Y, 30Y Treasury Bond Yield percentages.
-    
-    Return ONLY pure JSON. No markdown.`;
+    Benchmarks: Use latest actual live positioning percentages (rL+rS=100, iL+iS=100) for each. No markdown.`;
 
     const aiRes = await axios.post(baseUrl, {
       model: model,
@@ -39,7 +32,7 @@ export default async function handler(req, res) {
       response_format: { type: "json_object" }
     }, {
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      timeout: 12000
+      timeout: 25000
     });
 
     const data = JSON.parse(aiRes.data.choices[0].message.content);

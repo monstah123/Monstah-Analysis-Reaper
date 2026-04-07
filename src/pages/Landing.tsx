@@ -3,12 +3,19 @@ import { useApp } from '../contexts/AppContext';
 
 const Landing: React.FC = () => {
   const { setActiveView } = useApp();
+  const [audioEnabled, setAudioEnabled] = React.useState(false);
 
   // Reaper 13.0 - Money Sound Engine
-  const playMoneySound = () => {
+  const playMoneySound = (isForce = false) => {
+    if (!audioEnabled && !isForce) return;
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3');
     audio.volume = 0.35;
     audio.play().catch(e => console.log('Audio blocked by browser:', e));
+  };
+
+  const handleActivate = () => {
+    setAudioEnabled(true);
+    playMoneySound(true); // First click unlocks the protocol
   };
 
   const navItems = [
@@ -80,9 +87,28 @@ const Landing: React.FC = () => {
         }}>
           THE REAPER HAS ARRIVED.
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
+        <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6', marginBottom: '2rem' }}>
           Absolute market intelligence for the retail elite. Unified Sentiment, COT Deep-Dives, and the Neural AI Reasoner in one terminal.
         </p>
+
+        {!audioEnabled && (
+          <button 
+            onClick={handleActivate}
+            className="btn btn-primary"
+            style={{ 
+              padding: '1rem 2.5rem', 
+              fontSize: '0.9rem', 
+              letterSpacing: '0.1em', 
+              fontWeight: 800, 
+              borderRadius: '50px',
+              boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)',
+              border: 'none',
+              animation: 'pulseGlow 2s infinite alternate'
+            }}
+          >
+            🔊 ACTIVATE NEURAL LINK (ENABLE SOUND)
+          </button>
+        )}
       </header>
 
       <div className="landing-grid" style={{ 
@@ -91,12 +117,15 @@ const Landing: React.FC = () => {
         gap: '1.5rem', 
         width: '100%', 
         maxWidth: '1200px',
-        zIndex: 10
+        zIndex: 10,
+        opacity: audioEnabled ? 1 : 0.4,
+        pointerEvents: audioEnabled ? 'auto' : 'none',
+        transition: 'all 0.5s ease'
       }}>
         {navItems.map((item) => (
           <div 
             key={item.id}
-            onMouseEnter={playMoneySound}
+            onMouseEnter={() => playMoneySound()}
             onClick={() => setActiveView(item.id)}
             className="landing-card"
             style={{

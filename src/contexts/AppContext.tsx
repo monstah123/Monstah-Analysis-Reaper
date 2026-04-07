@@ -90,99 +90,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshRef.current = true;
     setIsRefreshing(true);
 
-    const updates: Record<string, AssetMarketData> = {};
+    try {
+      const updates: Record<string, AssetMarketData> = {};
 
-    // 1. Fetch market prices...
-    const cryptoAssets = assets.filter((a) => a.coingeckoId && a.category === 'Crypto');
-    if (cryptoAssets.length) {
+      // 1. Fetch market prices (Snapshot current assets to avoid dependency loop)
+      const cryptoAssets = assets.filter((a) => a.coingeckoId && a.category === 'Crypto');
+      if (cryptoAssets.length) {
+        try {
+          const prices = await fetchCryptoPrices(cryptoAssets.map(a => a.coingeckoId!));
+          for (const a of cryptoAssets) {
+            const p = prices[a.coingeckoId!];
+            if (p) {
+              const history = await fetchCryptoPriceHistory(a.coingeckoId!, 30).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
+              updates[a.id] = { price: p.usd, change24h: p.usd_24h_change, history, currency: 'USD', lastUpdated: Date.now() };
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 2. Forex logic...
+      const forexAssets = assets.filter((a) => a.avFrom && a.avTo);
+      for (const a of forexAssets) {
+        try {
+          const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
+          const history = await fetchForexHistory(a.avFrom!, a.avTo!).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
+          updates[a.id] = { price: rate.rate, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
+        } catch (e) {}
+      }
+
+      // 3. US Macro Scores...
+      let scores = { gdp: 0, inflation: 0, interestRates: 0, employmentChange: 0, unemploymentRate: 0 };
+      
+      // --- 4. Official Institutional, Retail & Macro Neural Sync (Total Parity) ---
+      let neuralData: Record<string, any> = {};
+      let neuralMacro: any = null;
       try {
-        const prices = await fetchCryptoPrices(cryptoAssets.map(a => a.coingeckoId!));
-        for (const a of cryptoAssets) {
-          const p = prices[a.coingeckoId!];
-          if (p) {
-            const history = await fetchCryptoPriceHistory(a.coingeckoId!, 30).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
-            updates[a.id] = { price: p.usd, change24h: p.usd_24h_change, history, currency: 'USD', lastUpdated: Date.now() };
+        const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) {
+            neuralData = json.batch || {};
+            neuralMacro = json.macro || null;
           }
         }
       } catch (e) {}
-    }
 
-    // 2. Forex logic...
-    const forexAssets = assets.filter((a) => a.avFrom && a.avTo);
-    for (const a of forexAssets) {
-      try {
-        const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
-        const history = await fetchForexHistory(a.avFrom!, a.avTo!).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
-        updates[a.id] = { price: rate.rate, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
-      } catch (e) {}
-    }
-
-    // 3. US Macro...
-    let scores = { gdp: 0, inflation: 0, interestRates: 0, employmentChange: 0, unemploymentRate: 0 };
-    if (apiKeys.fred) {
-      try {
-        const fredData = await fetchAllFredData(apiKeys.fred);
-        scores.gdp = (fredData.GDP_GROWTH?.[0]?.value || 0) >= 3 ? 2 : 0;
-        scores.inflation = (fredData.CPI?.[0]?.value || 0) >= 4.5 ? -2 : 0;
-      } catch (e) {}
-    }
-
-    // --- 4. Official Institutional, Retail & Macro Neural Sync (Total Parity) ---
-    let neuralData: Record<string, any> = {};
-    let neuralMacro: any = null;
-    try {
-      const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          neuralData = json.batch || {};
-          neuralMacro = json.macro || null;
-        }
+      // Update global Macro scores from Neural Matrix 9.0
+      if (neuralMacro) {
+        scores.gdp = (neuralMacro.GDP || 2.0) >= 3 ? 2 : (neuralMacro.GDP || 2.0) >= 2 ? 1 : 0;
+        scores.inflation = (neuralMacro.CPI || 3.0) >= 4.5 ? -2 : (neuralMacro.CPI || 3.0) >= 3.5 ? -1 : 0;
+        scores.interestRates = (neuralMacro.FedRate || 5.0) >= 5.5 ? -1 : 0;
+        scores.employmentChange = (neuralMacro.NFP || 200000) >= 250000 ? 2 : 1;
       }
-    } catch (e) {}
 
-    // Update global Macro scores from Neural Matrix 9.0
-    if (neuralMacro) {
-      scores.gdp = (neuralMacro.GDP || 2.0) >= 3 ? 2 : (neuralMacro.GDP || 2.0) >= 2 ? 1 : 0;
-      scores.inflation = (neuralMacro.CPI || 3.0) >= 4.5 ? -2 : (neuralMacro.CPI || 3.0) >= 3.5 ? -1 : 0;
-      // High Interest Rates can be bearish for many risk assets (-1 impact)
-      scores.interestRates = (neuralMacro.FedRate || 5.0) >= 5.5 ? -1 : 0;
-      // Employment NFP Surprise (High = Bullish +2)
-      scores.employmentChange = (neuralMacro.NFP || 200000) >= 250000 ? 2 : 1;
-    }
+      setAssets(prevAssets => {
+        return prevAssets.map(a => {
+          const data = neuralData[a.id];
+          let rL = a.retailLong ?? 50;
+          let cL = a.cotLong ?? 50;
+          let rP = a.retailPos || 0;
+          let cI = a.cot || 0;
 
-    setAssets(prevAssets => {
-      return prevAssets.map(a => {
-        const data = neuralData[a.id];
-        let rL = a.retailLong ?? 50;
-        let cL = a.cotLong ?? 50;
-        let rP = a.retailPos || 0;
-        let cI = a.cot || 0;
+          if (data) {
+            rL = data.long ?? 50;
+            cL = data.iLong ?? 50;
+            rP = rL >= 75 ? -2 : rL <= 25 ? 2 : 0;
+            cI = cL >= 75 ? 2 : cL <= 35 ? -2 : 0;
+          }
 
-        if (data) {
-          // Absolute AI-Driven Parity for both sides
-          rL = data.long ?? 50;
-          cL = data.iLong ?? 50;
-          rP = rL >= 75 ? -2 : rL <= 25 ? 2 : 0;
-          cI = cL >= 75 ? 2 : cL <= 35 ? -2 : 0;
-        }
-
-        const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
-        
-        return {
-          ...a, ...scores,
-          retailLong: rL, retailShort: 100 - rL, retailPos: rP,
-          cotLong: cL, cotShort: 100 - cL, cot: cI,
-          score: newTotals
-        };
+          const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + (a.unemploymentRate || 0);
+          
+          return {
+            ...a, ...scores,
+            retailLong: rL, retailShort: 100 - rL, retailPos: rP,
+            cotLong: cL, cotShort: 100 - cL, cot: cI,
+            score: newTotals
+          };
+        });
       });
-    });
 
-    setMarketData((prev) => ({ ...prev, ...updates }));
-    setLastRefresh(new Date());
-    setIsRefreshing(false);
-    refreshRef.current = false;
-  }, [apiKeys.alphaVantage, apiKeys.fred, assets]);
+      setMarketData((prev) => ({ ...prev, ...updates }));
+      setLastRefresh(new Date());
+    } finally {
+      setIsRefreshing(false);
+      refreshRef.current = false;
+    }
+  }, [apiKeys.alphaVantage, apiKeys.fred]);
 
   const updateMarketPrice = useCallback((assetId: string, p: number) => {
     setMarketData((prev) => ({

@@ -31,25 +31,34 @@ const ReaperSnatcher: React.FC = () => {
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
         if (cells.length >= 3) {
-          let rawSymbol = cells[0].innerText.trim().replace('/', '').toUpperCase(); 
+          // Normalize text: "  EUR / USD  " -> "EURUSD"
+          let rawText = cells[0].innerText.trim().toUpperCase();
+          let cleanSymbol = rawText.replace(/[^A-Z0-9]/g, ''); // Removes /, spaces, &, etc.
           
-          // Map Myfxbook Official Symbols to Reaper Terminal IDs
+          // Map Myfxbook Official Names to Reaper Terminal IDs
           const symbolMap: Record<string, string> = {
             'XAUUSD': 'GOLD',
+            'GOLD': 'GOLD',
             'XAGUSD': 'SILVER',
+            'SILVER': 'SILVER',
             'USDOLLAR': 'DXY',
             'WALLSTREET': 'DOW',
+            'WALLSTREET30': 'DOW',
             'US30': 'DOW',
-            'US500': 'SP500',
+            'SP500': 'SP500',
+            'SPX500': 'SP500',
             'USA500': 'SP500',
             'US100': 'NASDAQ',
+            'NAS100': 'NASDAQ',
+            'NDX100': 'NASDAQ',
             'GER30': 'DAX',
             'DE30': 'DAX',
+            'DE40': 'DAX',
             'UK100': 'FTSE',
             'JPN225': 'NIKKEI'
           };
 
-          const targetId = symbolMap[rawSymbol] || rawSymbol;
+          const targetId = symbolMap[cleanSymbol] || cleanSymbol;
           const shortText = cells[2].innerText.replace('%', '').trim();
           // const longText = cells[3]?.innerText.replace('%', '').trim(); 
 

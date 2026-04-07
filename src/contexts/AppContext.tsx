@@ -127,15 +127,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
     }
 
-    // --- 4. Official Institutional & Retail Neural Sync (Total Parity) ---
+    // --- 4. Official Institutional, Retail & Macro Neural Sync (Total Parity) ---
     let neuralData: Record<string, any> = {};
+    let neuralMacro: any = null;
     try {
       const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
       if (res.ok) {
         const json = await res.json();
-        if (json.success) neuralData = json.batch || {};
+        if (json.success) {
+          neuralData = json.batch || {};
+          neuralMacro = json.macro || null;
+        }
       }
     } catch (e) {}
+
+    // Update global Macro scores from Neural Matrix 9.0
+    if (neuralMacro) {
+      scores.gdp = (neuralMacro.GDP || 2.0) >= 3 ? 2 : (neuralMacro.GDP || 2.0) >= 2 ? 1 : 0;
+      scores.inflation = (neuralMacro.CPI || 3.0) >= 4.5 ? -2 : (neuralMacro.CPI || 3.0) >= 3.5 ? -1 : 0;
+      // High Interest Rates can be bearish for many risk assets (-1 impact)
+      scores.interestRates = (neuralMacro.FedRate || 5.0) >= 5.5 ? -1 : 0;
+      // Employment NFP Surprise (High = Bullish +2)
+      scores.employmentChange = (neuralMacro.NFP || 200000) >= 250000 ? 2 : 1;
+    }
 
     setAssets(prevAssets => {
       return prevAssets.map(a => {

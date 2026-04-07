@@ -20,12 +20,14 @@ import COTDeepDive from './pages/COTDeepDive';
 import YieldSpreads from './pages/YieldSpreads';
 import NewsTerminal from './pages/NewsTerminal';
 import ReaperSnatcher from './components/ReaperSnatcher';
+import Landing from './pages/Landing';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
 
   const renderPage = () => {
     switch (activeView) {
+      case 'landing':       return <Landing />;
       case 'watchlist':    return <Watchlist />;
       case 'sentiment':    return <Sentiment />;
       case 'fundamental':  return <Fundamental />;
@@ -41,16 +43,20 @@ function AppContent() {
     }
   };
 
+  const isLanding = activeView === 'landing';
+
   return (
-    <div className="app-container">
-      <div className="desktop-sidebar-wrapper">
-        <Sidebar activeView={activeView} onNavChange={setActiveView} />
-      </div>
+    <div className={`app-container ${isLanding ? 'is-landing' : ''}`}>
+      {!isLanding && (
+        <div className="desktop-sidebar-wrapper">
+          <Sidebar activeView={activeView} onNavChange={setActiveView} />
+        </div>
+      )}
       <div className="app-body">
-        <MobileNav />
-        <main className="main-content">{renderPage()}</main>
+        {!isLanding && <MobileNav />}
+        <main className={isLanding ? 'landing-content' : 'main-content'}>{renderPage()}</main>
       </div>
-      <AssetDrawer />
+      {!isLanding && <AssetDrawer />}
     </div>
   );
 }

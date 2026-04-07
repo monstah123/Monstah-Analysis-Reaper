@@ -8,10 +8,9 @@ interface Message {
   reasoning?: string; // Reaper 12.1 - Support for DeepSeek R1 Reasoning
 }
 
-function buildSystemPrompt(asset: AssetData, price?: number, change?: number, lastUpdated?: number): string {
+function buildSystemPrompt(asset: AssetData, price?: number, change?: number, _lastUpdated?: number): string {
   const priceStr = price ? price.toLocaleString() : '1.15820';
   const changeStr = change !== undefined ? `${change > 0 ? '+' : ''}${change.toFixed(2)}%` : 'N/A';
-  const ageSec = lastUpdated ? Math.floor((Date.now() - lastUpdated) / 1000) : 0;
   
   return `YOU ARE THE MONSTAH TERMINAL REASONER (R1).
 DATE: April 7th, 2026.

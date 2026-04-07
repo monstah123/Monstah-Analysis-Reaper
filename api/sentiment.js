@@ -104,8 +104,9 @@ export default async function handler(req, res) {
       const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       const prompt = `Return a strict JSON object with current LIVE Market Sentiment and US Macro Fundamentals. Date: ${dateStr}.
       Assets: GOLD, NASDAQ, SILVER, SP500, COPPER, DOW, USDJPY, DAX, USOIL, NIKKEI, GBPNZD, GBPJPY, BITCOIN, EURUSD, SOLANA, AUDUSD, NZDUSD, ETHEREUM, GBPUSD.
-      Format: { "sentiment": { "ASSET_ID": { "iL": number, "rL": number } }, "macro": { "GDP": number, "NFP": number, "PMI": number } }
-      Benchmarks: Provide Institutional (iL) COT Non-Commercial estimates and Retail (rL) Myfxbook estimates for these pairs. Also provide latest US GDP growth (%), NFP (raw number), and Manufacturing PMI. No markdown.`;
+      Format: { "sentiment": { "ASSET_ID": { "iL": integer, "rL": integer } }, "macro": { "GDP": number, "NFP": number, "PMI": number } }
+      Scaling: All sentiment values (iL and rL) MUST be integers between 0 and 100 (e.g., 65 instead of 0.65). 
+      Benchmarks: Provide Institutional (iL) COT Non-Commercial estimates and Retail (rL) Myfxbook estimates for these pairs. Also provide latest US GDP growth (%), NFP (monthly change in thousands), and Manufacturing PMI. No markdown.`;
 
       const aiRes = await axios.post(baseUrl, {
         model,

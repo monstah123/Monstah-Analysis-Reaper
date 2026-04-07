@@ -71,18 +71,22 @@ export default async function handler(req, res) {
         return parseFloat(r.data.observations[0].value);
       };
 
-      const [y2, y10, y30, y3m, effr, cpi] = await Promise.all([
+      const [y2, y10, y30, y3m, effr, cpiYoY, gdpGrowth, nfpChange] = await Promise.all([
         getFred('DGS2').catch(()=>4.52),
         getFred('DGS10').catch(()=>4.18),
         getFred('DGS30').catch(()=>4.35),
         getFred('DGS3MO').catch(()=>5.25),
         getFred('FEDFUNDS').catch(()=>5.5),
-        getFred('CPIAUCSL').catch(()=>3.4)
+        getFred('CPIAUCSL_PC1').catch(()=>3.4),      // Percent Change from Year Ago
+        getFred('A191RL1Q225SBEA').catch(()=>2.1),   // Real GDP % Change
+        getFred('PAYEMS_CHG').catch(()=>240000)       // Monthly NFP Change
       ]);
 
       finalYields = { y2, y10, y30, y3m };
       finalMacro.FedRate = effr || finalMacro.FedRate;
-      finalMacro.CPI = cpi || finalMacro.CPI;
+      finalMacro.CPI = cpiYoY || finalMacro.CPI;
+      finalMacro.GDP = gdpGrowth || finalMacro.GDP;
+      finalMacro.NFP = nfpChange || finalMacro.NFP;
       // Note: Full FRED integration completed for available real-time series
     } catch (e) {
       console.error('FRED Error:', e.message);

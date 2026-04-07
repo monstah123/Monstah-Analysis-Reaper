@@ -17,14 +17,14 @@ export default async function handler(req, res) {
   const model = isDeepSeek ? "deepseek-chat" : "gpt-4o-mini";
 
   try {
-    const prompt = `Return a strict JSON object for current Market Sentiment and US Macro Fundamentals. Date: April 6, 2026.
-    Assets: NIKKEI, DOW, GOLD, BITCOIN, DAX, COPPER, ETHEREUM, USOIL, SOLANA, EURUSD, GBPUSD, USDJPY, SILVER, GBPJPY, AUDUSD, SP500, NZDUSD, NASDAQ, GBPNZD.
+    const prompt = `Return a strict JSON object with current LIVE Market Sentiment and US Macro Fundamentals. Date: April 6, 2026.
+    Assets: GOLD, NASDAQ, SILVER, SP500, COPPER, DOW, USDJPY, DAX, USOIL, NIKKEI, GBPNZD, GBPJPY, BITCOIN, EURUSD, SOLANA, AUDUSD, NZDUSD, ETHEREUM, GBPUSD.
     Format: { 
-      "sentiment": { "ASSET_ID": { "rL": 38, "rS": 62, "iL": 85, "iS": 15 } }, 
-      "macro": { "GDP": 2.4, "CPI": 3.2, "FedRate": 5.5, "NFP": 275000, "PMI": 51.5 },
-      "yields": { "y2": 4.52, "y10": 4.18, "y30": 4.35, "y3m": 5.25 }
+      "sentiment": { "ASSET_ID": { "rL": number, "iL": number } }, 
+      "macro": { "GDP": number, "CPI": number, "FedRate": number, "NFP": number, "PMI": number },
+      "yields": { "y2": number, "y10": number, "y30": number, "y3m": number }
     }
-    Benchmarks: Use latest actual live positioning percentages (rL+rS=100, iL+iS=100) for each. No markdown.`;
+    Benchmarks: For every asset, fetch current unique live percentages. Institutional (iL) = COT Non-Commercial Longs. Retail (rL) = Myfxbook Client Longs. rS will be (100-rL), iS will be (100-iL). No markdown.`;
 
     const aiRes = await axios.post(baseUrl, {
       model: model,

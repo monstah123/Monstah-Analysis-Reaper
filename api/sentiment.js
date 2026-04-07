@@ -69,7 +69,8 @@ export default async function handler(req, res) {
       success: true,
       batch: {},
       macro: MACRO_FALLBACK,
-      source: 'Neural Fallback 9.0'
+      source: `ERR: ${error.message}${error.response ? ` (${error.response.status})` : ''}`,
+      timestamp: now
     });
   }
 }

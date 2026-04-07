@@ -67,7 +67,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<AssetData | null>(null);
-  const [activeView, setActiveView] = useState('dashboard');
+  const [activeView, setActiveView] = useState('landing');
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
   const refreshRef = useRef(false);
 

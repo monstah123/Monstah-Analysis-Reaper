@@ -6,8 +6,8 @@ const Landing: React.FC = () => {
 
   // Reaper 13.0 - Money Sound Engine
   const playMoneySound = () => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3');
-    audio.volume = 0.4;
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3');
+    audio.volume = 0.35;
     audio.play().catch(e => console.log('Audio blocked by browser:', e));
   };
 

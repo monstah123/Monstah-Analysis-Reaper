@@ -58,22 +58,24 @@ const Sentiment: React.FC = () => {
       .sort((a, b) => b.rankScore - a.rankScore); // Extreme First
   }, [sortedAssets]);
 
-  // Reaper 8.3 - Dual Dynamic Squad Sorting (Retail Side)
+  // Reaper 8.5 - Full Squad Mirroring (Retail Side)
   const retailChartData = useMemo(() => {
-    return Object.entries(liveData)
-      .map(([key, data]) => {
-        const long = data.long || 50;
+    return assets
+      .map(a => {
+        const live = liveData[a.id];
+        // Mirror the roster: Use live data OR default to 50%
+        const long = (live && typeof live.long === 'number') ? live.long : 50;
         const rankScore = Math.abs(long - 50);
         return {
-          name: key,
+          name: a.id,
           long,
           short: 100 - long,
           rankScore,
-          source: data.source || 'Neural Matrix'
+          source: live ? (live.source || 'Neural Matrix') : 'Neutral Hold'
         };
       })
       .sort((a, b) => b.rankScore - a.rankScore); // Extreme First
-  }, [liveData]);
+  }, [assets, liveData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

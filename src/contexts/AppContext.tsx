@@ -287,6 +287,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [fetchMarketData]);
 
   // --- 6. Live Myfxbook Sync Listener ---
+  // Priority 1: Official Data "Snatcher" (The Ground Truth)
   useEffect(() => {
     const handleSync = (e: any) => {
       const batch = e.detail;
@@ -297,7 +298,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (official) {
           const rLong = official.long;
           const rShort = official.short;
-          // Standard Reaper "Fade" Impact (if retail is 70% long, bias is -2)
+          // Standard Reaper "Fade" Impact
           const retailImpact = rLong >= 75 ? -2 : rLong >= 60 ? -1 : rLong <= 25 ? 2 : rLong <= 40 ? 1 : 0;
           
           return {
@@ -305,6 +306,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             retailLong: rLong,
             retailShort: rShort,
             retailPos: retailImpact,
+            sentimentSource: 'Official Myfxbook (Synced)',
             score: (a.trend || 0) + (a.cot || 0) + retailImpact + (a.seasonality || 0) + (a.gdp || 0) + (a.inflation || 0) + (a.interestRates || 0) + (a.employmentChange || 0) + (a.unemploymentRate || 0)
           };
         }

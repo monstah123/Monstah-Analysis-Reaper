@@ -54,7 +54,7 @@ const ReaperSnatcher: React.FC = () => {
       }
     };
 
-    snatcherRef.current = setInterval(snatchData, 15000); // Snatch every 15s
+    snatcherRef.current = setInterval(snatchData, 10000); // Fast snatch 10s
 
     return () => {
       if (snatcherRef.current) clearInterval(snatcherRef.current);

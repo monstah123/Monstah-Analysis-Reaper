@@ -187,22 +187,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'AUDUSD': { long: 42, short: 58 }, 'ETHEREUM': { long: 58, short: 42 },
         'USDJPY': { long: 32, short: 68 }, 'SP500': { long: 42, short: 58 },
         'NASDAQ': { long: 45, short: 55 }, 'BITCOIN': { long: 62, short: 38 },
-        'SOLANA': { long: 55, short: 45 }, 'NZDUSD': { long: 38, short: 62 }
+        'AUDUSD': { long: 42, short: 58 }, 'ETHEREUM': { long: 38, short: 62 },
+        'USDJPY': { long: 32, short: 68 }, 'SP500': { long: 38, short: 62 },
+        'NASDAQ': { long: 45, short: 55 }, 'BITCOIN': { long: 38, short: 62 },
+        'SOLANA': { long: 38, short: 62 }, 'NZDUSD': { long: 38, short: 62 }
       };
       console.warn('[AppContext] COT Feed (CFTC) not available, using fallback.');
     }
 
     // --- 5. Live Retail Sentiment (contrarian indicator) ---
-    let sentimentData: Record<string, any> = {};
-    try {
-      const sentRes = await fetch(`/api/sentiment?batch=true&_t=${Date.now()}`);
-      if (sentRes.ok) {
-        const sentJson = await sentRes.json();
-        if (sentJson.success) sentimentData = sentJson.batch || {};
-      }
-    } catch (e: any) {
-      console.warn('[AppContext] Sentiment fetch failed:', e.message);
-    }
+    await syncSentiment();
+    const sentimentData = liveSentiment;
 
     // Apply all layers of data to assets using functional update to avoid loop
     setAssets(prevAssets => {

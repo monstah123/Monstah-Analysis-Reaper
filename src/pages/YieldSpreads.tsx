@@ -1,5 +1,5 @@
-import React, { useMemo, useEffect, useState, useCallback } from 'react';
-import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, BarChart, Bar } from 'recharts';
+import React, { useMemo } from 'react';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar } from 'recharts';
 import { useApp } from '../contexts/AppContext';
 
 const YieldSpreads: React.FC = () => {

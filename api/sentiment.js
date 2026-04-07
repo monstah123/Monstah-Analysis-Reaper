@@ -24,9 +24,7 @@ export default async function handler(req, res) {
       "macro": { "GDP": number, "CPI": number, "FedRate": number, "NFP": number, "PMI": number },
       "yields": { "y2": number, "y10": number, "y30": number, "y3m": number }
     }
-    Benchmarks: Use the following EXACT live positioning data (rL = Retail Bullish, iL = Institutional Bullish) for the JSON structure:
-    NIKKEI: rL=45, iL=35 / DOW: rL=78, iL=35 / GOLD: rL=45, iL=70 / BITCOIN: rL=38, iL=85 / DAX: rL=50, iL=45 / COPPER: rL=52, iL=40 / ETHEREUM: rL=40, iL=75 / USOIL: rL=48, iL=42 / SOLANA: rL=45, iL=35 / EURUSD: rL=48, iL=45 / GBPNZD: rL=52, iL=50 / SILVER: rL=50, iL=55 / GBPJPY: rL=55, iL=52 / AUDUSD: rL=45, iL=40 / USDJPY: rL=52, iL=48 / SP500: rL=65, iL=45 / NZDUSD: rL=45, iL=30 / NASDAQ: rL=60, iL=42 / GBPUSD: rL=50, iL=50.
-    Calculate rS = 100-rL, iS = 100-iL. No markdown.`;
+    Benchmarks: For every asset, fetch current unique live percentages based on your latest internal data. Institutional (iL) = COT Non-Commercial Longs. Retail (rL) = Myfxbook Client Longs. Calculate rS = 100-rL, iS = 100-iL. No markdown.`;
 
     const aiRes = await axios.post(baseUrl, {
       model: model,

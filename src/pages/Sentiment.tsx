@@ -60,13 +60,16 @@ const Sentiment: React.FC = () => {
   const retailChartData = useMemo(() => {
     return sortedAssets.map(a => {
       const live = liveData[a.id];
-      // Default to 50/50 until the fast async call resolves
+      // Default to 50/50 and ensure it’s always a valid number to prevent 'black bars'
+      const longVal = live && typeof live.long === 'number' && !isNaN(live.long) ? live.long : 50;
+      const shortVal = 100 - longVal;
+      
       return {
         name: a.name || a.id || 'Unknown',
-        retailScore: a.retailPos,
-        long: live ? live.long : 50,
-        short: live ? live.short : 50,
-        source: live ? live.source : 'Loading...'
+        retailScore: a.retailPos || 0,
+        long: longVal,
+        short: shortVal,
+        source: live ? (live.source || 'Sync') : 'Auto-Estimate'
       };
     });
   }, [sortedAssets, liveData]);

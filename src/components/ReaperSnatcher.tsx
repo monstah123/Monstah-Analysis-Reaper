@@ -44,13 +44,16 @@ const ReaperSnatcher: React.FC = () => {
             'USDOLLAR': 'DXY',
             'WALLSTREET': 'DOW',
             'WALLSTREET30': 'DOW',
+            'USA30': 'DOW',
             'US30': 'DOW',
+            'DOWJONES': 'DOW',
             'SP500': 'SP500',
             'SPX500': 'SP500',
             'USA500': 'SP500',
             'US100': 'NASDAQ',
             'NAS100': 'NASDAQ',
             'NDX100': 'NASDAQ',
+            'USA100': 'NASDAQ',
             'GER30': 'DAX',
             'DE30': 'DAX',
             'DE40': 'DAX',
@@ -58,7 +61,13 @@ const ReaperSnatcher: React.FC = () => {
             'JPN225': 'NIKKEI'
           };
 
-          const targetId = symbolMap[cleanSymbol] || cleanSymbol;
+          let targetId = symbolMap[cleanSymbol] || cleanSymbol;
+          
+          // Fuzzy match fallback for DOW
+          if (cleanSymbol.includes('WALLSTREET') || cleanSymbol.includes('USA30')) {
+            targetId = 'DOW';
+          }
+          
           const shortText = cells[2].innerText.replace('%', '').trim();
           // const longText = cells[3]?.innerText.replace('%', '').trim(); 
 

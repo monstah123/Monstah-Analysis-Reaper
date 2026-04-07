@@ -90,7 +90,7 @@ export default async function handler(req, res) {
 
   // --- 3. NEURAL FALLBACK (For Cryptos/Missing Data) ---
   const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY || process.env.OPENAI_API_KEY;
-  if (apiKey && Object.keys(finalBatch).length < 10) {
+  if (apiKey) {
     const isDeepSeek = apiKey.startsWith('sk-') && !apiKey.startsWith('sk-proj-');
     const baseUrl = isDeepSeek ? 'https://api.deepseek.com/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
     const model = isDeepSeek ? "deepseek-chat" : "gpt-4o-mini";

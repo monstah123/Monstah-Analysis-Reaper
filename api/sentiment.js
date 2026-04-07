@@ -5,16 +5,21 @@ import axios from 'axios';
 
 export default async function handler(req, res) {
   const now = Date.now();
-  const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY;
+  const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY || process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
     return res.status(200).json({ success: true, batch: {}, source: 'Emergency Backup' });
   }
 
+  // Dynamic Provider Selection (Robust Connection Logic)
+  const isDeepSeek = apiKey.startsWith('sk-') && !apiKey.startsWith('sk-proj-');
+  const baseUrl = isDeepSeek ? 'https://api.deepseek.com/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
+  const model = isDeepSeek ? "deepseek-chat" : "gpt-4o-mini";
+
   try {
     const prompt = `Return a strict JSON object for current Market Sentiment and US Macro Fundamentals. Date: April 6, 2026.
     
-    1. Assets: NIKKEI, DOW, GOLD, BITCOIN, DAX, COPPER, ETHEREUM, USOIL, SOLANA, EURUSD, GBPUSD, USDJPY.
+    1. Assets: NIKKEI, DOW, GOLD, BITCOIN, DAX, COPPER, ETHEREUM, USOIL, SOLANA, EURUSD, GBPUSD, USDJPY, SILVER, GBPJPY, AUDUSD, SP500, NZDUSD, NASDAQ, GBPNZD.
     Format: { 
       "sentiment": { "ASSET_ID": { "rL": 38, "rS": 62, "iL": 85, "iS": 15 } }, 
       "macro": { "GDP": 2.4, "CPI": 3.2, "FedRate": 5.5, "NFP": 275000, "PMI": 51.5 },
@@ -22,18 +27,19 @@ export default async function handler(req, res) {
     }
     
     Benchmarks:
+    - Sentiment: Use actual current live Institutional (iL/iS) and Retail (rL/rS) positioning percentages for each asset. Ensure the sum in each pair (rL+rS and iL+iS) is exactly 100.
     - Macro: Latest US Real GDP, CPI YoY, Fed Rate.
     - Yields: Latest 2Y, 10Y, 30Y Treasury Bond Yield percentages.
     
     Return ONLY pure JSON. No markdown.`;
 
-    const aiRes = await axios.post('https://api.deepseek.com/v1/chat/completions', {
-      model: "deepseek-chat",
+    const aiRes = await axios.post(baseUrl, {
+      model: model,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" }
     }, {
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      timeout: 15000
+      timeout: 12000
     });
 
     const data = JSON.parse(aiRes.data.choices[0].message.content);
@@ -43,7 +49,7 @@ export default async function handler(req, res) {
       sentimentResults[id] = {
         long: s.rL, short: 100 - s.rL,
         iLong: s.iL, iShort: 100 - s.iL,
-        source: 'DeepSeek Neural 9.0'
+        source: `Neural ${isDeepSeek ? 'DeepSeek' : 'OpenAI'} Matrix 10.0`
       };
     }
 

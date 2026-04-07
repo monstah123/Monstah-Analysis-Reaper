@@ -129,30 +129,28 @@ const Sentiment: React.FC = () => {
 
       <div className="settings-row-2">
         {/* COT Chart */}
-        <div className="settings-card" style={{ minHeight: `${cotChartData.length * 45 + 150}px` }}>
+        <div className="settings-card" style={{ minHeight: `${cotChartData.length * 45 + 150}px`, minWidth: 0 }}>
           <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
           <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
-          <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
+          <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px', minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }} barSize={28}>
-                <XAxis type="number" hide domain={[0, 100]} />
-                <YAxis dataKey="name" type="category" width={120} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                <XAxis type="number" hide domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
+                <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                 <Bar 
                   dataKey="long" 
                   stackId="a" 
                   fill="#22c55e" 
                   radius={[4, 0, 0, 4]} 
-                  isAnimationActive={true}
-                  animationDuration={1500}
+                  isAnimationActive={false}
                 />
                 <Bar 
                   dataKey="short" 
                   stackId="a" 
                   fill="#ef4444" 
                   radius={[0, 4, 4, 0]} 
-                  isAnimationActive={true}
-                  animationDuration={1500}
+                  isAnimationActive={false}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -179,15 +177,15 @@ const Sentiment: React.FC = () => {
             </span>
           </div>
           <p className="settings-hint">Live retail client positioning from official Myfxbook sources. High long ratio = bearish contrarian signal.</p>
-          <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
+          <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px', minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={retailChartData}
                 layout="vertical"
-                margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
+                margin={{ top: 5, right: 30, left: 30, bottom: 5 }}
                 barSize={28}
               >
-                <XAxis type="number" hide domain={[0, 100]} />
+                <XAxis type="number" hide domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
                 <YAxis dataKey="name" type="category" tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} width={100} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                 <Bar 
@@ -195,16 +193,14 @@ const Sentiment: React.FC = () => {
                   stackId="a" 
                   fill="#22c55e" 
                   radius={[4, 0, 0, 4]} 
-                  isAnimationActive={true}
-                  animationDuration={1500}
+                  isAnimationActive={false}
                 />
                 <Bar 
                   dataKey="short" 
                   stackId="a" 
                   fill="#ef4444" 
                   radius={[0, 4, 4, 0]} 
-                  isAnimationActive={true}
-                  animationDuration={1500}
+                  isAnimationActive={false}
                 />
               </BarChart>
             </ResponsiveContainer>

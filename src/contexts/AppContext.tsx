@@ -154,23 +154,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prevAssets.map(a => {
           const data = neuralData[a.id];
           let rL = a.retailLong ?? 50;
+          let rS = a.retailShort ?? 50;
           let cL = a.cotLong ?? 50;
+          let cS = a.cotShort ?? 50;
           let rP = a.retailPos || 0;
           let cI = a.cot || 0;
 
           if (data) {
-            rL = data.long ?? 50;
-            cL = data.iLong ?? 50;
-            rP = rL >= 75 ? -2 : rL <= 25 ? 2 : 0;
-            cI = cL >= 75 ? 2 : cL <= 35 ? -2 : 0;
+            // Neural Overwrite (Stay live, fall back to existing if partial)
+            rL = data.long ?? a.retailLong ?? 50;
+            rS = 100 - rL;
+            cL = data.iLong ?? a.cotLong ?? 50;
+            cS = 100 - cL;
           }
+
+          // Proportion-aware Bias Scoring
+          const rPct = (rL / (rL + rS)) * 100;
+          const cPct = (cL / (cL + cS)) * 100;
+
+          rP = rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0;
+          cI = cPct >= 75 ? 2 : cPct <= 35 ? -2 : 0;
 
           const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + (a.unemploymentRate || 0);
           
           return {
             ...a, ...scores,
-            retailLong: rL, retailShort: 100 - rL, retailPos: rP,
-            cotLong: cL, cotShort: 100 - cL, cot: cI,
+            retailLong: rL, retailShort: rS,
+            cotLong: cL, cotShort: cS,
+            retailPos: rP, cot: cI,
             score: newTotals
           };
         });

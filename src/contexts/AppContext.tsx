@@ -169,14 +169,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         let rLong = a.retailLong ?? 50;
         let rShort = a.retailShort ?? 50;
         let retailImpact = a.retailPos || 0;
+        
+        let targetCotLong = a.cotLong || 0;
+        let targetCotShort = a.cotShort || 0;
+        let targetCotImpact = cotImpact;
 
         if (retail) {
           rLong = retail.long;
           rShort = retail.short;
           retailImpact = rLong >= 75 ? -2 : rLong >= 60 ? -1 : rLong <= 25 ? 2 : rLong <= 40 ? 1 : 0;
+          
+          if (retail.iLong !== undefined) {
+             targetCotLong = retail.iLong;
+             targetCotShort = 100 - retail.iLong;
+             targetCotImpact = targetCotLong >= 75 ? 2 : targetCotLong >= 60 ? 1 : targetCotLong <= 35 ? -2 : 0;
+          }
         }
 
-        const newTotals = (a.trend || 0) + cotImpact + retailImpact + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
+        const newTotals = (a.trend || 0) + targetCotImpact + retailImpact + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + scores.unemploymentRate;
         
         return {
           ...a,
@@ -184,7 +194,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           retailLong: rLong,
           retailShort: rShort,
           retailPos: retailImpact,
-          cot: cotImpact,
+          cotLong: targetCotLong,
+          cotShort: targetCotShort,
+          cot: targetCotImpact,
           score: newTotals
         };
       });

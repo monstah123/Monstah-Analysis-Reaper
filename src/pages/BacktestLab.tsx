@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { History, Play, Info, Loader2, Maximize2 } from 'lucide-react';
+import { History, Play, Info, Loader2, Maximize2, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -45,6 +45,25 @@ export default function BacktestLab() {
     };
   }, [asset]);
 
+  const [trades, setTrades] = useState<any[]>([]);
+
+  const executeTrade = (type: 'BUY' | 'SELL') => {
+    if (!result) {
+      alert("You must run a Simulation first to get the entry price.");
+      return;
+    }
+    const newTrade = {
+      id: Date.now(),
+      asset,
+      date,
+      type,
+      entry: result.price,
+      status: 'OPEN',
+      outcome: 'PENDING'
+    };
+    setTrades([newTrade, ...trades]);
+  };
+
   const runBacktest = async () => {
     if (!asset || !date) return;
     setLoading(true);
@@ -84,8 +103,45 @@ export default function BacktestLab() {
       </header>
 
       <div className="lab-layout">
-        <div className="chart-section shadow-glow">
-          <div id="tv_chart_container" style={{ height: '600px', width: '100%' }}></div>
+        <div className="main-simulation-area">
+          <div className="chart-section shadow-glow">
+            <div id="tv_chart_container" style={{ height: '550px', width: '100%' }}></div>
+          </div>
+
+          <div className="simulated-trades-panel">
+            <div className="panel-header">
+              <BarChart3 size={16} />
+              <h3>GHOST JOURNAL</h3>
+            </div>
+            <div className="trades-table">
+              {trades.length === 0 ? (
+                <p className="no-trades">No active simulations. Execute a trade below.</p>
+              ) : (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ASSET</th>
+                      <th>DATE</th>
+                      <th>TYPE</th>
+                      <th>ENTRY</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trades.map(trade => (
+                      <tr key={trade.id}>
+                        <td>{trade.asset}</td>
+                        <td>{trade.date}</td>
+                        <td className={trade.type === 'BUY' ? 'text-green' : 'text-red'}>{trade.type}</td>
+                        <td className="mono">{trade.entry}</td>
+                        <td><span className="badge-pending">OPEN</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="controls-section">
@@ -102,7 +158,7 @@ export default function BacktestLab() {
             </div>
 
             <div className="input-group">
-              <label>Simulation Date</label>
+              <label>Reconstruction Date</label>
               <input 
                 type="date" 
                 value={date} 
@@ -122,11 +178,22 @@ export default function BacktestLab() {
           </div>
 
           {result && (
-            <div className="backtest-results fade-in">
+            <div className="execution-panel fade-in">
               <div className="result-main-card">
                 <div className="verdict-banner" data-verdict={result.verdict.toLowerCase()}>
                   <h2>{result.verdict} SIGNAL</h2>
-                  <div className="historical-price">Price Check: {result.price}</div>
+                  <div className="historical-price">Simulated Entry: {result.price}</div>
+                </div>
+
+                <div className="simulation-broker">
+                  <button className="trade-btn buy" onClick={() => executeTrade('BUY')}>
+                    <ArrowUpRight size={20} />
+                    BUY
+                  </button>
+                  <button className="trade-btn sell" onClick={() => executeTrade('SELL')}>
+                    <ArrowDownRight size={20} />
+                    SELL
+                  </button>
                 </div>
                 
                 <div className="metrics-grid">
@@ -168,17 +235,92 @@ export default function BacktestLab() {
       <style>{`
         .lab-layout {
           display: grid;
-          grid-template-columns: 1.5fr 1fr;
+          grid-template-columns: 1.8fr 1fr;
           gap: 1.5rem;
           margin-top: 1rem;
+        }
+        .main-simulation-area {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
         }
         .chart-section {
           background: #0f172a;
           border-radius: 20px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           overflow: hidden;
-          min-height: 600px;
         }
+        .simulated-trades-panel {
+          background: rgba(15, 23, 42, 0.6);
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 1.5rem;
+        }
+        .panel-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+          color: #94a3b8;
+        }
+        .panel-header h3 { margin: 0; font-size: 0.9rem; letter-spacing: 0.1em; }
+        
+        .trades-table {
+          overflow-x: auto;
+        }
+        .trades-table table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .trades-table th {
+          text-align: left;
+          font-size: 0.7rem;
+          color: #64748b;
+          padding: 0.75rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .trades-table td {
+          padding: 1rem 0.75rem;
+          font-size: 0.9rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        .mono { font-family: monospace; }
+        .text-green { color: #22c55e; }
+        .text-red { color: #ef4444; }
+        .badge-pending {
+          background: rgba(59, 130, 246, 0.1);
+          color: #3b82f6;
+          padding: 0.2rem 0.6rem;
+          border-radius: 4px;
+          font-size: 0.7rem;
+          font-weight: 600;
+        }
+
+        .simulation-broker {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          padding: 1.5rem;
+          background: rgba(0, 0, 0, 0.2);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .trade-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 1rem;
+          border: none;
+          border-radius: 10px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .trade-btn.buy { background: #22c55e; color: #052e16; }
+        .trade-btn.sell { background: #ef4444; color: #450a0a; }
+        .trade-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .trade-btn:active { transform: scale(0.98); }
+
         .shadow-glow {
           box-shadow: 0 0 30px rgba(59, 130, 246, 0.1);
         }

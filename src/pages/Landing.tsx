@@ -99,7 +99,7 @@ const Landing: React.FC = () => {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          THE REAPER HAS ARRIVED.
+          THE MONSTAH REAPER HAS ARRIVED.
         </h1>
         <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6', marginBottom: '2rem' }}>
           Absolute market intelligence for the retail elite. Unified Sentiment, COT Deep-Dives, and the Neural AI Reasoner in one terminal.

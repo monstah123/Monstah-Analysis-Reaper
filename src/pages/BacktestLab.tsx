@@ -13,54 +13,6 @@ export default function BacktestLab() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  useEffect(() => {
-    // Load TradingView Widget
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/tv.js';
-    script.async = true;
-    script.onload = () => {
-      if (window.TradingView) {
-        new window.TradingView.widget({
-          "autosize": true,
-          "symbol": asset.includes('USD') ? `FX:${asset}` : asset,
-          "interval": "D",
-          "timezone": "Etc/UTC",
-          "theme": "dark",
-          "style": "1",
-          "locale": "en",
-          "enable_publishing": false,
-          "allow_symbol_change": true,
-          "container_id": "tv_chart_container",
-          "hide_top_toolbar": false,
-          "hide_side_toolbar": false,
-          "withdateranges": true,
-          "show_popup_button": true,
-          "popup_width": "1000",
-          "popup_height": "650",
-          "watchlist": [
-            "FX:XAUUSD",
-            "FX:EURUSD",
-            "FX:GBPUSD",
-            "FX:USDJPY",
-            "BINANCE:BTCUSDT",
-            "OANDA:XAGUSD"
-          ],
-          "details": true,
-          "hotlist": true,
-          "calendar": true,
-          "enabled_features": ["watchlist_add_symbols", "header_symbol_search", "header_compare"],
-          "save_image": false,
-          "backgroundColor": "rgba(15, 23, 42, 1)",
-          "gridColor": "rgba(255, 255, 255, 0.05)"
-        });
-      }
-    };
-    document.head.appendChild(script);
-    return () => {
-      // Cleanup script if needed, though usually fine to keep for session
-    };
-  }, [asset]);
-
   const [trades, setTrades] = useState<any[]>([]);
   const [balance, setBalance] = useState(100000);
   const [lotSize, setLotSize] = useState(1);
@@ -132,11 +84,13 @@ export default function BacktestLab() {
     setTrades(prev => [newTrade, ...prev]);
   };
 
+  const deleteTrade = (id: number) => {
+    setTrades(prev => prev.filter(t => t.id !== id));
+  };
+
   const runBacktest = async () => {
     if (!asset || !date) return;
     setLoading(true);
-    // ...
-
     try {
       const res = await fetch('/api/backtest', {
         method: 'POST',
@@ -156,6 +110,40 @@ export default function BacktestLab() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Load TradingView Widget and sync with date
+    const script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/tv.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.TradingView) {
+        new window.TradingView.widget({
+          "autosize": true,
+          "symbol": asset.includes('USD') ? `FX:${asset}` : asset,
+          "interval": "D",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "enable_publishing": false,
+          "allow_symbol_change": true,
+          "container_id": "tv_chart_container",
+          "hide_top_toolbar": false,
+          "hide_side_toolbar": true,
+          "withdateranges": true,
+          "range": "12M", // Show 1 year leading up to the date
+          "show_popup_button": true,
+          "popup_width": "1000",
+          "popup_height": "650",
+          "save_image": false,
+          "backgroundColor": "rgba(15, 23, 42, 1)",
+          "gridColor": "rgba(255, 255, 255, 0.05)"
+        });
+      }
+    };
+    document.head.appendChild(script);
+  }, [asset, date]); // RE-RENDER ON DATE CHANGE FOR AUTHENTIC TIME TRAVEL
 
   return (
     <div className="page-container backtest-page">
@@ -236,6 +224,7 @@ export default function BacktestLab() {
                       <th>TYPE</th>
                       <th>ENTRY</th>
                       <th>STATUS</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -246,6 +235,11 @@ export default function BacktestLab() {
                         <td className={trade.type === 'BUY' ? 'text-green' : 'text-red'}>{trade.type}</td>
                         <td className="mono">{trade.entry}</td>
                         <td><span className="badge-pending">OPEN</span></td>
+                        <td>
+                          <button className="delete-trade-btn" onClick={() => deleteTrade(trade.id)}>
+                            ×
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -646,6 +640,20 @@ export default function BacktestLab() {
           border-radius: 4px;
           font-size: 0.7rem;
           font-weight: 600;
+        }
+        .delete-trade-btn {
+          background: transparent;
+          border: none;
+          color: #ef4444;
+          cursor: pointer;
+          font-size: 1.2rem;
+          padding: 0.2rem;
+          opacity: 0.5;
+          transition: all 0.2s;
+        }
+        .delete-trade-btn:hover {
+          opacity: 1;
+          transform: scale(1.2);
         }
 
         .simulation-broker {

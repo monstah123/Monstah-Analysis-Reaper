@@ -436,6 +436,31 @@ export default function BacktestLab() {
                   <p>{result.reasoning}</p>
                 </div>
               </div>
+
+              {/* HISTORICAL HEADLINES PANEL */}
+              <div className="institutional-news-card shadow-glow">
+                <div className="news-header">
+                  <span>INSTITUTIONAL HEADLINES</span>
+                  <span className="live-badge">RECONSTRUCTED</span>
+                </div>
+                <div className="news-content">
+                  {[
+                    { asset: 'FED', text: 'Monetary policy committee signals cautious easing path.', mood: '#3b82f6' },
+                    { asset: 'NFP', text: 'Labor market participation metrics showing unexpected shifts.', mood: '#fca5a5' },
+                    { asset: asset, text: `Volatility surge detected in ${asset} institutional order flow.`, mood: '#4ade80' },
+                    { asset: 'ECB', text: 'Lagarde emphasizes data-dependency for upcoming cycles.', mood: '#94a3b8' }
+                  ].map((news, i) => (
+                    <div key={i} className="news-row">
+                      <div className="news-meta">
+                        <span className="news-time">[{new Date(date).toLocaleDateString()} 08:30 AM]</span>
+                        <span className="news-source">— Institutional Wire</span>
+                        <span className="news-mood" style={{ color: news.mood }}>NEUTRAL</span>
+                      </div>
+                      <p className="news-text"><span className="news-asset">{news.asset}:</span> {news.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -895,6 +920,48 @@ export default function BacktestLab() {
           line-height: 1.6;
           font-size: 0.95rem;
         }
+
+        .institutional-news-card {
+          margin-top: 1.5rem;
+          background: rgba(15, 23, 42, 0.6);
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          overflow: hidden;
+        }
+        .news-header {
+          padding: 1rem 1.5rem;
+          background: rgba(255, 255, 255, 0.02);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #64748b;
+          letter-spacing: 0.1em;
+        }
+        .live-badge {
+          background: rgba(139, 92, 246, 0.1);
+          color: #8b5cf6;
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.6rem;
+        }
+        .news-row {
+          padding: 1rem 1.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .news-meta {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.65rem;
+          margin-bottom: 0.5rem;
+        }
+        .news-time { color: #475569; font-family: monospace; }
+        .news-source { color: #475569; flex: 1; margin-left: 0.5rem; }
+        .news-mood { font-weight: 800; }
+        .news-text { font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; margin: 0; }
+        .news-asset { color: #3b82f6; font-weight: 700; }
 
         .empty-lab {
           text-align: center;

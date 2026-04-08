@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { History, Play, Info, Loader2, Maximize2, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 declare global {
@@ -12,7 +12,6 @@ export default function BacktestLab() {
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Load TradingView Widget
@@ -46,7 +45,7 @@ export default function BacktestLab() {
   }, [asset]);
 
   const [trades, setTrades] = useState<any[]>([]);
-  const [balance, setBalance] = useState(100000);
+  const [balance] = useState(100000);
   const [lotSize, setLotSize] = useState(1);
 
   const executeTrade = (type: 'BUY' | 'SELL') => {

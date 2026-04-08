@@ -40,24 +40,41 @@ export default function BacktestLab() {
   // Playback Engine Logic
   useEffect(() => {
     let interval: any;
-    if (isPlaying && date) {
+    const today = new Date().toISOString().split('T')[0];
+
+    if (isPlaying && date && date < today) {
       interval = setInterval(() => {
         const currentDate = new Date(date);
         currentDate.setDate(currentDate.getDate() + 1);
         const nextDate = currentDate.toISOString().split('T')[0];
-        setDate(nextDate);
-        // The next effect will catch the date change and we should trigger runBacktest
+        
+        if (nextDate <= today) {
+          setDate(nextDate);
+        } else {
+          setIsPlaying(false);
+        }
       }, speed);
+    } else if (date >= today) {
+      setIsPlaying(false);
     }
+    
     return () => clearInterval(interval);
   }, [isPlaying, speed, date]);
 
-  // Handle auto-reconstruct on date change during playback
+  // Handle auto-reconstruct AND auto-pause on signal
   useEffect(() => {
     if (isPlaying && date) {
       runBacktest();
     }
   }, [date]);
+
+  // AUTO-PAUSE LOGIC: Stop playback when a signal is found
+  useEffect(() => {
+    if (isPlaying && result && (result.verdict === 'BUY' || result.verdict === 'SELL')) {
+      console.log("SIGNAL DETECTED: Auto-Pausing Playback for analysis.");
+      setIsPlaying(false);
+    }
+  }, [result]);
 
   const executeTrade = (type: 'BUY' | 'SELL') => {
     if (!result) {

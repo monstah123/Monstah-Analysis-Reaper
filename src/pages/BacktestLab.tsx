@@ -68,7 +68,22 @@ export default function BacktestLab() {
   
   // Playback State
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(2000); // Default 2s per day
+  const [speed, setSpeed] = useState(2000);
+
+  // Watchlist State (Native)
+  const [watchlist, setWatchlist] = useState<string[]>(['EURUSD', 'GBPUSD', 'XAUUSD', 'BTCUSD', 'NAS100']);
+  const [newSymbol, setNewSymbol] = useState('');
+
+  const addToWatchlist = () => {
+    if (newSymbol && !watchlist.includes(newSymbol.toUpperCase())) {
+      setWatchlist([...watchlist, newSymbol.toUpperCase()]);
+      setNewSymbol('');
+    }
+  };
+
+  const removeFromWatchlist = (symbol: string) => {
+    setWatchlist(watchlist.filter(s => s !== symbol));
+  };
 
   const executeTrade = (type: 'BUY' | 'SELL') => {
     if (!result) {
@@ -184,6 +199,30 @@ export default function BacktestLab() {
               <div className="journal-title">
                 <BarChart3 size={16} />
                 <h3>GHOST JOURNAL</h3>
+              </div>
+            </div>
+
+            <div className="watchlist-section">
+              <div className="watchlist-header">
+                <span>WATCHLIST</span>
+                <div className="add-symbol-form">
+                  <input 
+                    type="text" 
+                    placeholder="ADD..." 
+                    value={newSymbol}
+                    onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && addToWatchlist()}
+                  />
+                  <button onClick={addToWatchlist}>+</button>
+                </div>
+              </div>
+              <div className="symbols-grid">
+                {watchlist.map(s => (
+                  <div key={s} className={`symbol-tag ${asset === s ? 'active' : ''}`}>
+                    <span onClick={() => setAsset(s)}>{s}</span>
+                    <button onClick={() => removeFromWatchlist(s)}>×</button>
+                  </div>
+                ))}
               </div>
             </div>
             
@@ -482,6 +521,79 @@ export default function BacktestLab() {
           color: #94a3b8;
         }
         .journal-title h3 { margin: 0; font-size: 0.9rem; letter-spacing: 0.1em; }
+
+        .watchlist-section {
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .watchlist-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.65rem;
+          color: #64748b;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          margin-bottom: 1rem;
+        }
+        .add-symbol-form {
+          display: flex;
+          gap: 0.5rem;
+        }
+        .add-symbol-form input {
+          background: #0f172a;
+          border: 1px solid rgba(59, 130, 246, 0.2);
+          color: white;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.7rem;
+          width: 80px;
+        }
+        .add-symbol-form button {
+          background: #3b82f6;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          width: 24px;
+          height: 24px;
+          cursor: pointer;
+        }
+        .symbols-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .symbol-tag {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 0.4rem 0.75rem;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.75rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .symbol-tag:hover { border-color: rgba(255, 255, 255, 0.2); }
+        .symbol-tag.active {
+          background: rgba(59, 130, 246, 0.1);
+          border-color: #3b82f6;
+          color: #3b82f6;
+        }
+        .symbol-tag button {
+          background: transparent;
+          border: none;
+          color: #ef4444;
+          cursor: pointer;
+          padding: 0;
+          font-size: 1rem;
+          line-height: 1;
+        }
         
         .trades-table {
           overflow-x: auto;

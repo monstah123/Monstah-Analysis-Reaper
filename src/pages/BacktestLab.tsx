@@ -85,6 +85,28 @@ export default function BacktestLab() {
     setWatchlist(watchlist.filter(s => s !== symbol));
   };
 
+  // Playback Engine Logic
+  useEffect(() => {
+    let interval: any;
+    if (isPlaying && date) {
+      interval = setInterval(() => {
+        const currentDate = new Date(date);
+        currentDate.setDate(currentDate.getDate() + 1);
+        const nextDate = currentDate.toISOString().split('T')[0];
+        setDate(nextDate);
+        // The next effect will catch the date change and we should trigger runBacktest
+      }, speed);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, speed, date]);
+
+  // Handle auto-reconstruct on date change during playback
+  useEffect(() => {
+    if (isPlaying && date) {
+      runBacktest();
+    }
+  }, [date]);
+
   const executeTrade = (type: 'BUY' | 'SELL') => {
     if (!result) {
       console.log("No result yet, cannot execute.");

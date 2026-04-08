@@ -45,8 +45,9 @@ export default function BacktestLab() {
   }, [asset]);
 
   const [trades, setTrades] = useState<any[]>([]);
-  const [balance] = useState(100000);
+  const [balance, setBalance] = useState(100000);
   const [lotSize, setLotSize] = useState(1);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const executeTrade = (type: 'BUY' | 'SELL') => {
     if (!result) {
@@ -104,10 +105,16 @@ export default function BacktestLab() {
         </div>
       </header>
 
-      <div className="lab-layout">
+      <div className={`lab-layout ${isFullScreen ? 'full-screen' : ''}`}>
         <div className="main-simulation-area">
           <div className="chart-section shadow-glow">
-            <div id="tv_chart_container" style={{ height: '550px', width: '100%' }}></div>
+            <div className="chart-header">
+              <span>LIVE HISTORICAL FEED</span>
+              <button className="max-btn" onClick={() => setIsFullScreen(!isFullScreen)}>
+                <Maximize2 size={16} />
+              </button>
+            </div>
+            <div id="tv_chart_container" style={{ height: isFullScreen ? '80vh' : '550px', width: '100%' }}></div>
           </div>
 
           <div className="simulated-trades-panel">
@@ -177,10 +184,19 @@ export default function BacktestLab() {
             </div>
 
             <div className="input-group">
+              <label>Initial Capital ($)</label>
+              <input 
+                type="number" 
+                value={balance} 
+                onChange={(e) => setBalance(parseFloat(e.target.value))}
+              />
+            </div>
+
+            <div className="input-group">
               <label>Risk (Lots)</label>
               <input 
                 type="number" 
-                step="0.01" 
+                step="0.1" 
                 value={lotSize} 
                 onChange={(e) => setLotSize(parseFloat(e.target.value))}
               />
@@ -269,6 +285,43 @@ export default function BacktestLab() {
           border: 1px solid rgba(255, 255, 255, 0.1);
           overflow: hidden;
         }
+        .chart-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem 1.25rem;
+          background: rgba(255, 255, 255, 0.02);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          font-size: 0.6rem;
+          color: #64748b;
+          letter-spacing: 0.2em;
+          font-weight: 800;
+        }
+        .max-btn {
+          background: transparent;
+          border: none;
+          color: #64748b;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+        .max-btn:hover { color: white; }
+
+        .lab-layout.full-screen {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 1000;
+          background: #020617;
+          grid-template-columns: 1fr;
+          padding: 1rem;
+          margin: 0;
+        }
+        .lab-layout.full-screen .controls-section { display: none; }
+        .lab-layout.full-screen .simulated-trades-panel { display: none; }
+        .lab-layout.full-screen .main-simulation-area { height: 100%; }
+        .lab-layout.full-screen .chart-section { height: calc(100% - 2rem); }
         .simulated-trades-panel {
           background: rgba(15, 23, 42, 0.6);
           border-radius: 16px;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { History, Play, Pause, FastForward, Info, Loader2, Maximize2, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { History, Play, Pause, FastForward, Rewind, Info, Loader2, Maximize2, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -51,6 +51,18 @@ export default function BacktestLab() {
     if (nextDate <= today) {
       setDate(nextDate);
     }
+  };
+
+  const stepBack = () => {
+    const currentDate = new Date(date);
+    currentDate.setDate(currentDate.getDate() - 1);
+    
+    // Skip weekends back
+    if (currentDate.getDay() === 0) currentDate.setDate(currentDate.getDate() - 2); // Sun -> Fri
+    if (currentDate.getDay() === 6) currentDate.setDate(currentDate.getDate() - 1); // Sat -> Fri
+    
+    const prevDate = currentDate.toISOString().split('T')[0];
+    setDate(prevDate);
   };
 
   // Playback Engine Logic
@@ -114,7 +126,7 @@ export default function BacktestLab() {
   };
 
   const runBacktest = async () => {
-    if (!asset || !date) return;
+    if (!asset || !date || loading) return; // LOADING GUARD: Prevent stuck loops
     setLoading(true);
     try {
       const res = await fetch('/api/backtest', {
@@ -126,11 +138,10 @@ export default function BacktestLab() {
       if (data.success) {
         setResult(data.report);
       } else {
-        alert(data.error || "Simulation failed");
+        console.error("Simulation failed:", data.error);
       }
     } catch (err) {
       console.error(err);
-      alert("System error during simulation");
     } finally {
       setLoading(false);
     }
@@ -209,12 +220,16 @@ export default function BacktestLab() {
           <div className="chart-section shadow-glow">
             <div className="chart-header">
               <div className="playback-controls">
+                <button className="pulse-btn" onClick={stepBack} title="Previous Day">
+                  <Rewind size={14} />
+                  <span>REWIND</span>
+                </button>
                 <button 
                   className={`pulse-btn ${isPlaying ? 'active' : ''}`}
                   onClick={() => setIsPlaying(!isPlaying)}
                 >
                   {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                  <span>{isPlaying ? 'PAUSE' : 'PULSE PLAY'}</span>
+                  <span>{isPlaying ? 'PAUSE' : 'PLAY'}</span>
                 </button>
                 <button className="pulse-btn" onClick={stepForward} title="Next Day">
                   <FastForward size={14} />

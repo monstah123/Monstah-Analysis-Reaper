@@ -15,6 +15,7 @@ const analysisItems = [
   { id: 'calendar',       label: 'Calendar',       icon: '📅' },
   { id: 'correlation',    label: 'Correlation',    icon: '🌡️' },
   { id: 'cot-deep-dive',  label: 'COT Deep-Dive',  icon: '🗳️' },
+  { id: 'research',       label: 'Global Intel',   icon: '🌍' },
 ];
 
 const marketItems = [

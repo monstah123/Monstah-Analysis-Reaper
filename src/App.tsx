@@ -21,6 +21,7 @@ import YieldSpreads from './pages/YieldSpreads';
 import NewsTerminal from './pages/NewsTerminal';
 import ReaperSnatcher from './components/ReaperSnatcher';
 import Landing from './pages/Landing';
+import Researcher from './pages/Researcher';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -38,6 +39,7 @@ function AppContent() {
       case 'calendar':       return <Calendar />;
       case 'correlation':    return <Correlation />;
       case 'cot-deep-dive':  return <COTDeepDive />;
+      case 'research':       return <Researcher />;
       case 'settings':       return <Settings />;
       default:               return <Dashboard />;
     }

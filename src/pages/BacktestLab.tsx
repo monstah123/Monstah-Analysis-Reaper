@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { History, Play, Info, Loader2, Maximize2, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { History, Play, Pause, FastForward, Info, Loader2, Maximize2, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -53,29 +53,41 @@ export default function BacktestLab() {
   const [balance, setBalance] = useState(100000);
   const [lotSize, setLotSize] = useState(1);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  
+  // Playback State
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(2000); // Default 2s per day
+  const playTimer = useRef<any>(null);
 
   const executeTrade = (type: 'BUY' | 'SELL') => {
     if (!result) {
-      alert("You must run a Simulation first to get the entry price.");
+      console.log("No result yet, cannot execute.");
       return;
     }
+
+    // Clean price string
+    const priceStr = result.price ? result.price.toString() : "0";
+    const cleanPrice = parseFloat(priceStr.replace(/[^0-9.]/g, ''));
+
     const newTrade = {
       id: Date.now(),
       asset,
-      date,
+      date: date || 'Historical',
       type,
-      entry: parseFloat(result.price.replace(/[^0-9.]/g, '')),
+      entry: cleanPrice || 0,
       status: 'OPEN',
       outcome: 'PENDING',
       lotSize: lotSize
     };
-    setTrades([newTrade, ...trades]);
+    
+    console.log("Executing Trade:", newTrade);
+    setTrades(prev => [newTrade, ...prev]);
   };
 
   const runBacktest = async () => {
     if (!asset || !date) return;
     setLoading(true);
-    setResult(null);
+    // ...
 
     try {
       const res = await fetch('/api/backtest', {
@@ -114,7 +126,23 @@ export default function BacktestLab() {
         <div className="main-simulation-area">
           <div className="chart-section shadow-glow">
             <div className="chart-header">
-              <span>LIVE HISTORICAL FEED</span>
+              <div className="playback-controls">
+                <button 
+                  className={`pulse-btn ${isPlaying ? 'active' : ''}`}
+                  onClick={() => setIsPlaying(!isPlaying)}
+                >
+                  {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                  <span>{isPlaying ? 'PAUSE' : 'PULSE PLAY'}</span>
+                </button>
+                <div className="speed-selector">
+                  <FastForward size={14} />
+                  <select value={speed} onChange={(e) => setSpeed(parseInt(e.target.value))}>
+                    <option value={5000}>0.5x</option>
+                    <option value={2000}>1x</option>
+                    <option value={1000}>2x</option>
+                  </select>
+                </div>
+              </div>
               <button className="max-btn" onClick={() => setIsFullScreen(!isFullScreen)}>
                 <Maximize2 size={16} />
               </button>
@@ -294,13 +322,50 @@ export default function BacktestLab() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 0.75rem 1.25rem;
+          padding: 0.5rem 1rem;
           background: rgba(255, 255, 255, 0.02);
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-          font-size: 0.6rem;
-          color: #64748b;
-          letter-spacing: 0.2em;
+        }
+        .playback-controls {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        .pulse-btn {
+          background: rgba(59, 130, 246, 0.1);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          color: #3b82f6;
+          padding: 0.4rem 0.8rem;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.65rem;
           font-weight: 800;
+          letter-spacing: 0.1em;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .pulse-btn:hover { background: rgba(59, 130, 246, 0.2); }
+        .pulse-btn.active { 
+          background: #3b82f6; 
+          color: white; 
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); 
+        }
+        .speed-selector {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          color: #64748b;
+          font-size: 0.7rem;
+        }
+        .speed-selector select {
+          background: transparent;
+          border: none;
+          color: #3b82f6;
+          font-weight: 700;
+          cursor: pointer;
+          outline: none;
         }
         .max-btn {
           background: transparent;

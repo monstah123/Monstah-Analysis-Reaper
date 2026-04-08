@@ -48,6 +48,7 @@ export default function BacktestLab() {
           "details": true,
           "hotlist": true,
           "calendar": true,
+          "enabled_features": ["watchlist_add_symbols", "header_symbol_search", "header_compare"],
           "save_image": false,
           "backgroundColor": "rgba(15, 23, 42, 1)",
           "gridColor": "rgba(255, 255, 255, 0.05)"

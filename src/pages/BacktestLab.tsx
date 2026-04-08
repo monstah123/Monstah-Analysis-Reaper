@@ -37,6 +37,17 @@ export default function BacktestLab() {
           "show_popup_button": true,
           "popup_width": "1000",
           "popup_height": "650",
+          "watchlist": [
+            "FX:XAUUSD",
+            "FX:EURUSD",
+            "FX:GBPUSD",
+            "FX:USDJPY",
+            "BINANCE:BTCUSDT",
+            "OANDA:XAGUSD"
+          ],
+          "details": true,
+          "hotlist": true,
+          "calendar": true,
           "save_image": false,
           "backgroundColor": "rgba(15, 23, 42, 1)",
           "gridColor": "rgba(255, 255, 255, 0.05)"

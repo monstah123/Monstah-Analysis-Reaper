@@ -201,30 +201,6 @@ export default function BacktestLab() {
                 <h3>GHOST JOURNAL</h3>
               </div>
             </div>
-
-            <div className="watchlist-section">
-              <div className="watchlist-header">
-                <span>WATCHLIST</span>
-                <div className="add-symbol-form">
-                  <input 
-                    type="text" 
-                    placeholder="ADD..." 
-                    value={newSymbol}
-                    onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && addToWatchlist()}
-                  />
-                  <button onClick={addToWatchlist}>+</button>
-                </div>
-              </div>
-              <div className="symbols-grid">
-                {watchlist.map(s => (
-                  <div key={s} className={`symbol-tag ${asset === s ? 'active' : ''}`}>
-                    <span onClick={() => setAsset(s)}>{s}</span>
-                    <button onClick={() => removeFromWatchlist(s)}>×</button>
-                  </div>
-                ))}
-              </div>
-            </div>
             
             <div className="trades-table">
               {trades.length === 0 ? (
@@ -258,6 +234,30 @@ export default function BacktestLab() {
         </div>
 
         <div className="controls-section">
+          <div className="watchlist-section">
+            <div className="watchlist-header">
+              <span>NATIVE WATCHLIST</span>
+              <div className="add-symbol-form">
+                <input 
+                  type="text" 
+                  placeholder="ADD TICKER..." 
+                  value={newSymbol}
+                  onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === 'Enter' && addToWatchlist()}
+                />
+                <button onClick={addToWatchlist}>+</button>
+              </div>
+            </div>
+            <div className="symbols-grid">
+              {watchlist.map(s => (
+                <div key={s} className={`symbol-tag ${asset === s ? 'active' : ''}`}>
+                  <span onClick={() => setAsset(s)}>{s}</span>
+                  <button onClick={() => removeFromWatchlist(s)}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="backtest-controls">
             <div className="input-group">
               <label>Target Asset</label>

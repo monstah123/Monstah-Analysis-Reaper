@@ -46,6 +46,8 @@ export default function BacktestLab() {
   }, [asset]);
 
   const [trades, setTrades] = useState<any[]>([]);
+  const [balance, setBalance] = useState(100000);
+  const [lotSize, setLotSize] = useState(1);
 
   const executeTrade = (type: 'BUY' | 'SELL') => {
     if (!result) {
@@ -57,9 +59,10 @@ export default function BacktestLab() {
       asset,
       date,
       type,
-      entry: result.price,
+      entry: parseFloat(result.price.replace(/[^0-9.]/g, '')),
       status: 'OPEN',
-      outcome: 'PENDING'
+      outcome: 'PENDING',
+      lotSize: lotSize
     };
     setTrades([newTrade, ...trades]);
   };
@@ -110,9 +113,16 @@ export default function BacktestLab() {
 
           <div className="simulated-trades-panel">
             <div className="panel-header">
-              <BarChart3 size={16} />
-              <h3>GHOST JOURNAL</h3>
+              <div className="balance-display shadow-glow">
+                <span className="balance-label">ACCOUNT BALANCE</span>
+                <span className="balance-amount">${balance.toLocaleString()}</span>
+              </div>
+              <div className="journal-title">
+                <BarChart3 size={16} />
+                <h3>GHOST JOURNAL</h3>
+              </div>
             </div>
+            
             <div className="trades-table">
               {trades.length === 0 ? (
                 <p className="no-trades">No active simulations. Execute a trade below.</p>
@@ -164,6 +174,16 @@ export default function BacktestLab() {
                 value={date} 
                 onChange={(e) => setDate(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+
+            <div className="input-group">
+              <label>Risk (Lots)</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                value={lotSize} 
+                onChange={(e) => setLotSize(parseFloat(e.target.value))}
               />
             </div>
 
@@ -258,12 +278,37 @@ export default function BacktestLab() {
         }
         .panel-header {
           display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+        }
+        .balance-display {
+          background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+          padding: 1rem 2rem;
+          border-radius: 12px;
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          display: flex;
+          flex-direction: column;
+        }
+        .balance-label {
+          font-size: 0.6rem;
+          color: #3b82f6;
+          letter-spacing: 0.2em;
+          font-weight: 800;
+        }
+        .balance-amount {
+          font-size: 1.5rem;
+          color: white;
+          font-weight: 900;
+          font-family: monospace;
+        }
+        .journal-title {
+          display: flex;
           align-items: center;
           gap: 0.75rem;
-          margin-bottom: 1rem;
           color: #94a3b8;
         }
-        .panel-header h3 { margin: 0; font-size: 0.9rem; letter-spacing: 0.1em; }
+        .journal-title h3 { margin: 0; font-size: 0.9rem; letter-spacing: 0.1em; }
         
         .trades-table {
           overflow-x: auto;

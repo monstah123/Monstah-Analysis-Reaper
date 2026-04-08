@@ -22,6 +22,7 @@ import NewsTerminal from './pages/NewsTerminal';
 import ReaperSnatcher from './components/ReaperSnatcher';
 import Landing from './pages/Landing';
 import Researcher from './pages/Researcher';
+import BacktestLab from './pages/BacktestLab';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -40,6 +41,7 @@ function AppContent() {
       case 'correlation':    return <Correlation />;
       case 'cot-deep-dive':  return <COTDeepDive />;
       case 'research':       return <Researcher />;
+      case 'backtest':       return <BacktestLab />;
       case 'settings':       return <Settings />;
       default:               return <Dashboard />;
     }

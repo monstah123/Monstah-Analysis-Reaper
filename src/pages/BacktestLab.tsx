@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { History, Calendar, Play, ShieldAlert, BarChart3, ArrowUpRight, ArrowDownRight, Info, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { History, Play, Info, Loader2 } from 'lucide-react';
 
 export default function BacktestLab() {
   const [asset, setAsset] = useState('XAUUSD');

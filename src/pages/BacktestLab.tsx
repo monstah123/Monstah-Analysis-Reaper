@@ -32,6 +32,11 @@ export default function BacktestLab() {
           "allow_symbol_change": true,
           "container_id": "tv_chart_container",
           "hide_top_toolbar": false,
+          "hide_side_toolbar": false,
+          "withdateranges": true,
+          "show_popup_button": true,
+          "popup_width": "1000",
+          "popup_height": "650",
           "save_image": false,
           "backgroundColor": "rgba(15, 23, 42, 1)",
           "gridColor": "rgba(255, 255, 255, 0.05)"

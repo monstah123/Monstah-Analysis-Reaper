@@ -27,6 +27,20 @@ const Landing: React.FC = () => {
       color: '#3b82f6'
     },
     { 
+      id: 'backtest', 
+      title: 'Backtest Lab', 
+      desc: 'Simulate historical trades with full-featured Pro charts and Demo Capital.',
+      icon: '⌛',
+      color: '#ec4899'
+    },
+    { 
+      id: 'research', 
+      title: 'Global Intel Portal', 
+      desc: 'Live neural web-crawler for real-time institutional alpha and news.',
+      icon: '🌍',
+      color: '#10b981'
+    },
+    { 
       id: 'cot', 
       title: 'COT Deep-Dive', 
       desc: 'Advanced Institutional Divergence & Smart Money Traps.',
@@ -38,14 +52,14 @@ const Landing: React.FC = () => {
       title: 'Macro Sovereign Dashboard', 
       desc: 'The Big Five: GDP, CPI, Fed Rates, Jobs, and PMI Pulse.',
       icon: '🏦',
-      color: '#10b981'
+      color: '#f59e0b'
     },
     { 
       id: 'ai', 
       title: 'Neural AI Reasoner', 
       desc: 'DeepSeek R1 step-by-step institutional trade dossiers.',
       icon: '🧠',
-      color: '#f59e0b'
+      color: '#6366f1'
     }
   ];
 

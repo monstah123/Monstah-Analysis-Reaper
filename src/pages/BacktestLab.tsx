@@ -20,7 +20,7 @@ export default function BacktestLab() {
   
   // Playback State
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(2000);
+  const [speed, setSpeed] = useState(4000); // Slower default (4s) for stability
 
   // Watchlist State (Native)
   const [watchlist, setWatchlist] = useState<string[]>(['EURUSD', 'GBPUSD', 'XAUUSD', 'BTCUSD', 'NAS100']);
@@ -37,6 +37,22 @@ export default function BacktestLab() {
     setWatchlist(watchlist.filter(s => s !== symbol));
   };
 
+  const stepForward = () => {
+    const currentDate = new Date(date);
+    currentDate.setDate(currentDate.getDate() + 1);
+    
+    // Skip weekends for authentic trading days
+    if (currentDate.getDay() === 6) currentDate.setDate(currentDate.getDate() + 2); // Sat -> Mon
+    if (currentDate.getDay() === 0) currentDate.setDate(currentDate.getDate() + 1); // Sun -> Mon
+    
+    const nextDate = currentDate.toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (nextDate <= today) {
+      setDate(nextDate);
+    }
+  };
+
   // Playback Engine Logic
   useEffect(() => {
     let interval: any;
@@ -44,15 +60,7 @@ export default function BacktestLab() {
 
     if (isPlaying && date && date < today) {
       interval = setInterval(() => {
-        const currentDate = new Date(date);
-        currentDate.setDate(currentDate.getDate() + 1);
-        const nextDate = currentDate.toISOString().split('T')[0];
-        
-        if (nextDate <= today) {
-          setDate(nextDate);
-        } else {
-          setIsPlaying(false);
-        }
+        stepForward();
       }, speed);
     } else if (date >= today) {
       setIsPlaying(false);
@@ -187,12 +195,16 @@ export default function BacktestLab() {
                   {isPlaying ? <Pause size={14} /> : <Play size={14} />}
                   <span>{isPlaying ? 'PAUSE' : 'PULSE PLAY'}</span>
                 </button>
-                <div className="speed-selector">
+                <button className="pulse-btn" onClick={stepForward} title="Next Day">
                   <FastForward size={14} />
+                  <span>STEP</span>
+                </button>
+                <div className="speed-selector">
+                  <span>SPD:</span>
                   <select value={speed} onChange={(e) => setSpeed(parseInt(e.target.value))}>
-                    <option value={5000}>0.5x</option>
-                    <option value={2000}>1x</option>
-                    <option value={1000}>2x</option>
+                    <option value={8000}>0.5x</option>
+                    <option value={4000}>1x</option>
+                    <option value={2000}>2x</option>
                   </select>
                 </div>
               </div>

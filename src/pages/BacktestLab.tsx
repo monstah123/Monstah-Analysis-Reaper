@@ -9,7 +9,7 @@ declare global {
 
 export default function BacktestLab() {
   const [asset, setAsset] = useState('XAUUSD');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(new Date(Date.now() - 86400000).toISOString().split('T')[0]); // Default to yesterday
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -751,10 +751,19 @@ export default function BacktestLab() {
           text-transform: uppercase;
           letter-spacing: 0.05em;
           transition: all 0.2s;
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .simulate-btn:not(:disabled) {
+          animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+          0% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+          50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.6); }
+          100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
         }
         .simulate-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+          filter: brightness(1.1);
         }
         .simulate-btn:disabled {
           opacity: 0.5;

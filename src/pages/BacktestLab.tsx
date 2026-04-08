@@ -143,6 +143,11 @@ export default function BacktestLab() {
     script.async = true;
     script.onload = () => {
       if (window.TradingView) {
+        // Calculate Unix Timestamps for hard-anchored time travel
+        const targetDate = new Date(date || Date.now());
+        const to = Math.floor(targetDate.getTime() / 1000);
+        const from = to - (365 * 24 * 60 * 60); // Show 1 year of history before the target
+
         new window.TradingView.widget({
           "autosize": true,
           "symbol": asset.includes('USD') ? `FX:${asset}` : asset,
@@ -155,12 +160,24 @@ export default function BacktestLab() {
           "allow_symbol_change": true,
           "container_id": "tv_chart_container",
           "hide_top_toolbar": false,
-          "hide_side_toolbar": true,
+          "hide_side_toolbar": false, // RESTORED DRAWING TOOLS
           "withdateranges": true,
-          "range": "12M", // Show 1 year leading up to the date
+          "from": from,
+          "to": to,
           "show_popup_button": true,
           "popup_width": "1000",
           "popup_height": "650",
+          "watchlist": [
+            "FX:XAUUSD",
+            "FX:EURUSD",
+            "FX:GBPUSD",
+            "FX:USDJPY",
+            "BINANCE:BTCUSDT"
+          ],
+          "details": true,
+          "hotlist": true,
+          "calendar": true,
+          "enabled_features": ["watchlist_add_symbols", "header_symbol_search", "header_compare"],
           "save_image": false,
           "backgroundColor": "rgba(15, 23, 42, 1)",
           "gridColor": "rgba(255, 255, 255, 0.05)"
@@ -168,7 +185,7 @@ export default function BacktestLab() {
       }
     };
     document.head.appendChild(script);
-  }, [asset, date]); // RE-RENDER ON DATE CHANGE FOR AUTHENTIC TIME TRAVEL
+  }, [asset, date]);
 
   return (
     <div className="page-container backtest-page">

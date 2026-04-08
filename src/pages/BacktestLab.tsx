@@ -1,11 +1,49 @@
-import { useState } from 'react';
-import { History, Play, Info, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { History, Play, Info, Loader2, Maximize2 } from 'lucide-react';
+
+declare global {
+  interface Window {
+    TradingView: any;
+  }
+}
 
 export default function BacktestLab() {
   const [asset, setAsset] = useState('XAUUSD');
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const container = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Load TradingView Widget
+    const script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/tv.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.TradingView) {
+        new window.TradingView.widget({
+          "autosize": true,
+          "symbol": asset.includes('USD') ? `FX:${asset}` : asset,
+          "interval": "D",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "enable_publishing": false,
+          "allow_symbol_change": true,
+          "container_id": "tv_chart_container",
+          "hide_top_toolbar": false,
+          "save_image": false,
+          "backgroundColor": "rgba(15, 23, 42, 1)",
+          "gridColor": "rgba(255, 255, 255, 0.05)"
+        });
+      }
+    };
+    document.head.appendChild(script);
+    return () => {
+      // Cleanup script if needed, though usually fine to keep for session
+    };
+  }, [asset]);
 
   const runBacktest = async () => {
     if (!asset || !date) return;
@@ -33,7 +71,7 @@ export default function BacktestLab() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container backtest-page">
       <header className="page-header">
         <div className="title-group">
           <h1>Backtest Lab</h1>
@@ -45,130 +83,159 @@ export default function BacktestLab() {
         </div>
       </header>
 
-      <div className="backtest-controls">
-        <div className="input-group">
-          <label>Target Asset</label>
-          <select value={asset} onChange={(e) => setAsset(e.target.value)}>
-            <option value="XAUUSD">XAUUSD (Gold)</option>
-            <option value="EURUSD">EURUSD</option>
-            <option value="GBPUSD">GBPUSD</option>
-            <option value="BTCUSD">BTCUSD</option>
-            <option value="NAS100">NAS100</option>
-          </select>
+      <div className="lab-layout">
+        <div className="chart-section shadow-glow">
+          <div id="tv_chart_container" style={{ height: '600px', width: '100%' }}></div>
         </div>
 
-        <div className="input-group">
-          <label>Simulation Date</label>
-          <input 
-            type="date" 
-            value={date} 
-            onChange={(e) => setDate(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </div>
+        <div className="controls-section">
+          <div className="backtest-controls">
+            <div className="input-group">
+              <label>Target Asset</label>
+              <select value={asset} onChange={(e) => setAsset(e.target.value)}>
+                <option value="XAUUSD">FX:XAUUSD (Gold)</option>
+                <option value="EURUSD">FX:EURUSD</option>
+                <option value="GBPUSD">FX:GBPUSD</option>
+                <option value="BTCUSD">BINANCE:BTCUSDT</option>
+                <option value="NAS100">OANDA:NAS100USD</option>
+              </select>
+            </div>
 
-        <button 
-          className={`simulate-btn ${loading ? 'loading' : ''}`} 
-          onClick={runBacktest}
-          disabled={loading || !date}
-        >
-          {loading ? <Loader2 className="animate-spin" /> : <Play size={18} />}
-          <span>{loading ? 'Reconstructing...' : 'Simulate Reap'}</span>
-        </button>
+            <div className="input-group">
+              <label>Simulation Date</label>
+              <input 
+                type="date" 
+                value={date} 
+                onChange={(e) => setDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+
+            <button 
+              className={`simulate-btn ${loading ? 'loading' : ''}`} 
+              onClick={runBacktest}
+              disabled={loading || !date}
+            >
+              {loading ? <Loader2 className="animate-spin" /> : <Play size={18} />}
+              <span>{loading ? 'Reconstructing...' : 'Simulate Reap'}</span>
+            </button>
+          </div>
+
+          {result && (
+            <div className="backtest-results fade-in">
+              <div className="result-main-card">
+                <div className="verdict-banner" data-verdict={result.verdict.toLowerCase()}>
+                  <h2>{result.verdict} SIGNAL</h2>
+                  <div className="historical-price">Price Check: {result.price}</div>
+                </div>
+                
+                <div className="metrics-grid">
+                  <div className="metric-item">
+                    <span className="label">Sentiment</span>
+                    <div className="bar-bg"><div className="bar-fill" style={{ width: `${result.sentiment}%` }}></div></div>
+                    <span className="value">{result.sentiment}%</span>
+                  </div>
+                  <div className="metric-item">
+                    <span className="label">Macro</span>
+                    <div className="bar-bg"><div className="bar-fill blue" style={{ width: `${result.macro}%` }}></div></div>
+                    <span className="value">{result.macro}%</span>
+                  </div>
+                  <div className="metric-item">
+                    <span className="label">Institutional</span>
+                    <div className="bar-bg"><div className="bar-fill yellow" style={{ width: `${result.institutional}%` }}></div></div>
+                    <span className="value">{result.institutional}%</span>
+                  </div>
+                </div>
+
+                <div className="reasoning-box">
+                  <h3><Info size={16} /> Strategy Logic</h3>
+                  <p>{result.reasoning}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!result && !loading && (
+            <div className="empty-lab">
+              <Maximize2 className="faint-icon animate-pulse" size={40} />
+              <h3>The Lab is Ready</h3>
+              <p>Pick a date on the calendar above to sync the Reaper Intelligence with the chart price action.</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {result && (
-        <div className="backtest-results fade-in">
-          <div className="result-main-card">
-            <div className="verdict-banner" data-verdict={result.verdict.toLowerCase()}>
-              <h2>{result.verdict} SIGNAL</h2>
-              <div className="historical-price">Price: {result.price}</div>
-            </div>
-            
-            <div className="metrics-grid">
-              <div className="metric-item">
-                <span className="label">Sentiment</span>
-                <div className="bar-bg"><div className="bar-fill" style={{ width: `${result.sentiment}%` }}></div></div>
-                <span className="value">{result.sentiment}%</span>
-              </div>
-              <div className="metric-item">
-                <span className="label">Macro</span>
-                <div className="bar-bg"><div className="bar-fill blue" style={{ width: `${result.macro}%` }}></div></div>
-                <span className="value">{result.macro}%</span>
-              </div>
-              <div className="metric-item">
-                <span className="label">Institutional</span>
-                <div className="bar-bg"><div className="bar-fill yellow" style={{ width: `${result.institutional}%` }}></div></div>
-                <span className="value">{result.institutional}%</span>
-              </div>
-            </div>
-
-            <div className="reasoning-box">
-              <h3><Info size={16} /> Strategy Logic</h3>
-              <p>{result.reasoning}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!result && !loading && (
-        <div className="empty-lab">
-          <div className="lab-graphic">
-            <div className="oscillator"></div>
-          </div>
-          <h3>The Lab is Idle</h3>
-          <p>Select an asset and a historical date to see how the Reaper would have analyzed the market.</p>
-        </div>
-      )}
-
       <style>{`
+        .lab-layout {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr;
+          gap: 1.5rem;
+          margin-top: 1rem;
+        }
+        .chart-section {
+          background: #0f172a;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          overflow: hidden;
+          min-height: 600px;
+        }
+        .shadow-glow {
+          box-shadow: 0 0 30px rgba(59, 130, 246, 0.1);
+        }
+        .controls-section {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
         .backtest-controls {
           display: flex;
-          align-items: flex-end;
-          gap: 1.5rem;
+          flex-direction: column;
+          gap: 1.25rem;
           background: rgba(15, 23, 42, 0.6);
           padding: 1.5rem;
           border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.05);
-          margin-bottom: 2rem;
         }
         .input-group {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
-          flex: 1;
         }
         .input-group label {
-          font-size: 0.75rem;
+          font-size: 0.7rem;
           text-transform: uppercase;
           color: #64748b;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.1em;
+          font-weight: 600;
         }
         .input-group select, .input-group input {
           background: #0f172a;
           border: 1px solid rgba(255, 255, 255, 0.1);
           color: white;
           padding: 0.75rem;
-          border-radius: 8px;
+          border-radius: 10px;
           outline: none;
+          font-size: 1rem;
         }
         .simulate-btn {
-          background: #3b82f6;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
           color: white;
           border: none;
-          padding: 0.75rem 2rem;
-          border-radius: 8px;
+          padding: 1rem;
+          border-radius: 10px;
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 0.75rem;
-          font-weight: 600;
-          height: 46px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
           transition: all 0.2s;
         }
         .simulate-btn:hover:not(:disabled) {
-          background: #2563eb;
           transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
         }
         .simulate-btn:disabled {
           opacity: 0.5;
@@ -182,43 +249,46 @@ export default function BacktestLab() {
           overflow: hidden;
         }
         .verdict-banner {
-          padding: 2rem;
+          padding: 1.5rem;
           text-align: center;
           background: rgba(255, 255, 255, 0.03);
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
+        .verdict-banner h2 { font-size: 1.5rem; margin: 0; }
         .verdict-banner[data-verdict="buy"] h2 { color: #22c55e; }
         .verdict-banner[data-verdict="sell"] h2 { color: #ef4444; }
         .verdict-banner[data-verdict="neutral"] h2 { color: #94a3b8; }
         .historical-price {
           font-family: monospace;
-          color: #94a3b8;
+          color: #64748b;
           margin-top: 0.5rem;
+          font-size: 0.9rem;
         }
 
         .metrics-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
-          padding: 2rem;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+          padding: 1.5rem;
         }
         .metric-item {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.4rem;
         }
+        .metric-item .label { font-size: 0.75rem; color: #94a3b8; }
         .bar-bg {
           height: 6px;
           background: rgba(255, 255, 255, 0.1);
           border-radius: 10px;
           overflow: hidden;
         }
-        .bar-fill { height: 100%; background: #22c55e; }
+        .bar-fill { height: 100%; background: #22c55e; border-radius: 10px; }
         .bar-fill.blue { background: #3b82f6; }
         .bar-fill.yellow { background: #eab308; }
 
         .reasoning-box {
-          padding: 2rem;
+          padding: 1.5rem;
           background: rgba(0, 0, 0, 0.2);
           border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -226,34 +296,30 @@ export default function BacktestLab() {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 0.9rem;
+          font-size: 0.8rem;
           color: #64748b;
-          margin-bottom: 1rem;
+          margin-bottom: 0.75rem;
+          text-transform: uppercase;
         }
         .reasoning-box p {
           color: #cbd5e1;
           line-height: 1.6;
+          font-size: 0.95rem;
         }
 
         .empty-lab {
           text-align: center;
-          padding: 5rem 0;
+          padding: 3rem 0;
           color: #475569;
+          background: rgba(15, 23, 42, 0.3);
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .oscillator {
-          width: 60px;
-          height: 60px;
-          border: 4px solid #3b82f6;
-          border-radius: 50%;
-          border-top-color: transparent;
-          margin: 0 auto 1.5rem;
-          animation: spin 2s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .faint-icon { margin-bottom: 1rem; opacity: 0.2; }
 
-        @media (max-width: 768px) {
-          .backtest-controls { flex-direction: column; align-items: stretch; }
-          .metrics-grid { grid-template-columns: 1fr; }
+        @media (max-width: 1200px) {
+          .lab-layout { grid-template-columns: 1fr; }
+          .chart-section { min-height: 400px; }
         }
       `}</style>
     </div>

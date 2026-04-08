@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { History, Play, Pause, FastForward, Info, Loader2, Maximize2, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 declare global {
@@ -57,7 +57,6 @@ export default function BacktestLab() {
   // Playback State
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(2000); // Default 2s per day
-  const playTimer = useRef<any>(null);
 
   const executeTrade = (type: 'BUY' | 'SELL') => {
     if (!result) {

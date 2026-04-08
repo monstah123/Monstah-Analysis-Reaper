@@ -137,55 +137,59 @@ export default function BacktestLab() {
   };
 
   useEffect(() => {
-    // Load TradingView Widget and sync with date
+    // Load TradingView Widget and sync with asset
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/tv.js';
     script.async = true;
     script.onload = () => {
-      if (window.TradingView) {
-        // Calculate Unix Timestamps for hard-anchored time travel
-        const targetDate = new Date(date || Date.now());
-        const to = Math.floor(targetDate.getTime() / 1000);
-        const from = to - (365 * 24 * 60 * 60); // Show 1 year of history before the target
-
-        new window.TradingView.widget({
-          "autosize": true,
-          "symbol": asset.includes('USD') ? `FX:${asset}` : asset,
-          "interval": "D",
-          "timezone": "Etc/UTC",
-          "theme": "dark",
-          "style": "1",
-          "locale": "en",
-          "enable_publishing": false,
-          "allow_symbol_change": true,
-          "container_id": "tv_chart_container",
-          "hide_top_toolbar": false,
-          "hide_side_toolbar": false, // RESTORED DRAWING TOOLS
-          "withdateranges": true,
-          "from": from,
-          "to": to,
-          "show_popup_button": true,
-          "popup_width": "1000",
-          "popup_height": "650",
-          "watchlist": [
-            "FX:XAUUSD",
-            "FX:EURUSD",
-            "FX:GBPUSD",
-            "FX:USDJPY",
-            "BINANCE:BTCUSDT"
-          ],
-          "details": true,
-          "hotlist": true,
-          "calendar": true,
-          "enabled_features": ["watchlist_add_symbols", "header_symbol_search", "header_compare"],
-          "save_image": false,
-          "backgroundColor": "rgba(15, 23, 42, 1)",
-          "gridColor": "rgba(255, 255, 255, 0.05)"
-        });
-      }
+      syncChart();
     };
     document.head.appendChild(script);
-  }, [asset, date]);
+  }, [asset]); // ONLY RELOAD ON ASSET CHANGE OR EXPLICIT SYNC
+
+  const syncChart = () => {
+    if (window.TradingView) {
+      // Calculate Unix Timestamps for hard-anchored time travel
+      const targetDate = new Date(date || Date.now());
+      const to = Math.floor(targetDate.getTime() / 1000);
+      const from = to - (365 * 24 * 60 * 60); // Show 1 year of history before the target
+
+      new window.TradingView.widget({
+        "autosize": true,
+        "symbol": asset.includes('USD') ? `FX:${asset}` : asset,
+        "interval": "D",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "enable_publishing": false,
+        "allow_symbol_change": true,
+        "container_id": "tv_chart_container",
+        "hide_top_toolbar": false,
+        "hide_side_toolbar": false,
+        "withdateranges": true,
+        "from": from,
+        "to": to,
+        "show_popup_button": true,
+        "popup_width": "1000",
+        "popup_height": "650",
+        "watchlist": [
+          "FX:XAUUSD",
+          "FX:EURUSD",
+          "FX:GBPUSD",
+          "FX:USDJPY",
+          "BINANCE:BTCUSDT"
+        ],
+        "details": true,
+        "hotlist": true,
+        "calendar": true,
+        "enabled_features": ["watchlist_add_symbols", "header_symbol_search", "header_compare"],
+        "save_image": false,
+        "backgroundColor": "rgba(15, 23, 42, 1)",
+        "gridColor": "rgba(255, 255, 255, 0.05)"
+      });
+    }
+  };
 
   return (
     <div className="page-container backtest-page">
@@ -215,6 +219,10 @@ export default function BacktestLab() {
                 <button className="pulse-btn" onClick={stepForward} title="Next Day">
                   <FastForward size={14} />
                   <span>STEP</span>
+                </button>
+                <button className="pulse-btn sync-btn" onClick={syncChart} title="Sync Chart to Date">
+                  <History size={14} />
+                  <span>SYNC</span>
                 </button>
                 <div className="speed-selector">
                   <span>SPD:</span>
@@ -477,6 +485,15 @@ export default function BacktestLab() {
           background: #3b82f6; 
           color: white; 
           box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); 
+        }
+        .sync-btn {
+          background: rgba(139, 92, 246, 0.1);
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          color: #8b5cf6;
+        }
+        .sync-btn:hover {
+          background: rgba(139, 92, 246, 0.2);
+          box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
         }
         .speed-selector {
           display: flex;

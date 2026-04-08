@@ -154,6 +154,20 @@ export default function BacktestLab() {
                   </select>
                 </div>
               </div>
+              
+              <div className="symbol-search-wrapper">
+                <input 
+                  type="text" 
+                  placeholder="QUICK SYMBOL..." 
+                  defaultValue={asset}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setAsset((e.target as HTMLInputElement).value.toUpperCase());
+                    }
+                  }}
+                />
+              </div>
+
               <button className="max-btn" onClick={() => setIsFullScreen(!isFullScreen)}>
                 <Maximize2 size={16} />
               </button>
@@ -377,6 +391,32 @@ export default function BacktestLab() {
           font-weight: 700;
           cursor: pointer;
           outline: none;
+        }
+        .symbol-search-wrapper {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          padding: 0 2rem;
+        }
+        .symbol-search-wrapper input {
+          background: rgba(15, 23, 42, 0.4);
+          border: 1px solid rgba(59, 130, 246, 0.2);
+          padding: 0.35rem 1rem;
+          border-radius: 8px;
+          color: white;
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          width: 100%;
+          max-width: 200px;
+          text-align: center;
+          transition: all 0.3s;
+        }
+        .symbol-search-wrapper input:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+          outline: none;
+          max-width: 300px;
         }
         .max-btn {
           background: transparent;

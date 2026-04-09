@@ -1,40 +1,12 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const Sentiment: React.FC = () => {
   const { assets } = useApp();
-  const [liveData, setLiveData] = useState<Record<string, { long: number; short: number; source: string }>>({});
-  const [sentimentSource, setSentimentSource] = useState<string>('Connecting...');
-  const [symbolCount, setSymbolCount] = useState<number>(0);
-
   const sortedAssets = useMemo(() => {
     return [...assets].sort((a, b) => b.cot - a.cot);
-  }, [assets]);
-
-  // Fetch live sentiment from Vercel Serverless Function
-  useEffect(() => {
-    const fetchLiveSentiment = async () => {
-      try {
-        const res = await fetch(`/api/sentiment?batch=true&_t=${Date.now()}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-        });
-        if (!res.ok) throw new Error('Sentiment Batch Offline');
-        const data = await res.json();
-        
-        if (data.success && data.batch) {
-          setLiveData(data.batch);
-          setSentimentSource(data.source || 'Live Feed');
-          setSymbolCount(data.symbolCount || Object.keys(data.batch).length);
-        }
-      } catch (e) {
-        console.warn('[Sentiment] Pulse failed:', e);
-      }
-    };
-
-    fetchLiveSentiment();
   }, [assets]);
 
   // Reaper 8.3 - Dual Dynamic Squad Sorting (Institutional Side)

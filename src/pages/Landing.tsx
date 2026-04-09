@@ -49,7 +49,7 @@ const Landing: React.FC = () => {
     },
     { 
       id: 'fundamental', 
-      title: 'Macro Sovereign Dashboard', 
+      title: 'Inst. Fundamental Matrix', 
       desc: 'The Big Five: GDP, CPI, Fed Rates, Jobs, and PMI Pulse.',
       icon: '🏦',
       color: '#f59e0b'
@@ -60,6 +60,20 @@ const Landing: React.FC = () => {
       desc: 'DeepSeek R1 step-by-step institutional trade dossiers.',
       icon: '🧠',
       color: '#6366f1'
+    },
+    {
+      id: 'technical',
+      title: 'Technical Confluence',
+      desc: 'Multi-timeframe moving averages and momentum oscillators.',
+      icon: '📈',
+      color: '#14b8a6'
+    },
+    {
+      id: 'yield-spreads',
+      title: 'Yield Spread Divergence',
+      desc: 'Bond market differentials tracking the flow of global liquidity.',
+      icon: '⚖️',
+      color: '#f43f5e'
     }
   ];
 

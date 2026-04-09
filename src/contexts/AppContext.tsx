@@ -179,7 +179,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           rP = rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0;
           cI = cPct >= 75 ? 2 : cPct <= 35 ? -2 : 0;
 
-          const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange + (a.unemploymentRate || 0);
+          const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange;
           
           return {
             ...a, ...scores,

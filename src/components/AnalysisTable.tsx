@@ -30,12 +30,8 @@ const columns = [
   { key: 'seasonality', label: 'Season', hideMobile: false },
   { key: 'trend', label: 'Trend', hideMobile: false },
   { key: 'gdp', label: 'GDP', hideMobile: true },
-  { key: 'mPMI', label: 'mPMI', hideMobile: true },
-  { key: 'sPMI', label: 'sPMI', hideMobile: true },
-  { key: 'retailSales', label: 'R.Sales', hideMobile: true },
   { key: 'inflation', label: 'CPI', hideMobile: true },
-  { key: 'employmentChange', label: 'Employ.', hideMobile: true },
-  { key: 'unemploymentRate', label: 'Unemp.', hideMobile: true },
+  { key: 'employmentChange', label: 'Jobs', hideMobile: true },
   { key: 'interestRates', label: 'Rates', hideMobile: true },
 ];
 

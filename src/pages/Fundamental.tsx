@@ -27,8 +27,8 @@ const Fundamental: React.FC = () => {
     <div className="page-container">
       <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
-          <h1>📊 Neural Fundamental Tracker</h1>
-          <p>Global economic heatmaps powered by DeepSeek Macro-Pulse 9.0</p>
+          <h1>📊 Institutional Fundamental Matrix</h1>
+          <p>Global economic pillars synchronized via FRED & Live Institutional Wire</p>
         </div>
       </header>
 

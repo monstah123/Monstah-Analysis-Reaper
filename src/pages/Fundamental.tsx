@@ -4,21 +4,18 @@ import { useApp } from '../contexts/AppContext';
 const Fundamental: React.FC = () => {
   const { assets } = useApp();
   const [macroData, setMacroData] = useState<any>(null);
-  const [macroLoading, setMacroLoading] = useState<boolean>(true);
   
   // Real-time Macro Sync from Institutional Wire
   useEffect(() => {
     const fetchMacro = async () => {
-      setMacroLoading(true);
       try {
         const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.success) { setMacroData(json.macro); setMacroLoading(false); }
+          if (json.success) { setMacroData(json.macro); }
         }
       } catch (e) {
         console.error('Core Sync Failure:', e);
-        setMacroLoading(false);
       }
     };
     fetchMacro();
@@ -26,9 +23,6 @@ const Fundamental: React.FC = () => {
 
   const getStatus = (label: string, val: number | null) => {
     if (val === null) {
-      if (label === 'Manufacturing PMI' && !macroLoading && macroData !== null) {
-        return { text: 'No Free Feed', color: '#52525b' };
-      }
       return { text: 'Syncing...', color: '#71717a' };
     }
 
@@ -55,11 +49,7 @@ const Fundamental: React.FC = () => {
       if (val >= 50) return { text: 'Cooling', color: '#f59e0b' };
       return { text: 'Weak', color: '#ef4444' };
     }
-    if (label === 'Manufacturing PMI') {
-      if (val >= 52) return { text: 'Expansion', color: '#22c55e' };
-      if (val >= 50) return { text: 'Neutral', color: '#3b82f6' };
-      return { text: 'Contraction', color: '#ef4444' };
-    }
+
     return { text: 'Live', color: '#71717a' };
   };
 
@@ -72,7 +62,6 @@ const Fundamental: React.FC = () => {
     { label: 'Inflation (CPI)', val: macroData?.CPI ?? null, unit: '%', icon: '⛽' },
     { label: 'Fed Funds Rate', val: macroData?.FedRate ?? null, unit: '%', icon: '♟️' },
     { label: 'Non-Farm Payrolls', val: macroData?.NFP ?? null, unit: 'k', icon: '👷' },
-    { label: 'Manufacturing PMI', val: macroData?.PMI ?? null, unit: '', icon: '🏭' }
   ];
 
   return (
@@ -84,7 +73,7 @@ const Fundamental: React.FC = () => {
         </div>
       </header>
 
-      <div className="stats-bar" style={{ padding: '1.5rem 0', gridTemplateColumns: 'repeat(5, 1fr)' }}>
+      <div className="stats-bar" style={{ padding: '1.5rem 0', gridTemplateColumns: 'repeat(4, 1fr)' }}>
         {pillars.map(p => {
           const status = getStatus(p.label, p.val);
           return (
@@ -93,7 +82,7 @@ const Fundamental: React.FC = () => {
               <div className="stat-body">
                 <span className="stat-label" style={{ opacity: 0.6 }}>{p.label}</span>
                 <span className="stat-value" style={{ color: p.val === null ? '#3f3f46' : status.color }}>
-                  {p.val === null ? (p.label === 'Manufacturing PMI' && !macroLoading && macroData !== null ? '—' : 'SYNC...') : `${p.val}${p.unit}`}
+                  {p.val === null ? 'SYNC...' : `${p.val}${p.unit}`}
                 </span>
                 <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 700, color: status.color }}>
                   {status.text}

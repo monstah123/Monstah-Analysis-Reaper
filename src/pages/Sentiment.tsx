@@ -75,7 +75,7 @@ const Sentiment: React.FC = () => {
       </div>
 
       {/* COT Chart */}
-      <div className="settings-card" style={{ minHeight: `${cotChartData.length * 45 + 150}px` }}>
+      <div className="settings-card" style={{ display: 'flex', flexDirection: 'column', minHeight: `${cotChartData.length * 45 + 150}px` }}>
         <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
         <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
         <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px', minHeight: 0 }}>

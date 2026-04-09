@@ -349,6 +349,13 @@ tr:hover td { background: rgba(255,255,255,0.025); }
   .hide-mobile { display: none !important; }
   .calendar-header { padding: 8px 4px !important; }
   .btn { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+  table { min-width: 500px; }
+  td { padding: 0.6rem 0.5rem; font-size: 0.75rem; }
+  th { padding: 0.6rem 0.5rem; font-size: 0.6rem; }
+  .th-asset { min-width: 100px; }
+  .th-bias { min-width: 90px; }
+  .asset-name { font-size: 0.75rem; }
+  .bias-badge { padding: 0.2rem 0.5rem; font-size: 0.6rem; }
 }
 
 .text-pos { color: var(--text-pos) !important; }

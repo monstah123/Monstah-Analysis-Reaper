@@ -58,33 +58,7 @@ const Sentiment: React.FC = () => {
       .sort((a, b) => b.rankScore - a.rankScore); // Extreme First
   }, [sortedAssets]);
 
-  // Reaper 8.5 - Full Squad Mirroring (Retail Side)
-  const retailChartData = useMemo(() => {
-    return assets
-      .map(a => {
-        const live = liveData[a.id];
-        // Mirror the roster: Use live data OR default to 50%
-        const long = (live && typeof live.long === 'number') ? live.long : 50;
-        const rankScore = Math.abs(long - 50);
-        
-        // Fix: Retail data is always Neural Matrix unless it's explicitly stated otherwise
-        let rSource = 'Neural Matrix';
-        if (live && live.source && live.source.includes('Official CFTC')) {
-          rSource = 'Neural Fallback (DeepSeek)';
-        } else if (live && live.source) {
-          rSource = live.source;
-        }
 
-        return {
-          name: a.id,
-          long,
-          short: 100 - long,
-          rankScore,
-          source: rSource
-        };
-      })
-      .sort((a, b) => b.rankScore - a.rankScore); // Extreme First
-  }, [assets, liveData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -126,19 +100,11 @@ const Sentiment: React.FC = () => {
             <span className="stat-sub">COT Score: {cotChartData[cotChartData.length - 1]?.cotScore}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon">🐑</div>
-          <div className="stat-body">
-            <span className="stat-label">Highest Retail Long</span>
-            <span className="stat-value" style={{ color: '#22c55e' }}>{retailChartData.find(d => d.long > 50)?.name || 'N/A'}</span>
-            <span className="stat-sub">Retail sentiment is contrarian</span>
-          </div>
-        </div>
       </div>
 
       <div className="settings-row-2">
         {/* COT Chart */}
-        <div className="settings-card" style={{ minHeight: `${cotChartData.length * 45 + 150}px`, minWidth: 0 }}>
+        <div className="settings-card" style={{ minHeight: `${cotChartData.length * 45 + 150}px` }}>
           <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
           <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
           <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px', minHeight: 0 }}>
@@ -166,55 +132,7 @@ const Sentiment: React.FC = () => {
           </div>
         </div>
 
-        {/* Retail Chart */}
-        <div className="settings-card" style={{ minHeight: `${retailChartData.length * 45 + 150}px` }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 className="settings-section-title" style={{ margin: 0 }}>Retail Positioning (Official Feed)</h2>
-            <span style={{ 
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              fontSize: '0.7rem', color: symbolCount > 0 ? '#22c55e' : '#f59e0b',
-              background: 'rgba(34,197,94,0.08)', padding: '4px 10px', borderRadius: '20px',
-              fontWeight: 600, letterSpacing: '0.03em'
-            }}>
-              <span style={{ 
-                width: 7, height: 7, borderRadius: '50%', 
-                background: symbolCount > 0 ? '#22c55e' : '#f59e0b',
-                animation: 'pulse-dot 2s infinite',
-                boxShadow: symbolCount > 0 ? '0 0 6px #22c55e' : '0 0 6px #f59e0b' 
-              }} />
-              {symbolCount > 0 ? `LIVE SYNC · ${symbolCount} pairs` : sentimentSource}
-            </span>
-          </div>
-          <p className="settings-hint">Live retail client positioning from official Myfxbook sources. High long ratio = bearish contrarian signal.</p>
-          <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px', minHeight: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={retailChartData}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 30, bottom: 5 }}
-                barSize={28}
-              >
-                <XAxis type="number" hide domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
-                <YAxis dataKey="name" type="category" tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} width={100} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                <Bar 
-                  dataKey="long" 
-                  stackId="a" 
-                  fill="#22c55e" 
-                  radius={[4, 0, 0, 4]} 
-                  isAnimationActive={false}
-                />
-                <Bar 
-                  dataKey="short" 
-                  stackId="a" 
-                  fill="#ef4444" 
-                  radius={[0, 4, 4, 0]} 
-                  isAnimationActive={false}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+
       </div>
 
       {/* Official Myfxbook Outlook Widget Section */}

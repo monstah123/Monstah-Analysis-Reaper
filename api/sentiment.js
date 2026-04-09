@@ -1,10 +1,13 @@
 import axios from 'axios';
 
-// Reaper 12.0 - TRUE LIVE DATA ENGINE
-// Fed Rate, CPI, NFP → Alpha Vantage (reliable, fast)
-// GDP → FRED with extended timeout
-// COT → Official CFTC API
-// NO fake fallbacks — null = syncing, not wrong data
+// Reaper 12.1 - TRUE LIVE DATA ENGINE
+// Sources:
+//   Fed Funds Rate → Alpha Vantage FEDERAL_FUNDS_RATE (fast, reliable)
+//   CPI YoY %     → Alpha Vantage CPI index (compute YoY from 13-month window)
+//   NFP MoM       → FRED PAYEMS units=chg (official BLS monthly jobs added — same source as TradingView)
+//   Real GDP %    → FRED A191RL1Q225SBEA (quarterly annualised growth rate)
+//   COT           → Official CFTC public API
+//   NO fake fallbacks — null = syncing, not wrong data
 
 export default async function handler(req, res) {
   const now = Date.now();
@@ -14,8 +17,7 @@ export default async function handler(req, res) {
   let sourceLabel = 'Awaiting Sync...';
 
   const fredKey = process.env.FRED_KEY || 'a511ff61c8ca4177e733079ebec436d3';
-  // Alpha Vantage — free tier, no key needed for economic indicators
-  const avKey = process.env.ALPHA_VANTAGE_KEY || 'demo';
+  const avKey   = process.env.ALPHA_VANTAGE_KEY || 'demo';
 
   // ─── 1. CFTC COT DATA ────────────────────────────────────────────────────
   try {
@@ -65,92 +67,82 @@ export default async function handler(req, res) {
     console.error('CFTC Error:', error.message);
   }
 
-  // ─── 2. MACRO DATA — Alpha Vantage + FRED ───────────────────────────────
+  // ─── 2. MACRO DATA ───────────────────────────────────────────────────────
   try {
-    // Helper: fetch Alpha Vantage economic indicator
+    // Alpha Vantage helper
     const getAV = async (fn, params = '') => {
       const url = `https://www.alphavantage.co/query?function=${fn}&apikey=${avKey}${params}`;
       const r = await axios.get(url, { timeout: 15000 });
       return r.data;
     };
 
-    // Helper: fetch FRED series (single value)
+    // FRED helper — returns latest numeric value
     const getFred = async (series, units = 'lin') => {
       const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${fredKey}&file_type=json&limit=2&sort_order=desc&units=${units}`;
       const r = await axios.get(url, { timeout: 15000 });
-      const obs = r.data.observations?.filter(o => o.value !== '.');
-      if (!obs || obs.length === 0) throw new Error('No data');
+      const obs = (r.data.observations || []).filter(o => o.value !== '.');
+      if (!obs.length) throw new Error('No FRED data for ' + series);
       return parseFloat(obs[0].value);
     };
 
-    // Run all fetches in parallel
-    const [fedData, cpiData, nfpData, gdpGrowth, y2, y10, y30, y3m] = await Promise.allSettled([
+    const [fedData, cpiData, nfpVal, gdpVal, y2, y10, y30, y3m] = await Promise.allSettled([
       // Fed Funds Rate — Alpha Vantage (fast, reliable)
       getAV('FEDERAL_FUNDS_RATE', '&interval=monthly'),
-      // CPI index — Alpha Vantage (compute YoY ourselves)
+      // CPI index monthly — Alpha Vantage (compute YoY ourselves)
       getAV('CPI', '&interval=monthly'),
-      // Nonfarm Payrolls — Alpha Vantage (absolute, compute MoM)
-      getAV('NONFARM_PAYROLL'),
-      // Real GDP Growth % — FRED (quarterly, % change, already annualized)
-      getFred('A191RL1Q225SBEA').catch(() => null),
+      // NFP monthly jobs added — FRED PAYEMS units=chg (EXACT same number BLS releases / TradingView shows)
+      getFred('PAYEMS', 'chg'),
+      // Real GDP annualised growth % — FRED
+      getFred('A191RL1Q225SBEA'),
       // Treasury yields — FRED
-      getFred('DGS2').catch(() => null),
-      getFred('DGS10').catch(() => null),
-      getFred('DGS30').catch(() => null),
-      getFred('DGS3MO').catch(() => null),
+      getFred('DGS2'),
+      getFred('DGS10'),
+      getFred('DGS30'),
+      getFred('DGS3MO'),
     ]);
 
-    // --- Parse Fed Funds Rate ---
+    // Fed Rate
     let fedRate = null;
     if (fedData.status === 'fulfilled') {
       const d = fedData.value?.data;
       if (d && d.length > 0) fedRate = parseFloat(d[0].value);
     }
 
-    // --- Parse CPI YoY % ---
+    // CPI YoY %
     let cpiYoY = null;
     if (cpiData.status === 'fulfilled') {
       const d = cpiData.value?.data;
       if (d && d.length >= 13) {
-        const latest = parseFloat(d[0].value);
-        const yearAgo = parseFloat(d[12].value);
-        if (yearAgo > 0) {
-          cpiYoY = parseFloat(((latest - yearAgo) / yearAgo * 100).toFixed(2));
-        }
+        const latest   = parseFloat(d[0].value);
+        const yearAgo  = parseFloat(d[12].value);
+        if (yearAgo > 0) cpiYoY = parseFloat(((latest - yearAgo) / yearAgo * 100).toFixed(2));
       }
     }
 
-    // --- Parse NFP MoM change (in thousands) ---
-    let nfpChange = null;
-    if (nfpData.status === 'fulfilled') {
-      const d = nfpData.value?.data;
-      if (d && d.length >= 2) {
-        const latest = parseFloat(d[0].value);
-        const prev = parseFloat(d[1].value);
-        nfpChange = Math.round(latest - prev); // in thousands already
-      }
-    }
+    // NFP — FRED PAYEMS chg already gives the official monthly change in thousands
+    // This is the exact same figure reported by BLS and shown on TradingView Economic Calendar
+    const nfpChange = nfpVal.status === 'fulfilled' ? Math.round(nfpVal.value) : null;
 
-    // --- Parse GDP ---
-    const gdpVal = gdpGrowth.status === 'fulfilled' ? gdpGrowth.value : null;
+    // GDP
+    const gdpGrowth = gdpVal.status === 'fulfilled' ? gdpVal.value : null;
 
-    // --- Parse Yields ---
+    // Yields
     finalYields = {
-      y2: y2.status === 'fulfilled' ? y2.value : null,
+      y2:  y2.status  === 'fulfilled' ? y2.value  : null,
       y10: y10.status === 'fulfilled' ? y10.value : null,
       y30: y30.status === 'fulfilled' ? y30.value : null,
       y3m: y3m.status === 'fulfilled' ? y3m.value : null,
     };
 
     finalMacro = {
-      GDP: gdpVal,
-      CPI: cpiYoY,
+      GDP:     gdpGrowth,
+      CPI:     cpiYoY,
       FedRate: fedRate,
-      NFP: nfpChange,
-      PMI: null  // No free reliable PMI source — show null not fake data
+      NFP:     nfpChange,  // in thousands, matches BLS / TradingView
+      PMI:     null        // No free reliable PMI — show dash, not fake number
     };
 
-    sourceLabel = 'Alpha Vantage + FRED (Live)';
+    sourceLabel = 'BLS/FRED + Alpha Vantage (Live)';
   } catch (e) {
     console.error('Macro Sync Error:', e.message);
     sourceLabel = 'Sync Error';
@@ -161,7 +153,9 @@ export default async function handler(req, res) {
   if (apiKey) {
     try {
       const isDeepSeek = apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-proj-');
-      const baseUrl = isDeepSeek ? 'https://api.deepseek.com/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
+      const baseUrl = isDeepSeek
+        ? 'https://api.deepseek.com/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
       const model = isDeepSeek ? 'deepseek-chat' : 'gpt-4o-mini';
       const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -180,7 +174,7 @@ export default async function handler(req, res) {
         if (!finalBatch[id]) {
           finalBatch[id] = { iLong: s.iL, iShort: 100 - s.iL, long: s.rL, short: 100 - s.rL, source: 'AI Engine Estimate' };
         } else {
-          finalBatch[id].long = s.rL;
+          finalBatch[id].long  = s.rL;
           finalBatch[id].short = 100 - s.rL;
         }
       }
@@ -191,10 +185,10 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     success: true,
-    batch: finalBatch,
-    macro: finalMacro,
-    yields: finalYields,
-    source: sourceLabel,
+    batch:   finalBatch,
+    macro:   finalMacro,
+    yields:  finalYields,
+    source:  sourceLabel,
     timestamp: now
   });
 }

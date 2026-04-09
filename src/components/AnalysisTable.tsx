@@ -62,14 +62,26 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
             </tr>
           </thead>
           <tbody>
-            {assets.map((asset, index) => (
-              <tr key={asset.id} className="table-row" style={{ animationDelay: `${index * 60}ms`, cursor: onRowClick ? 'pointer' : 'default' }} onClick={() => onRowClick?.(asset)}>
-                <td className="td-asset">
+            {assets.map((asset, index) => {
+              const isBullSqueeze = asset.cot >= 1 && asset.retailPos >= 1;
+              const isBearSqueeze = asset.cot <= -1 && asset.retailPos <= -1;
+              let rowClass = "table-row";
+              if (isBullSqueeze) rowClass += " squeeze-bull";
+              if (isBearSqueeze) rowClass += " squeeze-bear";
+
+              return (
+              <tr key={asset.id} className={rowClass} style={{ animationDelay: `${index * 60}ms`, cursor: onRowClick ? 'pointer' : 'default' }} onClick={() => onRowClick?.(asset)}>
+                <td className="td-asset relative">
                   <div className="asset-info">
                     <span className="asset-rank">#{index + 1}</span>
                     <span className={`asset-name ${asset.score > 0 ? 'text-pos' : asset.score < 0 ? 'text-neg' : ''}`}>
                       {asset.name}
                     </span>
+                    {(isBullSqueeze || isBearSqueeze) && (
+                      <span className="text-[0.6rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm ml-1" style={{ background: isBullSqueeze ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', color: isBullSqueeze ? '#4ade80' : '#f87171', border: `1px solid ${isBullSqueeze ? '#22c55e' : '#ef4444'}`, transform: 'translateY(-1px)' }}>
+                        {isBullSqueeze ? 'Squeeze' : 'Trap'}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="td-bias">
@@ -93,7 +105,8 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
                   </td>
                 ))}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

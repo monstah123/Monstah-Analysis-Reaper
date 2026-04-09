@@ -148,7 +148,7 @@ export default function BacktestLab() {
   };
 
   useEffect(() => {
-    // Load TradingView Widget exactly once, then sync on asset/date changes
+    // Load TradingView Widget exactly once per asset
     if (window.TradingView) {
       syncChart();
     } else {
@@ -160,7 +160,7 @@ export default function BacktestLab() {
       };
       document.head.appendChild(script);
     }
-  }, [asset, date]); // RELOAD WIDGET ON ASSET OR CALENDAR DATE CHANGE
+  }, [asset]); // ONLY RELOAD WIDGET ON ASSET CHANGE
 
   const syncChart = () => {
     if (window.TradingView) {

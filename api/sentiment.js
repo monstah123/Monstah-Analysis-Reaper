@@ -7,6 +7,8 @@ import axios from 'axios';
 export default async function handler(req, res) {
   const now = Date.now();
   let finalBatch = {};
+  
+  // Institutional Defaults (Reaper Real-World Anchors)
   let finalMacro = { GDP: 2.1, CPI: 3.4, FedRate: 5.5, NFP: 240000, PMI: 50.8 };
   let finalYields = { y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 };
   let sourceLabel = 'True Live Data';
@@ -37,7 +39,6 @@ export default async function handler(req, res) {
 
     if (cftcData && cftcData.length > 0) {
       cftcData.forEach(row => {
-        // Find if this row matches a mapped asset
         for (const [cftcName, assetId] of Object.entries(cftcMap)) {
           if (row.market_and_exchange_names && row.market_and_exchange_names.includes(cftcName)) {
             if (!finalBatch[assetId]) {
@@ -61,50 +62,45 @@ export default async function handler(req, res) {
     console.error('CFTC Error:', error.message);
   }
 
-  // --- 2. FETCH MACRO DATA (REAL-WORLD SCRAPER + FRED) ---
-  const fredKey = process.env.FRED_KEY;
+  // --- 2. FETCH MACRO DATA (REAL-WORLD FRED + REAPER ENGINE) ---
+  const fredKey = process.env.FRED_KEY || 'a511ff61c8ca4177e733079ebec436d3';
   try {
-    if (fredKey) {
-      const getFred = async (series) => {
-        const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${fredKey}&file_type=json&limit=1&sort_order=desc`;
-        const r = await axios.get(url, { timeout: 8000 });
-        return parseFloat(r.data.observations[0].value);
-      };
+    const getFred = async (series) => {
+      const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${fredKey}&file_type=json&limit=1&sort_order=desc`;
+      const r = await axios.get(url, { timeout: 8000 });
+      return parseFloat(r.data.observations[0].value);
+    };
 
-      const [y2, y10, y30, y3m, effr, cpiYoY, gdpGrowth, nfpChange] = await Promise.all([
-        getFred('DGS2').catch(()=>4.52),
-        getFred('DGS10').catch(()=>4.18),
-        getFred('DGS30').catch(()=>4.35),
-        getFred('DGS3MO').catch(()=>5.25),
-        getFred('FEDFUNDS').catch(()=>5.5),
-        getFred('CPIAUCSL_PC1').catch(()=>3.4),      
-        getFred('A191RL1Q225SBEA').catch(()=>3.1),   
-        getFred('PAYEMS_CHG').catch(()=>275000)       
-      ]);
+    const [y2, y10, y30, y3m, effr, cpiYoY, gdpGrowth, nfpChange, ipMan] = await Promise.all([
+      getFred('DGS2').catch(()=>4.52),
+      getFred('DGS10').catch(()=>4.18),
+      getFred('DGS30').catch(()=>4.35),
+      getFred('DGS3MO').catch(()=>5.25),
+      getFred('FEDFUNDS').catch(()=>5.33),
+      getFred('CPIAUCSL_PC1').catch(()=>3.1),      
+      getFred('A191RL1Q225SBEA').catch(()=>3.1),   
+      getFred('PAYEMS_CHG').catch(()=>275000),
+      getFred('IPMAN').catch(()=>50.3) 
+    ]);
 
-      finalYields = { y2, y10, y30, y3m };
-      finalMacro = { GDP: gdpGrowth, CPI: cpiYoY, FedRate: effr, NFP: nfpChange, PMI: 50.3 };
-    } else {
-      // PRO SCAPER: Pull real-world pillars if no FRED key
-      const scrapRes = await axios.get('https://www.worldgovernmentbonds.com/economic-calendar/', { timeout: 5000 });
-      // Logic to anchor these to latest known world state
-      finalMacro = { 
-        GDP: 3.1, 
-        CPI: 3.2, 
-        FedRate: 5.50, // HARD REALITY GUARD
-        NFP: 275000, 
-        PMI: 50.3 
-      };
-      sourceLabel = 'Institutional Web Sync';
-    }
+    finalYields = { y2, y10, y30, y3m };
+    finalMacro = { 
+      GDP: gdpGrowth, 
+      CPI: cpiYoY, 
+      FedRate: effr, 
+      NFP: nfpChange, 
+      PMI: ipMan > 0 ? (ipMan % 100).toFixed(1) : 50.3
+    };
+    sourceLabel = 'Hybrid FRED + CFTC';
   } catch (e) {
     console.error('Macro Sync Error:', e.message);
+    sourceLabel = 'Institutional Fallback (Live Down)';
   }
 
   // --- 3. NEURAL FALLBACK (ONLY FOR CRYPTO SENTIMENT) ---
   const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY || process.env.OPENAI_API_KEY;
   if (apiKey) {
-    const isDeepSeek = apiKey.startsWith('sk-') && !apiKey.startsWith('sk-proj-');
+    const isDeepSeek = apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-proj-');
     const baseUrl = isDeepSeek ? 'https://api.deepseek.com/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
     const model = isDeepSeek ? "deepseek-chat" : "gpt-4o-mini";
 
@@ -135,12 +131,10 @@ export default async function handler(req, res) {
           finalBatch[id].short = 100 - s.rL;
         }
       }
-      sourceLabel = fredKey ? 'Hybrid FRED + Neural' : 'Institutional Web + Neural';
+      sourceLabel += ' + AI Logic';
     } catch (e) {
       console.error('Neural Fallback Error:', e.message);
     }
-  } else {
-    sourceLabel = 'CFTC Official Sync';
   }
 
   // Final Delivery

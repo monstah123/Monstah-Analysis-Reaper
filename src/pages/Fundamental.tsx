@@ -19,9 +19,75 @@ const Fundamental: React.FC = () => {
     fetchMacro();
   }, []);
 
+  const getStatus = (label: string, val: number) => {
+    if (label === 'US Real GDP') {
+      if (val >= 2.5) return { text: 'Robust', color: '#22c55e' };
+      if (val >= 1.5) return { text: 'Stable', color: '#3b82f6' };
+      if (val >= 0) return { text: 'Weak', color: '#f59e0b' };
+      return { text: 'Contraction', color: '#ef4444' };
+    }
+    if (label === 'Inflation (CPI)') {
+      if (val >= 3.5) return { text: 'Hot', color: '#ef4444' };
+      if (val >= 2.5) return { text: 'Sticky', color: '#f59e0b' };
+      if (val >= 1.8) return { text: 'Target', color: '#22c55e' };
+      return { text: 'Disinflationary', color: '#3b82f6' };
+    }
+    if (label === 'Fed Funds Rate') {
+      if (val >= 5.0) return { text: 'Restrictive', color: '#ef4444' };
+      if (val >= 3.5) return { text: 'Neutral', color: '#3b82f6' };
+      return { text: 'Accommodative', color: '#22c55e' };
+    }
+    if (label === 'Non-Farm Payrolls') {
+      const nfpK = val > 1000 ? Math.round(val/1000) : val;
+      if (nfpK >= 250) return { text: 'Hot', color: '#ef4444' };
+      if (nfpK >= 150) return { text: 'Solid', color: '#22c55e' };
+      if (nfpK >= 50) return { text: 'Cooling', color: '#f59e0b' };
+      return { text: 'Weak', color: '#ef4444' };
+    }
+    if (label === 'Manufacturing PMI') {
+      if (val >= 52) return { text: 'Expansion', color: '#22c55e' };
+      if (val >= 50) return { text: 'Neutral', color: '#3b82f6' };
+      return { text: 'Contraction', color: '#ef4444' };
+    }
+    return { text: 'Normal', color: '#71717a' };
+  };
+
   const sortedByScore = useMemo(() => {
     return [...assets].sort((a, b) => b.score - a.score);
   }, [assets]);
+
+  const pillars = [
+    { 
+      label: 'US Real GDP', 
+      val: macroData?.GDP || 3.1, 
+      unit: '%',
+      icon: '🏛️'
+    },
+    { 
+      label: 'Inflation (CPI)', 
+      val: macroData?.CPI || 3.2, 
+      unit: '%',
+      icon: '⛽'
+    },
+    { 
+      label: 'Fed Funds Rate', 
+      val: (macroData?.FedRate && macroData.FedRate > 0) ? macroData.FedRate : 5.50, 
+      unit: '%',
+      icon: '♟️'
+    },
+    { 
+      label: 'Non-Farm Payrolls', 
+      val: macroData?.NFP ? (macroData.NFP > 1000 ? Math.round(macroData.NFP/1000) : macroData.NFP) : 275, 
+      unit: 'k',
+      icon: '👷'
+    },
+    { 
+      label: 'Manufacturing PMI', 
+      val: macroData?.PMI || 50.3, 
+      unit: '',
+      icon: '🏭'
+    }
+  ];
 
   return (
     <div className="page-container">
@@ -34,51 +100,19 @@ const Fundamental: React.FC = () => {
 
       {/* Global Macro Pillars */}
       <div className="stats-bar" style={{ padding: '1.5rem 0', gridTemplateColumns: 'repeat(5, 1fr)' }}>
-        {[
-          { 
-            label: 'US Real GDP', 
-            val: macroData?.GDP ? `${macroData.GDP}%` : '3.1%', 
-            icon: '🏛️', 
-            status: 'Stable' 
-          },
-          { 
-            label: 'Inflation (CPI)', 
-            val: macroData?.CPI ? `${macroData.CPI}%` : '3.2%', 
-            icon: '⛽', 
-            color: '#ef4444', 
-            status: 'Sticky' 
-          },
-          { 
-            label: 'Fed Funds Rate', 
-            // Sanity Check: Reject hallucinations below 5.25% in the current cycle
-            val: (macroData?.FedRate && macroData.FedRate > 5) ? `${macroData.FedRate}%` : '5.50%', 
-            icon: '♟️', 
-            status: 'Restrictive' 
-          },
-          { 
-            label: 'Non-Farm Payrolls', 
-            // Unit Fix: Convert 275000 to 275k
-            val: macroData?.NFP ? `${macroData.NFP > 1000 ? (macroData.NFP/1000).toFixed(0) : macroData.NFP}k` : '275k', 
-            icon: '👷', 
-            color: '#22c55e', 
-            status: 'Hot' 
-          },
-          { 
-            label: 'Manufacturing PMI', 
-            val: macroData?.PMI || '50.3', 
-            icon: '🏭', 
-            status: 'Expansion' 
-          }
-        ].map(m => (
-          <div key={m.label} className="stat-card" style={{ border: '1px solid #1e2d48', background: 'rgba(15,22,35,0.4)' }}>
-            <div className="stat-icon">{m.icon}</div>
-            <div className="stat-body">
-              <span className="stat-label">{m.label}</span>
-              <span className="stat-value" style={m.color ? { color: m.color } : {}}>{m.val}</span>
-              <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em' }}>{m.status}</span>
+        {pillars.map(p => {
+          const status = getStatus(p.label, p.val);
+          return (
+            <div key={p.label} className="stat-card" style={{ border: '1px solid #1e2d48', background: 'rgba(15,22,35,0.4)', transition: 'all 0.3s ease' }}>
+              <div className="stat-icon">{p.icon}</div>
+              <div className="stat-body">
+                <span className="stat-label">{p.label}</span>
+                <span className="stat-value" style={{ color: status.color }}>{p.val}{p.unit}</span>
+                <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em', color: status.color, fontWeight: 700 }}>{status.text}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="settings-row-2" style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>

@@ -104,18 +104,10 @@ const Landing: React.FC = () => {
         }}>
           Institutional Pulse · Neural Matrix · v13.0
         </div>
-        <h1 style={{ 
-          fontSize: '3.5rem', 
-          fontWeight: 900, 
-          letterSpacing: '-0.02em', 
-          marginBottom: '1rem',
-          background: 'linear-gradient(to bottom, #fff 0%, #94a3b8 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
+        <h1 className="landing-title">
           THE MONSTAH REAPER HAS ARRIVED.
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6', marginBottom: '2rem' }}>
+        <p className="landing-header-subtitle">
           Absolute market intelligence for the retail elite. Unified Sentiment, COT Deep-Dives, and the Neural AI Reasoner in one terminal.
         </p>
 
@@ -207,6 +199,38 @@ const Landing: React.FC = () => {
         }
         .landing-card:active {
           transform: scale(0.98);
+        }
+        .landing-title {
+          font-size: 3.5rem;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+          margin-bottom: 1rem;
+          background: linear-gradient(to bottom, #fff 0%, #94a3b8 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .landing-header-subtitle {
+          font-size: 1.2rem;
+          color: #64748b;
+          max-width: 600px;
+          margin: 0 auto;
+          line-height: 1.6;
+          margin-bottom: 2rem;
+        }
+        @media (max-width: 768px) {
+          .landing-layout {
+            padding: 1rem !important;
+          }
+          .landing-title {
+            font-size: 2.2rem;
+          }
+          .landing-header-subtitle {
+            font-size: 1rem;
+            padding: 0 1rem;
+          }
+          .landing-card {
+            padding: 1.25rem !important;
+          }
         }
       `}} />
     </div>

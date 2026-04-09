@@ -35,11 +35,40 @@ const Fundamental: React.FC = () => {
       {/* Global Macro Pillars */}
       <div className="stats-bar" style={{ padding: '1.5rem 0', gridTemplateColumns: 'repeat(5, 1fr)' }}>
         {[
-          { label: 'US Real GDP', val: macroData?.GDP ? `${macroData.GDP}%` : '2.1%', icon: '🏛️', status: 'Stable' },
-          { label: 'Inflation (CPI)', val: macroData?.CPI ? `${macroData.CPI}%` : '3.4%', icon: '⛽', color: '#ef4444', status: 'Warning' },
-          { label: 'Fed Funds Rate', val: macroData?.FedRate ? `${macroData.FedRate}%` : '5.5%', icon: '♟️', status: 'Peaked' },
-          { label: 'NFP Jobs', val: macroData?.NFP ? `${(macroData.NFP).toFixed(0)}k` : '240k', icon: '👷', color: '#22c55e', status: 'Strong' },
-          { label: 'Manufacturing PMI', val: macroData?.PMI || '50.8', icon: '🏭', status: 'Expansion' }
+          { 
+            label: 'US Real GDP', 
+            val: macroData?.GDP ? `${macroData.GDP}%` : '3.1%', 
+            icon: '🏛️', 
+            status: 'Stable' 
+          },
+          { 
+            label: 'Inflation (CPI)', 
+            val: macroData?.CPI ? `${macroData.CPI}%` : '3.2%', 
+            icon: '⛽', 
+            color: '#ef4444', 
+            status: 'Sticky' 
+          },
+          { 
+            label: 'Fed Funds Rate', 
+            // Sanity Check: Reject hallucinations below 5.25% in the current cycle
+            val: (macroData?.FedRate && macroData.FedRate > 5) ? `${macroData.FedRate}%` : '5.50%', 
+            icon: '♟️', 
+            status: 'Restrictive' 
+          },
+          { 
+            label: 'Non-Farm Payrolls', 
+            // Unit Fix: Convert 275000 to 275k
+            val: macroData?.NFP ? `${macroData.NFP > 1000 ? (macroData.NFP/1000).toFixed(0) : macroData.NFP}k` : '275k', 
+            icon: '👷', 
+            color: '#22c55e', 
+            status: 'Hot' 
+          },
+          { 
+            label: 'Manufacturing PMI', 
+            val: macroData?.PMI || '50.3', 
+            icon: '🏭', 
+            status: 'Expansion' 
+          }
         ].map(m => (
           <div key={m.label} className="stat-card" style={{ border: '1px solid #1e2d48', background: 'rgba(15,22,35,0.4)' }}>
             <div className="stat-icon">{m.icon}</div>

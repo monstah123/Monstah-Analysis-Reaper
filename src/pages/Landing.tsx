@@ -186,6 +186,41 @@ const Landing: React.FC = () => {
         ))}
       </div>
 
+      <div 
+        onClick={() => { playMoneySound(); setActiveView('dashboard'); }}
+        className="landing-card"
+        style={{
+          width: '100%',
+          maxWidth: '1200px',
+          background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.08) 0%, rgba(239, 68, 68, 0.08) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          padding: '1.5rem 2rem',
+          borderRadius: '24px',
+          cursor: 'pointer',
+          marginTop: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1.5rem',
+          backdropFilter: 'blur(10px)',
+          zIndex: 10,
+          opacity: audioEnabled ? 1 : 0.4,
+          pointerEvents: audioEnabled ? 'auto' : 'none',
+          transition: 'all 0.5s ease'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 10px #22c55e', animation: 'pulse-dot 2s infinite' }}></div>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '0.05em' }}>LIVE SQUEEZE DETECTOR</h3>
+        </div>
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, flex: '1 1 300px' }}>
+          The terminal now actively hunts for extreme <strong>Smart vs Dumb Money</strong> traps. Look for the glowing pulse on the Dashboard.
+        </p>
+        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#22c55e', marginLeft: 'auto' }}>
+          ACTIVATE MODULE <span>→</span>
+        </div>
+      </div>
+
       <footer style={{ marginTop: '5rem', textAlign: 'center', color: '#475569', fontSize: '0.8rem', letterSpacing: '0.05em' }}>
         <p>© 2026 MONSTAH ANALYSIS REAPER · POWERED BY DEEPSEEK NEURAL MATRIX · 100% PARITY SECURED</p>
       </footer>

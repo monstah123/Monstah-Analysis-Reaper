@@ -20,6 +20,13 @@ const Landing: React.FC = () => {
 
   const navItems = [
     { 
+      id: 'dashboard', 
+      title: 'Market Dashboard', 
+      desc: 'Central command center for real-time asset scoring and unified logic.',
+      icon: '⚡',
+      color: '#eab308'
+    },
+    { 
       id: 'sentiment', 
       title: 'Neural Sentiment Matrix', 
       desc: 'Institutional vs Retail Sentiment Leaderboards with 1:1 parity.',

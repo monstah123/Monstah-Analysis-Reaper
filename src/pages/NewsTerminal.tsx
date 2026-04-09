@@ -23,6 +23,7 @@ const NewsTerminal: React.FC = () => {
           url: item.url,
           time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           source: item.source || 'Institutional Wire',
+          summary: item.summary || item.title,
           sentiment: item.title.match(/Bullish|Positive|Gain|Up|Rise|Rally/i) ? 'Bullish' : item.title.match(/Bearish|Negative|Loss|Down|Fall|Crash/i) ? 'Bearish' : 'Neutral',
           sentimentScore: item.title.match(/Bullish|Positive|Gain|Up|Rise|Rally/i) ? 0.4 : item.title.match(/Bearish|Negative|Loss|Down|Fall|Crash/i) ? -0.4 : 0
         }));
@@ -48,6 +49,7 @@ const NewsTerminal: React.FC = () => {
         url: '#',
         time: new Date(Date.now() - (i * 420000)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         source: n.source,
+        summary: n.title,
         sentiment: n.s,
         sentimentScore: n.scr
       }));

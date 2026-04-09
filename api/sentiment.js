@@ -17,7 +17,6 @@ export default async function handler(req, res) {
   let sourceLabel = 'Awaiting Sync...';
 
   const fredKey = process.env.FRED_KEY || 'a511ff61c8ca4177e733079ebec436d3';
-  const avKey   = process.env.ALPHA_VANTAGE_KEY || 'demo';
 
   // ─── 1. CFTC COT DATA ────────────────────────────────────────────────────
   try {
@@ -69,12 +68,6 @@ export default async function handler(req, res) {
 
   // ─── 2. MACRO DATA ───────────────────────────────────────────────────────
   try {
-    // Alpha Vantage helper
-    const getAV = async (fn, params = '') => {
-      const url = `https://www.alphavantage.co/query?function=${fn}&apikey=${avKey}${params}`;
-      const r = await axios.get(url, { timeout: 15000 });
-      return r.data;
-    };
 
     // FRED helper — returns latest numeric value
     const getFred = async (series, units = 'lin') => {
@@ -86,10 +79,10 @@ export default async function handler(req, res) {
     };
 
     const [fedData, cpiData, nfpVal, gdpVal, y2, y10, y30, y3m] = await Promise.allSettled([
-      // Fed Funds Rate — Alpha Vantage (fast, reliable)
-      getAV('FEDERAL_FUNDS_RATE', '&interval=monthly'),
-      // CPI index monthly — Alpha Vantage (compute YoY ourselves)
-      getAV('CPI', '&interval=monthly'),
+      // Fed Funds Rate — FRED (fast, reliable)
+      getFred('FEDFUNDS'),
+      // CPI index YoY % — FRED (direct percent change from year ago)
+      getFred('CPIAUCSL', 'pc1'),
       // NFP monthly jobs added — FRED PAYEMS units=chg (EXACT same number BLS releases / TradingView shows)
       getFred('PAYEMS', 'chg'),
       // Real GDP annualised growth % — FRED
@@ -102,22 +95,10 @@ export default async function handler(req, res) {
     ]);
 
     // Fed Rate
-    let fedRate = null;
-    if (fedData.status === 'fulfilled') {
-      const d = fedData.value?.data;
-      if (d && d.length > 0) fedRate = parseFloat(d[0].value);
-    }
+    const fedRate = fedData.status === 'fulfilled' ? fedData.value : null;
 
     // CPI YoY %
-    let cpiYoY = null;
-    if (cpiData.status === 'fulfilled') {
-      const d = cpiData.value?.data;
-      if (d && d.length >= 13) {
-        const latest   = parseFloat(d[0].value);
-        const yearAgo  = parseFloat(d[12].value);
-        if (yearAgo > 0) cpiYoY = parseFloat(((latest - yearAgo) / yearAgo * 100).toFixed(2));
-      }
-    }
+    const cpiYoY = cpiData.status === 'fulfilled' ? parseFloat(cpiData.value.toFixed(2)) : null;
 
     // NFP — FRED PAYEMS chg already gives the official monthly change in thousands
     // This is the exact same figure reported by BLS and shown on TradingView Economic Calendar
@@ -142,7 +123,7 @@ export default async function handler(req, res) {
       PMI:     null        // No free reliable PMI — show dash, not fake number
     };
 
-    sourceLabel = 'BLS/FRED + Alpha Vantage (Live)';
+    sourceLabel = 'BLS/FRED (Live)';
   } catch (e) {
     console.error('Macro Sync Error:', e.message);
     sourceLabel = 'Sync Error';

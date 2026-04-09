@@ -69,7 +69,7 @@ const Fundamental: React.FC = () => {
       <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
           <h1>📊 Institutional Fundamental Matrix</h1>
-          <p>Global economic pillars synchronized via Alpha Vantage & FRED</p>
+          <p>Global economic pillars synchronized via BLS & FRED</p>
         </div>
       </header>
 

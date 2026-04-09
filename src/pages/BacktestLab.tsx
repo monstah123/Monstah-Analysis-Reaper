@@ -148,15 +148,19 @@ export default function BacktestLab() {
   };
 
   useEffect(() => {
-    // Load TradingView Widget and sync with asset
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/tv.js';
-    script.async = true;
-    script.onload = () => {
+    // Load TradingView Widget exactly once, then sync on asset/date changes
+    if (window.TradingView) {
       syncChart();
-    };
-    document.head.appendChild(script);
-  }, [asset]); // ONLY RELOAD ON ASSET CHANGE OR EXPLICIT SYNC
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/tv.js';
+      script.async = true;
+      script.onload = () => {
+        syncChart();
+      };
+      document.head.appendChild(script);
+    }
+  }, [asset, date]); // RELOAD WIDGET ON ASSET OR CALENDAR DATE CHANGE
 
   const syncChart = () => {
     if (window.TradingView) {

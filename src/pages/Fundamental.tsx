@@ -4,26 +4,34 @@ import { useApp } from '../contexts/AppContext';
 const Fundamental: React.FC = () => {
   const { assets } = useApp();
   const [macroData, setMacroData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
-  // Real-time Macro Sync from Neural Matrix
+  // Real-time Macro Sync from Institutional Wire
   useEffect(() => {
     const fetchMacro = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
         if (res.ok) {
           const json = await res.json();
           if (json.success) setMacroData(json.macro);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Core Sync Failure:', e);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchMacro();
   }, []);
 
-  const getStatus = (label: string, val: number) => {
+  const getStatus = (label: string, val: number | null) => {
+    if (val === null) return { text: 'Syncing...', color: '#71717a' };
+
     if (label === 'US Real GDP') {
       if (val >= 2.5) return { text: 'Robust', color: '#22c55e' };
       if (val >= 1.5) return { text: 'Stable', color: '#3b82f6' };
-      if (val >= 0) return { text: 'Weak', color: '#f59e0b' };
+      if (val >= 0) return { text: 'Slowdown', color: '#f59e0b' };
       return { text: 'Contraction', color: '#ef4444' };
     }
     if (label === 'Inflation (CPI)') {
@@ -38,10 +46,9 @@ const Fundamental: React.FC = () => {
       return { text: 'Accommodative', color: '#22c55e' };
     }
     if (label === 'Non-Farm Payrolls') {
-      const nfpK = val > 1000 ? Math.round(val/1000) : val;
-      if (nfpK >= 250) return { text: 'Hot', color: '#ef4444' };
-      if (nfpK >= 150) return { text: 'Solid', color: '#22c55e' };
-      if (nfpK >= 50) return { text: 'Cooling', color: '#f59e0b' };
+      if (val >= 250) return { text: 'Hot', color: '#ef4444' };
+      if (val >= 150) return { text: 'Robust', color: '#22c55e' };
+      if (val >= 50) return { text: 'Cooling', color: '#f59e0b' };
       return { text: 'Weak', color: '#ef4444' };
     }
     if (label === 'Manufacturing PMI') {
@@ -49,7 +56,7 @@ const Fundamental: React.FC = () => {
       if (val >= 50) return { text: 'Neutral', color: '#3b82f6' };
       return { text: 'Contraction', color: '#ef4444' };
     }
-    return { text: 'Normal', color: '#71717a' };
+    return { text: 'Live', color: '#71717a' };
   };
 
   const sortedByScore = useMemo(() => {
@@ -57,36 +64,11 @@ const Fundamental: React.FC = () => {
   }, [assets]);
 
   const pillars = [
-    { 
-      label: 'US Real GDP', 
-      val: macroData?.GDP || 3.1, 
-      unit: '%',
-      icon: '🏛️'
-    },
-    { 
-      label: 'Inflation (CPI)', 
-      val: macroData?.CPI || 3.2, 
-      unit: '%',
-      icon: '⛽'
-    },
-    { 
-      label: 'Fed Funds Rate', 
-      val: (macroData?.FedRate && macroData.FedRate > 0) ? macroData.FedRate : 5.50, 
-      unit: '%',
-      icon: '♟️'
-    },
-    { 
-      label: 'Non-Farm Payrolls', 
-      val: macroData?.NFP ? (macroData.NFP > 1000 ? Math.round(macroData.NFP/1000) : macroData.NFP) : 275, 
-      unit: 'k',
-      icon: '👷'
-    },
-    { 
-      label: 'Manufacturing PMI', 
-      val: macroData?.PMI || 50.3, 
-      unit: '',
-      icon: '🏭'
-    }
+    { label: 'US Real GDP', val: macroData?.GDP ?? null, unit: '%', icon: '🏛️' },
+    { label: 'Inflation (CPI)', val: macroData?.CPI ?? null, unit: '%', icon: '⛽' },
+    { label: 'Fed Funds Rate', val: macroData?.FedRate ?? null, unit: '%', icon: '♟️' },
+    { label: 'Non-Farm Payrolls', val: macroData?.NFP ?? null, unit: 'k', icon: '👷' },
+    { label: 'Manufacturing PMI', val: macroData?.PMI ?? null, unit: '', icon: '🏭' }
   ];
 
   return (
@@ -98,7 +80,6 @@ const Fundamental: React.FC = () => {
         </div>
       </header>
 
-      {/* Global Macro Pillars */}
       <div className="stats-bar" style={{ padding: '1.5rem 0', gridTemplateColumns: 'repeat(5, 1fr)' }}>
         {pillars.map(p => {
           const status = getStatus(p.label, p.val);
@@ -106,9 +87,13 @@ const Fundamental: React.FC = () => {
             <div key={p.label} className="stat-card" style={{ border: '1px solid #1e2d48', background: 'rgba(15,22,35,0.4)', transition: 'all 0.3s ease' }}>
               <div className="stat-icon">{p.icon}</div>
               <div className="stat-body">
-                <span className="stat-label">{p.label}</span>
-                <span className="stat-value" style={{ color: status.color }}>{p.val}{p.unit}</span>
-                <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em', color: status.color, fontWeight: 700 }}>{status.text}</span>
+                <span className="stat-label" style={{ opacity: 0.6 }}>{p.label}</span>
+                <span className="stat-value" style={{ color: p.val === null ? '#3f3f46' : status.color }}>
+                  {p.val === null ? 'SYNC...' : `${p.val}${p.unit}`}
+                </span>
+                <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 700, color: status.color }}>
+                  {status.text}
+                </span>
               </div>
             </div>
           );
@@ -141,7 +126,7 @@ const Fundamental: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div style={{ background: '#141b2d', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
                  <div style={{ fontSize: '10px', color: '#71717a', marginBottom: '4px' }}>GROWTH IMPACT</div>
-                 <div style={{ fontSize: '14px', fontWeight: 700, color: a.gdp > 0 ? '#22c55e' : '#71717a' }}>{a.gdp > 0 ? `+${a.gdp} Bulish` : 'Neutral'}</div>
+                 <div style={{ fontSize: '14px', fontWeight: 700, color: a.gdp > 0 ? '#22c55e' : '#71717a' }}>{a.gdp > 0 ? `+${a.gdp} Bullish` : 'Neutral'}</div>
               </div>
               <div style={{ background: '#141b2d', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
                  <div style={{ fontSize: '10px', color: '#71717a', marginBottom: '4px' }}>INFLATION DRIVER</div>

@@ -181,12 +181,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange;
           
+          let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
+          if (newTotals >= 5) dynamicBias = 'Very Bullish';
+          else if (newTotals >= 2) dynamicBias = 'Bullish';
+          else if (newTotals >= -1) dynamicBias = 'Neutral';
+          else if (newTotals >= -5) dynamicBias = 'Bearish';
+          else dynamicBias = 'Very Bearish';
+
           return {
             ...a, ...scores,
             retailLong: rL, retailShort: rS,
             cotLong: cL, cotShort: cS,
             retailPos: rP, cot: cI,
-            score: newTotals
+            score: newTotals,
+            bias: dynamicBias
           };
         });
       });

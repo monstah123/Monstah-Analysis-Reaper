@@ -16,7 +16,6 @@ const analysisItems = [
   { id: 'correlation',    label: 'Correlation',    icon: '🌡️' },
   { id: 'cot-deep-dive',  label: 'COT Deep-Dive',  icon: '🗳️' },
   { id: 'research',       label: 'Global Intel',   icon: '🌍' },
-  { id: 'backtest',       label: 'Backtest Lab',   icon: '⌛' },
 ];
 
 const marketItems = [

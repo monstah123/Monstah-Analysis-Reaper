@@ -27,13 +27,6 @@ const Landing: React.FC = () => {
       color: '#3b82f6'
     },
     { 
-      id: 'backtest', 
-      title: 'Backtest Lab', 
-      desc: 'Simulate historical trades with full-featured Pro charts and Demo Capital.',
-      icon: '⌛',
-      color: '#ec4899'
-    },
-    { 
       id: 'research', 
       title: 'Global Intel Portal', 
       desc: 'Live neural web-crawler for real-time institutional alpha and news.',

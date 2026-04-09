@@ -4,29 +4,33 @@ import { useApp } from '../contexts/AppContext';
 const Fundamental: React.FC = () => {
   const { assets } = useApp();
   const [macroData, setMacroData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [macroLoading, setMacroLoading] = useState<boolean>(true);
   
   // Real-time Macro Sync from Institutional Wire
   useEffect(() => {
     const fetchMacro = async () => {
-      setLoading(true);
+      setMacroLoading(true);
       try {
         const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.success) setMacroData(json.macro);
+          if (json.success) { setMacroData(json.macro); setMacroLoading(false); }
         }
       } catch (e) {
         console.error('Core Sync Failure:', e);
-      } finally {
-        setLoading(false);
+        setMacroLoading(false);
       }
     };
     fetchMacro();
   }, []);
 
   const getStatus = (label: string, val: number | null) => {
-    if (val === null) return { text: 'Syncing...', color: '#71717a' };
+    if (val === null) {
+      if (label === 'Manufacturing PMI' && !macroLoading && macroData !== null) {
+        return { text: 'No Free Feed', color: '#52525b' };
+      }
+      return { text: 'Syncing...', color: '#71717a' };
+    }
 
     if (label === 'US Real GDP') {
       if (val >= 2.5) return { text: 'Robust', color: '#22c55e' };
@@ -76,7 +80,7 @@ const Fundamental: React.FC = () => {
       <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
           <h1>📊 Institutional Fundamental Matrix</h1>
-          <p>Global economic pillars synchronized via FRED & Live Institutional Wire</p>
+          <p>Global economic pillars synchronized via Alpha Vantage & FRED</p>
         </div>
       </header>
 
@@ -89,7 +93,7 @@ const Fundamental: React.FC = () => {
               <div className="stat-body">
                 <span className="stat-label" style={{ opacity: 0.6 }}>{p.label}</span>
                 <span className="stat-value" style={{ color: p.val === null ? '#3f3f46' : status.color }}>
-                  {p.val === null ? 'SYNC...' : `${p.val}${p.unit}`}
+                  {p.val === null ? (p.label === 'Manufacturing PMI' && !macroLoading && macroData !== null ? '—' : 'SYNC...') : `${p.val}${p.unit}`}
                 </span>
                 <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 700, color: status.color }}>
                   {status.text}

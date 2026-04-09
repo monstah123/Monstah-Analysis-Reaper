@@ -1,36 +1,27 @@
 import axios from 'axios';
 
+// Reaper 12.0 - FRED Proxy
+// NO FAKE FALLBACKS — if FRED fails, return error so UI shows null/syncing
+// not stale hardcoded numbers
+
 export default async function handler(req, res) {
-  const { series_id } = req.query;
-  const apiKey = process.env.VITE_FRED_KEY || 'a511ff61c8ca4177e733079ebec436d3';
+  const { series_id, limit = 2, units = 'lin' } = req.query;
+  const apiKey = process.env.FRED_KEY || 'a511ff61c8ca4177e733079ebec436d3';
 
   if (!series_id) {
     return res.status(400).json({ error: 'Missing series_id' });
   }
 
   try {
-    const response = await axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=${series_id}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=2`, {
-      timeout: 8000,
-    });
-    
+    const response = await axios.get(
+      `https://api.stlouisfed.org/fred/series/observations?series_id=${series_id}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=${limit}&units=${units}`,
+      { timeout: 15000 }
+    );
     return res.status(200).json(response.data);
   } catch (error) {
-    console.error(`[FRED API] Error fetching ${series_id}:`, error.message);
-    
-    // Provide realistic fallback data to prevent 500s from breaking UI
-    const fallbacks = {
-      'FEDFUNDS': { observations: [{ value: '5.33' }, { value: '5.33' }] },
-      'CPIAUCSL': { observations: [{ value: '3.1' }, { value: '3.2' }] },
-      'UNRATE': { observations: [{ value: '3.9' }, { value: '3.7' }] },
-      'GDP': { observations: [{ value: '3.2' }, { value: '4.9' }] },
-      'DGS10': { observations: [{ value: '4.25' }, { value: '4.20' }] },
-    };
-    
-    if (fallbacks[series_id]) {
-      return res.status(200).json(fallbacks[series_id]);
-    }
-    
-    // Catch-all fallback for ANY series ID to prevent a 500 error chain
-    return res.status(200).json({ observations: [{ value: '0' }, { value: '0' }] });
+    console.error(`[FRED] Error fetching ${series_id}:`, error.message);
+    // Return a real error — do NOT return fake data
+    // The frontend reads null and shows "SYNC..." which is honest
+    return res.status(503).json({ error: `FRED unavailable: ${error.message}`, series_id });
   }
 }

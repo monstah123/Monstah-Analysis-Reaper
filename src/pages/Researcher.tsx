@@ -112,7 +112,8 @@ export default function Researcher() {
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
-              placeholder="Ex: 'EURUSD retail sentiment' or 'Nvidia earnings outlook'..."
+              placeholder="Ex: 'EURUSD institutional sentiment' or 'Nvidia earnings outlook'..."
+
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />

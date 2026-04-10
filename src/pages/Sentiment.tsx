@@ -32,6 +32,14 @@ const Sentiment: React.FC = () => {
   }, [sortedAssets]);
 
 
+  // --- Reaper Leaderboard Logic (Correct Extremes) ---
+  const mostBullish = useMemo(() => {
+    return [...cotChartData].sort((a, b) => b.long - a.long)[0];
+  }, [cotChartData]);
+
+  const mostBearish = useMemo(() => {
+    return [...cotChartData].sort((a, b) => a.long - b.long)[0];
+  }, [cotChartData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -61,16 +69,16 @@ const Sentiment: React.FC = () => {
           <div className="stat-icon">🏦</div>
           <div className="stat-body">
             <span className="stat-label">Most Bullish (Inst.)</span>
-            <span className="stat-value" style={{ color: '#22c55e' }}>{cotChartData[0]?.name}</span>
-            <span className="stat-sub">COT Score: +{cotChartData[0]?.cotScore}</span>
+            <span className="stat-value" style={{ color: '#22c55e' }}>{mostBullish?.name}</span>
+            <span className="stat-sub">COT Score: {mostBullish?.cotScore > 0 ? `+${mostBullish.cotScore}` : mostBullish?.cotScore}</span>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">⚠️</div>
           <div className="stat-body">
             <span className="stat-label">Most Bearish (Inst.)</span>
-            <span className="stat-value" style={{ color: '#ef4444' }}>{cotChartData[cotChartData.length - 1]?.name}</span>
-            <span className="stat-sub">COT Score: {cotChartData[cotChartData.length - 1]?.cotScore}</span>
+            <span className="stat-value" style={{ color: '#ef4444' }}>{mostBearish?.name}</span>
+            <span className="stat-sub">COT Score: {mostBearish?.cotScore}</span>
           </div>
         </div>
       </div>

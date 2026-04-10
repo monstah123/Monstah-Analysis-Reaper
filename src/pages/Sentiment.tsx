@@ -20,11 +20,12 @@ const Sentiment: React.FC = () => {
         }
         const rankScore = Math.abs(longPct - 50);
         return {
-          name: a.id,
+          name: a.name, // Display the human readable name (e.g., BRENT OIL instead of UKOIL)
           cotScore: a.cot,
           long: longPct, 
           short: 100 - longPct,
-          rankScore
+          rankScore,
+          source: (a.category === 'Crypto' ? 'Binance / On-chain' : 'CFTC Gov Data')
         };
       })
       .sort((a, b) => b.rankScore - a.rankScore); // Extreme First

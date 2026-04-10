@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Globe, ShieldCheck, Newspaper, ExternalLink, Loader2, Zap } from 'lucide-react';
 
 const TypewriterText = ({ text, speed = 10 }: { text: string; speed?: number }) => {
@@ -31,6 +31,34 @@ export default function Researcher() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [report, setReport] = useState<{ answer: string; sources: Source[] } | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!report && !loading && videoRef.current) {
+      const video = videoRef.current;
+      const streamUrl = "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8";
+      
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native HLS support (Safari/iOS)
+        video.src = streamUrl;
+      } else {
+        // Inject HLS.js for Chrome/Firefox
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
+        script.onload = () => {
+          // @ts-ignore
+          if (window.Hls && window.Hls.isSupported()) {
+            // @ts-ignore
+            const hls = new window.Hls();
+            hls.loadSource(streamUrl);
+            hls.attachMedia(video);
+          }
+        };
+        document.body.appendChild(script);
+        return () => { document.body.removeChild(script); };
+      }
+    }
+  }, [report, loading]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,14 +183,14 @@ export default function Researcher() {
               border: '1px solid rgba(255, 255, 255, 0.05)',
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
             }}>
-              <iframe 
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                src="https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1" 
-                title="Global Macro Live TV" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen>
-              </iframe>
+              <video 
+                ref={videoRef}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#0f172a', objectFit: 'cover' }}
+                autoPlay 
+                muted 
+                controls 
+                playsInline>
+              </video>
             </div>
           </div>
         )}

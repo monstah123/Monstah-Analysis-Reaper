@@ -2,23 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Search, Globe, ShieldCheck, Newspaper, ExternalLink, Loader2, Zap } from 'lucide-react';
 
 const TypewriterText = ({ text, speed = 10 }: { text: string; speed?: number }) => {
-  const [displayedText, setDisplayedText] = useState('');
+  const [index, setIndex] = useState(0);
   
   useEffect(() => {
-    setDisplayedText('');
-    let i = 0;
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(i));
-        i++;
-      } else {
-        clearInterval(timer);
-      }
-    }, speed);
-    return () => clearInterval(timer);
-  }, [text, speed]);
+    setIndex(0);
+  }, [text]);
 
-  return <span>{displayedText}</span>;
+  useEffect(() => {
+    if (index < text.length) {
+      const timer = setTimeout(() => {
+        setIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(timer);
+    }
+  }, [index, text, speed]);
+
+  return <span>{text.substring(0, index)}</span>;
 };
 
 interface Source {

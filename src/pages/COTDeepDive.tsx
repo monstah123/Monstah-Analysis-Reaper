@@ -8,10 +8,15 @@ const COTDeepDive: React.FC = () => {
   const analysisData = useMemo(() => {
     return [...assets].map(a => {
       // Pulling direct from live COT data
-      const cotLong = a.cotLong !== undefined ? a.cotLong : 50;
+      const cLong = a.cotLong || 0;
+      const cShort = a.cotShort || 0;
+      const total = cLong + cShort;
       
-      // Institutional Positioning formula
-      const instSentiment = cotLong >= 60 ? 'Bullish' : cotLong <= 40 ? 'Bearish' : 'Neutral';
+      // Calculate real percentage (Handle edge case where total is 0)
+      const longPct = total > 0 ? Math.round((cLong / total) * 100) : 50;
+      
+      // Institutional Positioning formula based on normalized 0-100
+      const instSentiment = longPct >= 60 ? 'Bullish' : longPct <= 40 ? 'Bearish' : 'Neutral';
       
       let signal = 'Neutral Positioning';
       let signalClass = 'val-neutral';
@@ -24,11 +29,11 @@ const COTDeepDive: React.FC = () => {
         signalClass = 'bias-bearish';
       }
 
-      return { ...a, cotLong, signal, signalClass };
+      return { ...a, longPct, signal, signalClass };
     }).sort((a, b) => {
         // Sort by Extremeness of Positioning
-        const aExt = Math.abs((a.cotLong || 50) - 50);
-        const bExt = Math.abs((b.cotLong || 50) - 50);
+        const aExt = Math.abs((a.longPct || 50) - 50);
+        const bExt = Math.abs((b.longPct || 50) - 50);
         return bExt - aExt;
     });
   }, [assets]);
@@ -70,10 +75,10 @@ const COTDeepDive: React.FC = () => {
                   <td style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
                       <div style={{ width: '180px', height: '10px', background: '#0f172a', borderRadius: '5px', overflow: 'hidden', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
-                         <div style={{ width: `${a.cotLong}%`, background: '#22c55e', height: '100%', boxShadow: '0 0 10px rgba(34,197,94,0.3)' }} />
-                         <div style={{ width: `${100 - a.cotLong}%`, background: '#ef4444', height: '100%' }} />
+                         <div style={{ width: `${a.longPct}%`, background: '#22c55e', height: '100%', boxShadow: '0 0 10px rgba(34,197,94,0.3)' }} />
+                         <div style={{ width: `${100 - a.longPct}%`, background: '#ef4444', height: '100%' }} />
                       </div>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f8fafc' }}>{a.cotLong}% Institutional Long</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f8fafc' }}>{a.longPct}% Institutional Long</span>
                     </div>
                   </td>
 

@@ -14,19 +14,44 @@ export default async function handler(req, res) {
       api_key: tavilyKey,
       query: query || "latest retail and institutional sentiment for major forex and stocks",
       search_depth: "advanced",
-      include_answer: false, // Turn off AI generation to prevent token glitches
+      include_answer: false, // We'll do custom extraction to be safe
       max_results: 5
     });
 
     const results = searchRes.data;
-    
-    // 2. Bypass all AI generation and build the answer straight from pure source text
-    let finalAnswer = "";
-    if (results.results && results.results.length > 0) {
-      // Grab the content of the top 2 articles directly to ensure human-written spelling
-      finalAnswer = results.results.slice(0, 2).map((r, i) => `[Source ${i+1}]: ${r.content.trim()}`).join('\n\n');
+    let rawText = results.results ? results.results.map(r => r.content).join(' || ') : "";
+    let finalAnswer = "Analyzing raw institutional data...";
+
+    // 2. Intelligent Extraction to determine Institutional Bias (LONG/SHORT)
+    const aiKey = req.headers['x-api-key'] || process.env.VITE_OPENAI_KEY || process.env.VITE_DEEPSEEK_API_KEY;
+    const isDeepSeek = !req.headers['x-api-key'] && !process.env.VITE_OPENAI_KEY;
+    const aiUrl = isDeepSeek ? 'https://api.deepseek.com/chat/completions' : 'https://api.openai.com/v1/chat/completions';
+
+    if (aiKey && rawText) {
+      try {
+        const proofRes = await axios.post(aiUrl, {
+          model: isDeepSeek ? 'deepseek-chat' : 'gpt-4o',
+          messages: [
+            { role: "system", content: "You are a Wall Street Quant Analyst. Analyze the provided news snippets. In 2 or 3 sentences, summarize the current market sentiment and explicitly state whether the Institutional Bias is LONG, SHORT, or NEUTRAL. CRITICAL: Use pure text only. Do NOT use markdown. Do NOT use asterisks. Ensure perfect spelling." },
+            { role: "user", content: rawText.substring(0, 4000) }
+          ],
+          temperature: 0.7 // Standard entropy to prevent token looping/typos
+        }, {
+          headers: {
+            'Authorization': `Bearer ${aiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (proofRes.data.choices?.[0]?.message?.content) {
+          finalAnswer = proofRes.data.choices[0].message.content;
+        }
+      } catch (aiErr) {
+        console.error('AI Research Extractor Error:', aiErr.message);
+        finalAnswer = "Institutional Bias could not be computed at this time. Raw source data available below.";
+      }
     } else {
-      finalAnswer = "No reliable institutional intel could be located for this query.";
+      finalAnswer = "AI connection inactive. Please check your API keys.";
     }
 
     // 3. Format the final output

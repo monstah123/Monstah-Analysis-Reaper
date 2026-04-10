@@ -93,7 +93,7 @@ export default function Researcher() {
             </button>
           </form>
           <div className="search-tags">
-            <span onClick={() => setQuery("Live retail sentiment EURUSD Myfxbook")}>EURUSD Retail</span>
+            <span onClick={() => setQuery("Fed Interest Rates policy impact")}>Fed Interest Rates</span>
             <span onClick={() => setQuery("Latest COT report Gold analysis")}>Gold COT</span>
             <span onClick={() => setQuery("Institutional positioning S&P 500")}>Equity Positioning</span>
           </div>

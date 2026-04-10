@@ -14,41 +14,19 @@ export default async function handler(req, res) {
       api_key: tavilyKey,
       query: query || "latest retail and institutional sentiment for major forex and stocks",
       search_depth: "advanced",
-      include_answer: true,
+      include_answer: false, // Turn off AI generation to prevent token glitches
       max_results: 5
     });
 
     const results = searchRes.data;
-    let finalAnswer = results.answer;
-
-    // 2. Intelligent Auto-Correction / Proofreading via DeepSeek (or fallback to OpenAI)
-    const aiKey = req.headers['x-api-key'] || process.env.VITE_OPENAI_KEY || process.env.VITE_DEEPSEEK_API_KEY;
-    const isDeepSeek = !req.headers['x-api-key'] && !process.env.VITE_OPENAI_KEY;
-    const aiUrl = isDeepSeek ? 'https://api.deepseek.com/chat/completions' : 'https://api.openai.com/v1/chat/completions';
-
-    if (aiKey && finalAnswer) {
-      try {
-        const proofRes = await axios.post(aiUrl, {
-          model: isDeepSeek ? 'deepseek-chat' : 'gpt-4o',
-          messages: [
-            { role: "system", content: "You are a proofreader. Your ONLY job is to take the provided raw web search summary and rewrite it into a highly concise, professional, and flawlessly spelled paragraph. CRITICAL RULES: 1. DO NOT use any markdown formatting. 2. DO NOT use asterisks (*). 3. DO NOT include titles, headers, dates, or placeholders like [Your Name]. 4. Return ONLY the raw, polished text consisting of continuous flowing paragraphs." },
-            { role: "user", content: finalAnswer }
-          ],
-          temperature: 0.6,
-          presence_penalty: 0.1
-        }, {
-          headers: {
-            'Authorization': `Bearer ${aiKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (proofRes.data.choices?.[0]?.message?.content) {
-          finalAnswer = proofRes.data.choices[0].message.content;
-        }
-      } catch (aiErr) {
-        console.error('DeepSeek Proofreading Error (falling back to raw answer):', aiErr.message);
-      }
+    
+    // 2. Bypass all AI generation and build the answer straight from pure source text
+    let finalAnswer = "";
+    if (results.results && results.results.length > 0) {
+      // Grab the content of the top 2 articles directly to ensure human-written spelling
+      finalAnswer = results.results.slice(0, 2).map((r, i) => `[Source ${i+1}]: ${r.content.trim()}`).join('\n\n');
+    } else {
+      finalAnswer = "No reliable institutional intel could be located for this query.";
     }
 
     // 3. Format the final output

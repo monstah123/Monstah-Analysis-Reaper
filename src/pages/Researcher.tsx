@@ -144,7 +144,7 @@ export default function Researcher() {
           <div className="live-tv-container fade-in" style={{ marginTop: '2rem' }}>
             <div className="section-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse-dot 2s infinite' }}></div>
-              <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.9rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• BLOOMBERG TV</span></h3>
+              <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.9rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• GLOBAL MACRO NEWS</span></h3>
             </div>
             <div className="video-wrapper" style={{ 
               position: 'relative', 
@@ -157,8 +157,8 @@ export default function Researcher() {
             }}>
               <iframe 
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                src="https://www.youtube.com/embed/live_stream?channel=UCIALMKvObZNtJ6AmdToI5KQ&autoplay=1&mute=1" 
-                title="Bloomberg Live TV" 
+                src="https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1" 
+                title="Global Macro Live TV" 
                 frameBorder="0" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowFullScreen>

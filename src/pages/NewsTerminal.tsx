@@ -21,7 +21,7 @@ const NewsTerminal: React.FC = () => {
           id: index.toString(),
           title: item.title,
           url: item.url,
-          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          time: item.time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           source: item.source || 'Institutional Wire',
           summary: item.summary || item.title,
           sentiment: item.title.match(/Bullish|Positive|Gain|Up|Rise|Rally/i) ? 'Bullish' : item.title.match(/Bearish|Negative|Loss|Down|Fall|Crash/i) ? 'Bearish' : 'Neutral',

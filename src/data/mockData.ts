@@ -30,7 +30,7 @@ export interface AssetData {
 }
 
 export const mockAssets: AssetData[] = [
-  { id: 'DOW', name: 'DOW', category: 'Indices', bias: 'Very Bullish', score: 10, basePrice: 39500, cot: 2, retailPos: 1, seasonality: 2, trend: 2, gdp: 0, mPMI: -1, sPMI: 1, retailSales: 1, inflation: 1, employmentChange: 1, unemploymentRate: 1, interestRates: -1, cotLong: 450, cotShort: 120, retailLong: 35, retailShort: 65 },
+  { id: 'US30', name: 'US30', category: 'Indices', bias: 'Very Bullish', score: 10, basePrice: 39500, cot: 2, retailPos: 1, seasonality: 2, trend: 2, gdp: 0, mPMI: -1, sPMI: 1, retailSales: 1, inflation: 1, employmentChange: 1, unemploymentRate: 1, interestRates: -1, cotLong: 450, cotShort: 120, retailLong: 35, retailShort: 65 },
   { id: 'DAX', name: 'DAX', category: 'Indices', bias: 'Very Bullish', score: 9, basePrice: 18200, cot: 0, retailPos: 0, seasonality: 2, trend: 2, gdp: 0, mPMI: 0, sPMI: 0, retailSales: -1, inflation: 3, employmentChange: 1, unemploymentRate: 0, interestRates: 1, cotLong: 80, cotShort: 75, retailLong: 50, retailShort: 50 },
   { id: 'NIKKEI', name: 'NIKKEI', category: 'Indices', bias: 'Very Bullish', score: 9, basePrice: 40100, cot: 2, retailPos: 2, seasonality: 2, trend: 2, gdp: -1, mPMI: 1, sPMI: 1, retailSales: 1, inflation: -1, employmentChange: -1, unemploymentRate: 1, interestRates: 0, cotLong: 220, cotShort: 45, retailLong: 12, retailShort: 88 },
   { id: 'GOLD', name: 'GOLD', category: 'Commodities', bias: 'Very Bullish', score: 8, basePrice: 2350, cot: 2, retailPos: 0, seasonality: 2, trend: 2, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 2, employmentChange: 1, unemploymentRate: 0, interestRates: -1, cotLong: 850, cotShort: 200, retailLong: 45, retailShort: 55 },

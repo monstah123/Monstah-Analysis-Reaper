@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       { id: 'NZDUSD', name: 'NZ DOLLAR' },
       { id: 'SP500', name: 'S&P 500 STOCK INDEX' },
       { id: 'NASDAQ', name: 'NASDAQ 100 STOCK INDEX' },
-      { id: 'DOW', name: 'DOW JONES INDUSTRIAL' }
+      { id: 'US30', name: 'DOW JONES INDUSTRIAL' }
     ];
 
     const results = {};

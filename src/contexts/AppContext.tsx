@@ -40,6 +40,9 @@ interface AppContextType {
   addAsset: (asset: AssetData) => void;
   removeAsset: (id: string) => void;
   yields: { y2: number; y10: number; y30: number; y3m: number };
+  audioEnabled: boolean;
+  setAudioEnabled: (v: boolean) => void;
+  playMoneySound: (isForce?: boolean) => void;
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -71,7 +74,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeView, setActiveView] = useState('landing');
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
   const [yields, setYields] = useState({ y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 });
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const lastSqueezeRef = useRef<Set<string>>(new Set());
   const refreshRef = useRef(false);
+
+  const playMoneySound = useCallback((isForce = false) => {
+    if (!audioEnabled && !isForce) return;
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3');
+    audio.volume = 0.35;
+    audio.play().catch(e => console.log('Audio blocked by browser:', e));
+  }, [audioEnabled]);
 
   const apiKeys: ApiKeys = {
     alphaVantage: apiKeysRaw.alphaVantage || DEFAULT_KEYS.alphaVantage,
@@ -254,12 +266,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => window.removeEventListener('myfxbook_sync', handleSync);
   }, [setAssets]);
 
+  // --- Neural Sound Scraper - Squeeze Alerts ---
+  useEffect(() => {
+    if (!audioEnabled) return;
+    
+    const currentSqueezes = new Set<string>();
+    let triggered = false;
+
+    assets.forEach(a => {
+      // Squeeze Logic from AnalysisTable
+      const isSqueeze = (a.cot >= 1 && a.retailPos >= 1) || (a.cot <= -1 && a.retailPos <= -1);
+      if (isSqueeze) {
+        currentSqueezes.add(a.id);
+        if (!lastSqueezeRef.current.has(a.id)) triggered = true;
+      }
+    });
+
+    if (triggered) {
+      console.log('--- MONSTAH SQUEEZE DETECTED ---');
+      playMoneySound(true);
+    }
+    lastSqueezeRef.current = currentSqueezes;
+  }, [assets, audioEnabled, playMoneySound]);
+
   return (
     <Ctx.Provider value={{
       apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
       refreshData: fetchMarketData, selectedAsset, setSelectedAsset,
       activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
-      updateMarketPrice, addAsset, removeAsset, yields
+      updateMarketPrice, addAsset, removeAsset, yields,
+      audioEnabled, setAudioEnabled, playMoneySound
     }}>
       {children}
     </Ctx.Provider>

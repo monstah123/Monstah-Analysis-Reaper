@@ -2,16 +2,7 @@ import React from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const Landing: React.FC = () => {
-  const { setActiveView } = useApp();
-  const [audioEnabled, setAudioEnabled] = React.useState(false);
-
-  // Reaper 13.0 - Money Sound Engine
-  const playMoneySound = (isForce = false) => {
-    if (!audioEnabled && !isForce) return;
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3');
-    audio.volume = 0.35;
-    audio.play().catch(e => console.log('Audio blocked by browser:', e));
-  };
+  const { setActiveView, audioEnabled, setAudioEnabled, playMoneySound } = useApp();
 
   const handleActivate = () => {
     setAudioEnabled(true);

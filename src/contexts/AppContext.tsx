@@ -228,6 +228,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
+  // Self-heal local storage to push new baseline assets (like UKOIL) to users who already cached older arrays
+  useEffect(() => {
+    setAssets((prev) => {
+      const missing = mockAssets.filter(ma => !prev.find(pa => pa.id === ma.id));
+      if (missing.length > 0) return [...prev, ...missing];
+      return prev;
+    });
+  }, [setAssets]);
+
   // Keep the 'Live Snatcher' for Currency/Gold pulse, but AI takes the lead
   useEffect(() => {
     const handleSync = (e: any) => {

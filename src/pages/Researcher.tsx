@@ -172,7 +172,7 @@ export default function Researcher() {
           <div className="live-tv-container fade-in" style={{ marginTop: '2rem' }}>
             <div className="section-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse-dot 2s infinite' }}></div>
-              <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.9rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• GLOBAL MACRO NEWS</span></h3>
+              <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.9rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• BLOOMBERG TV</span></h3>
             </div>
             <div className="video-wrapper" style={{ 
               position: 'relative', 

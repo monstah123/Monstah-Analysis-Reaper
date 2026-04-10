@@ -55,31 +55,37 @@ export default async function handler(req, res) {
        }
     });
 
-    // 3. Fallback for commodities (Legacy Report) - GOLD
-    if (!results.GOLD) {
+    // 3. Fallback for commodities (Legacy Report) - GOLD, USOIL, UKOIL
+    if (!results.GOLD || !results.USOIL || !results.UKOIL) {
        try {
           const legacyRes = await axios.get('https://www.cftc.gov/dea/newcot/deafut.txt', { 
             timeout: 5000,
             headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0' }
           });
           const ltxt = legacyRes.data;
-          const goldIdx = ltxt.toUpperCase().indexOf('GOLD');
-          if (goldIdx !== -1) {
-             const gBlock = ltxt.substring(goldIdx, goldIdx + 1500);
-             const lines = gBlock.split('\n');
-             // In Legacy: Non-Commercial row
-             const ncRow = lines.find(l => l.trim().toUpperCase().startsWith('NON-COMMERCIAL'));
-             if (ncRow) {
-                const cols = ncRow.trim().split(/\s+/);
-                if (cols.length >= 3) {
-                   results.GOLD = {
-                      long: parseInt(cols[1].replace(/,/g, '')),
-                      short: parseInt(cols[2].replace(/,/g, '')),
-                      source: 'CFTC Legacy Report'
-                   };
+          
+          const parseLegacy = (assetName, retKey) => {
+             const idx = ltxt.toUpperCase().indexOf(assetName);
+             if (idx !== -1) {
+                const block = ltxt.substring(idx, idx + 1500);
+                const ncRow = block.split('\n').find(l => l.trim().toUpperCase().startsWith('NON-COMMERCIAL'));
+                if (ncRow) {
+                   const cols = ncRow.trim().split(/\s+/);
+                   if (cols.length >= 3) {
+                      results[retKey] = {
+                         long: parseInt(cols[1].replace(/,/g, '')),
+                         short: parseInt(cols[2].replace(/,/g, '')),
+                         source: 'CFTC Legacy Report'
+                      };
+                   }
                 }
              }
-          }
+          };
+
+          parseLegacy('GOLD', 'GOLD');
+          parseLegacy('CRUDE OIL, LIGHT SWEET', 'USOIL');
+          parseLegacy('BRENT CRUDE', 'UKOIL');
+
        } catch (e) {}
     }
 

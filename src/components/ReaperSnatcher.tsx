@@ -58,7 +58,11 @@ const ReaperSnatcher: React.FC = () => {
             'DE30': 'DAX',
             'DE40': 'DAX',
             'UK100': 'FTSE',
-            'JPN225': 'NIKKEI'
+            'JPN225': 'NIKKEI',
+            'BRENT': 'UKOIL',
+            'UKOIL': 'UKOIL',
+            'WTI': 'USOIL',
+            'USOIL': 'USOIL'
           };
 
           let targetId = symbolMap[cleanSymbol] || cleanSymbol;

@@ -52,10 +52,23 @@ export default async function handler(req, res) {
             if (!finalBatch[assetId]) {
               const l = parseFloat(row.noncomm_positions_long_all) || 0;
               const s = parseFloat(row.noncomm_positions_short_all) || 0;
+              const rL = parseFloat(row.nonreport_positions_long_all) || 0;
+              const rS = parseFloat(row.nonreport_positions_short_all) || 0;
+
               if (l > 0 || s > 0) {
                 const total = l + s;
                 const iL = Math.round((l / total) * 100);
-                finalBatch[assetId] = { iLong: iL, iShort: 100 - iL, source: 'Official CFTC COT' };
+                
+                const rTotal = rL + rS;
+                const rLPct = rTotal > 0 ? Math.round((rL / rTotal) * 100) : 50;
+
+                finalBatch[assetId] = { 
+                  iLong: iL, 
+                  iShort: 100 - iL, 
+                  long: rLPct, 
+                  short: 100 - rLPct,
+                  source: 'Official CFTC COT' 
+                };
               }
             }
           }
@@ -129,40 +142,7 @@ export default async function handler(req, res) {
     sourceLabel = 'Sync Error';
   }
 
-  // ─── 3. AI ENGINE — fill missing COT + retail sentiment ─────────────────
-  const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.VITE_OPENAI_KEY;
-  if (apiKey) {
-    try {
-      const isDeepSeek = apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-proj-');
-      const baseUrl = isDeepSeek
-        ? 'https://api.deepseek.com/v1/chat/completions'
-        : 'https://api.openai.com/v1/chat/completions';
-      const model = isDeepSeek ? 'deepseek-chat' : 'gpt-4o-mini';
-      const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-      const aiRes = await axios.post(baseUrl, {
-        model,
-        messages: [{ role: 'user', content: `Return JSON: { "sentiment": { "ASSET_ID": { "iL": 0-100, "rL": 0-100 } } } for GOLD, NASDAQ, SILVER, SP500, COPPER, DOW, USDJPY, DAX, USOIL, NIKKEI, BITCOIN, EURUSD, SOLANA, ETHEREUM. COT & Retail estimates for ${dateStr}.` }],
-        response_format: { type: 'json_object' },
-        temperature: 0
-      }, {
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        timeout: 10000
-      });
-
-      const data = JSON.parse(aiRes.data.choices[0].message.content);
-      for (const [id, s] of Object.entries(data.sentiment)) {
-        if (!finalBatch[id]) {
-          finalBatch[id] = { iLong: s.iL, iShort: 100 - s.iL, long: s.rL, short: 100 - s.rL, source: 'AI Engine Estimate' };
-        } else {
-          finalBatch[id].long  = s.rL;
-          finalBatch[id].short = 100 - s.rL;
-        }
-      }
-    } catch (e) {
-      console.error('AI Engine Error:', e.message);
-    }
-  }
+  // AI ENGINE PURGED - 100% Institutional Data Only
 
   return res.status(200).json({
     success: true,

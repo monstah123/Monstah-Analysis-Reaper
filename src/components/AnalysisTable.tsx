@@ -63,8 +63,13 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
           </thead>
           <tbody>
             {assets.map((asset, index) => {
-              const isBullSqueeze = asset.cot >= 1 && asset.retailPos >= 1;
-              const isBearSqueeze = asset.cot <= -1 && asset.retailPos <= -1;
+              // Institutional Thresholds: 65% is where the pain starts for the other side
+              const iLongPct = ( (asset.cotLong || 0) / ((asset.cotLong || 0) + (asset.cotShort || 0)) ) * 100;
+              const rLongPct = ( (asset.retailLong || 0) / ((asset.retailLong || 0) + (asset.retailShort || 0)) ) * 100;
+              
+              const isBullSqueeze = iLongPct >= 65 && rLongPct <= 35;
+              const isBearSqueeze = iLongPct <= 35 && rLongPct >= 65;
+              
               let rowClass = "table-row";
               if (isBullSqueeze) rowClass += " squeeze-bull";
               if (isBearSqueeze) rowClass += " squeeze-bear";
@@ -78,8 +83,13 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
                       {asset.name}
                     </span>
                     {(isBullSqueeze || isBearSqueeze) && (
-                      <span className="text-[0.6rem] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm ml-1" style={{ background: isBullSqueeze ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', color: isBullSqueeze ? '#4ade80' : '#f87171', border: `1px solid ${isBullSqueeze ? '#22c55e' : '#ef4444'}`, transform: 'translateY(-1px)' }}>
-                        {isBullSqueeze ? 'Squeeze' : 'Trap'}
+                      <span className="text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm ml-1 animate-pulse" style={{ 
+                        background: isBullSqueeze ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', 
+                        color: isBullSqueeze ? '#4ade80' : '#f87171', 
+                        border: `1px solid ${isBullSqueeze ? '#22c55e' : '#ef4444'}`,
+                        boxShadow: `0 0 10px ${isBullSqueeze ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`
+                      }}>
+                        {isBullSqueeze ? 'SQUEEZE' : 'TRAP'}
                       </span>
                     )}
                   </div>

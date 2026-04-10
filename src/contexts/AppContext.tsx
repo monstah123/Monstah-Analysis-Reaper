@@ -173,9 +173,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           let cI = a.cot || 0;
 
           if (data) {
-            // Institutional always comes from the Backend (CFTC or Neural)
+            // Institutional Positioning (Raw counts from CFTC or ratios from Neural)
             cL = data.iLong ?? a.cotLong ?? 50;
-            cS = 100 - cL;
+            // If iShort is provided (like from CFTC), use it. Otherwise assume percentages.
+            cS = data.iShort ?? (cL > 100 ? a.cotShort ?? 50 : 100 - cL);
             
             // Retail only uses Backend (Neural) if ReaperSnatcher didn't grab it client-side
             if (!a.snatcherActive) {
@@ -274,8 +275,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let triggered = false;
 
     assets.forEach(a => {
-      // Squeeze Logic from AnalysisTable
-      const isSqueeze = (a.cot >= 1 && a.retailPos >= 1) || (a.cot <= -1 && a.retailPos <= -1);
+      // Institutional Thresholds: 65% is where the pain starts for the other side
+      const iLP = ( (a.cotLong || 0) / ((a.cotLong || 0) + (a.cotShort || 0)) ) * 100;
+      const rLP = ( (a.retailLong || 0) / ((a.retailLong || 0) + (a.retailShort || 0)) ) * 100;
+      
+      const isSqueeze = (iLP >= 65 && rLP <= 35) || (iLP <= 35 && rLP >= 65);
+      
       if (isSqueeze) {
         currentSqueezes.add(a.id);
         if (!lastSqueezeRef.current.has(a.id)) triggered = true;

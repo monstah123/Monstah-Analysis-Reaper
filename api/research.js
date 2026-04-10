@@ -31,10 +31,11 @@ export default async function handler(req, res) {
         const proofRes = await axios.post(aiUrl, {
           model: isDeepSeek ? 'deepseek-chat' : 'gpt-4o',
           messages: [
-            { role: "system", content: "You are a professional Wall Street Quant Analyst. Your job is to take the following raw web search summary and rewrite it into a highly professional, typo-free, concise Institutional Intelligence Report. Fix any egregious spelling errors. Keep it strictly factual." },
+            { role: "system", content: "You are a proofreader. Your ONLY job is to take the provided raw web search summary and rewrite it into a highly concise, professional, and flawlessly spelled paragraph. CRITICAL RULES: 1. DO NOT use any markdown formatting. 2. DO NOT use asterisks (*). 3. DO NOT include titles, headers, dates, or placeholders like [Your Name]. 4. Return ONLY the raw, polished text consisting of continuous flowing paragraphs." },
             { role: "user", content: finalAnswer }
           ],
-          temperature: 0.1
+          temperature: 0.6,
+          presence_penalty: 0.1
         }, {
           headers: {
             'Authorization': `Bearer ${aiKey}`,

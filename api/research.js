@@ -27,15 +27,17 @@ export default async function handler(req, res) {
     const isDeepSeek = !req.headers['x-api-key'] && !process.env.VITE_OPENAI_KEY;
     const aiUrl = isDeepSeek ? 'https://api.deepseek.com/chat/completions' : 'https://api.openai.com/v1/chat/completions';
 
+    let biasLabel = "";
+
     if (aiKey && rawText) {
       try {
         const proofRes = await axios.post(aiUrl, {
           model: isDeepSeek ? 'deepseek-chat' : 'gpt-4o',
           messages: [
-            { role: "system", content: "You are a Wall Street Quant Analyst. Analyze the provided news snippets. In 2 or 3 sentences, summarize the current market sentiment and explicitly state whether the Institutional Bias is LONG, SHORT, or NEUTRAL. CRITICAL: Use pure text only. Do NOT use markdown. Do NOT use asterisks. Ensure perfect spelling." },
+            { role: "system", content: "Analyze the provided news snippets. Determine the prevailing institutional bias. You MUST reply with EXACTLY ONE WORD: LONG, SHORT, or NEUTRAL. Absolutely no other text." },
             { role: "user", content: rawText.substring(0, 4000) }
           ],
-          temperature: 0.7 // Standard entropy to prevent token looping/typos
+          temperature: 0.1 // Safe for 1-word generation
         }, {
           headers: {
             'Authorization': `Bearer ${aiKey}`,
@@ -44,15 +46,20 @@ export default async function handler(req, res) {
         });
         
         if (proofRes.data.choices?.[0]?.message?.content) {
-          finalAnswer = proofRes.data.choices[0].message.content;
+          biasLabel = proofRes.data.choices[0].message.content.trim().toUpperCase().replace(/[^A-Z]/g, '');
         }
       } catch (aiErr) {
         console.error('AI Research Extractor Error:', aiErr.message);
-        finalAnswer = "Institutional Bias could not be computed at this time. Raw source data available below.";
       }
-    } else {
-      finalAnswer = "AI connection inactive. Please check your API keys.";
     }
+
+    if (!['LONG', 'SHORT', 'NEUTRAL'].includes(biasLabel)) {
+      biasLabel = "NEUTRAL";
+    }
+
+    const rawSnippets = results.results ? results.results.slice(0, 2).map((r, i) => `[Source ${i+1}]: ${r.content.trim()}`).join('\n\n') : "";
+    
+    finalAnswer = `[INSTITUTIONAL SENTIMENT DETECTED]: ${biasLabel}\n\n${rawSnippets}`;
 
     // 3. Format the final output
     return res.status(200).json({

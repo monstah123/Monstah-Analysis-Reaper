@@ -35,6 +35,71 @@ const Calendar: React.FC = () => {
         </div>
       </header>
       
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px', marginTop: '20px' }}>
+        {/* Inflation Rate YoY Add-on */}
+        <div className="settings-card" style={{ padding: 0, height: '150px', overflow: 'hidden' }}>
+          <div ref={(el) => {
+            if (el && !el.hasChildNodes()) {
+              const script = document.createElement('script');
+              script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js';
+              script.type = 'text/javascript';
+              script.async = true;
+              script.innerHTML = JSON.stringify({
+                symbol: "ECONOMICS:USIRYY",
+                width: "100%",
+                height: "100%",
+                colorTheme: "dark",
+                isTransparent: true,
+                locale: "en"
+              });
+              el.appendChild(script);
+            }
+          }} style={{ width: '100%', height: '100%' }} />
+        </div>
+        
+        {/* Core Inflation YoY Add-on */}
+        <div className="settings-card" style={{ padding: 0, height: '150px', overflow: 'hidden' }}>
+          <div ref={(el) => {
+            if (el && !el.hasChildNodes()) {
+              const script = document.createElement('script');
+              script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js';
+              script.type = 'text/javascript';
+              script.async = true;
+              script.innerHTML = JSON.stringify({
+                symbol: "ECONOMICS:USCIRYY",
+                width: "100%",
+                height: "100%",
+                colorTheme: "dark",
+                isTransparent: true,
+                locale: "en"
+              });
+              el.appendChild(script);
+            }
+          }} style={{ width: '100%', height: '100%' }} />
+        </div>
+
+        {/* Interest Rate Add-on */}
+        <div className="settings-card" style={{ padding: 0, height: '150px', overflow: 'hidden' }}>
+          <div ref={(el) => {
+            if (el && !el.hasChildNodes()) {
+              const script = document.createElement('script');
+              script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js';
+              script.type = 'text/javascript';
+              script.async = true;
+              script.innerHTML = JSON.stringify({
+                symbol: "ECONOMICS:USINTR",
+                width: "100%",
+                height: "100%",
+                colorTheme: "dark",
+                isTransparent: true,
+                locale: "en"
+              });
+              el.appendChild(script);
+            }
+          }} style={{ width: '100%', height: '100%' }} />
+        </div>
+      </div>
+
       <div className="settings-card" style={{ marginTop: '20px', height: '80vh', padding: '10px', display: 'flex', flexDirection: 'column' }}>
         {/* Institutional Calendar Header */}
         <div className="calendar-header" style={{ display: 'flex', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border)', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>

@@ -12,8 +12,8 @@ interface Session {
 const SESSIONS: Session[] = [
   { name: 'Sydney', id: 'sydney', startUTC: 22, endUTC: 7, color: '#3b82f6', flag: '🇦🇺' },
   { name: 'Tokyo', id: 'tokyo', startUTC: 0, endUTC: 9, color: '#ec4899', flag: '🇯🇵' },
-  { name: 'London', id: 'london', startUTC: 8, endUTC: 17, color: '#0ea5e9', flag: '🇬🇧' },
-  { name: 'New York', id: 'new-york', startUTC: 13, endUTC: 22, color: '#22c55e', flag: '🇺🇸' },
+  { name: 'London', id: 'london', startUTC: 7, endUTC: 16, color: '#0ea5e9', flag: '🇬🇧' },
+  { name: 'New York', id: 'new-york', startUTC: 12, endUTC: 21, color: '#22c55e', flag: '🇺🇸' },
 ];
 
 const MarketHours: React.FC = () => {

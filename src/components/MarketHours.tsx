@@ -223,21 +223,22 @@ const MarketHours: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'flex-end', height: '60px', gap: '2px', position: 'relative' }}>
             {Array.from({ length: 48 }).map((_, i) => {
               const h = i / 2;
+              // Institutional Liquidity Model (Based on $9.6T Daily Turnover)
               const vol = 
-                (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.1) + 
-                (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 1.4) + 
-                (Math.exp(-Math.pow(h - 18, 2) / 8) * 0.9) + 
-                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.4) +  
-                0.15;
+                (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.8) + // London Heavy Session
+                (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 2.6) + // Peak Overlap Surge ($5T+ Session)
+                (Math.exp(-Math.pow(h - 18, 2) / 8) * 1.4) + // US Afternoon Session
+                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.6) +  // Tokyo/Asia
+                0.2; // Global Baseline
               
               const isCurrent = Math.abs(h - displayFraction) < 0.25;
-              const height = (vol / 1.5) * 100;
+              const height = (vol / 3.0) * 100; // Scaled for higher throughput
 
               return (
                 <div key={i} style={{
                   flex: 1,
                   height: `${height}%`,
-                  background: isCurrent ? '#6366f1' : (vol > 0.8 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(71, 85, 105, 0.2)'),
+                  background: isCurrent ? '#6366f1' : (vol > 1.2 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(71, 85, 105, 0.2)'),
                   borderRadius: '1px',
                   position: 'relative',
                   transition: 'background 0.2s'
@@ -259,7 +260,7 @@ const MarketHours: React.FC = () => {
                       boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)',
                       zIndex: 20
                     }}>
-                      <span style={{ fontSize: '11px', fontWeight: 900, color: 'white' }}>${Math.min(2.5, (vol * 0.9)).toFixed(2)} Trillion</span>
+                      <span style={{ fontSize: '11px', fontWeight: 900, color: 'white' }}>${(vol * 1.6).toFixed(2)} Trillion</span>
                     </div>
                   )}
                 </div>

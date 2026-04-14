@@ -115,9 +115,9 @@ const MarketHours: React.FC = () => {
             minWidth: '60px'
           }}>
             <div style={{ fontSize: '10px', fontWeight: 900, color: 'white' }}>
-              {nowUTC.getUTCHours().toString().padStart(2, '0')}:{nowUTC.getUTCMinutes().toString().padStart(2, '0')}
+              {nowUTC.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
-            <div style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase' }}>UTC</div>
+            <div style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase' }}>LOCAL</div>
             
             {/* Pointer triangle */}
             <div style={{

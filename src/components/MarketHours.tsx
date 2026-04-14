@@ -31,7 +31,11 @@ const MarketHours: React.FC = () => {
   };
 
   const currentFraction = getUTCFraction(nowUTC);
+  // Shift the fraction so 22:00 UTC is '0' on the chart
+  const getShiftedFraction = (f: number) => (f - 22 + 24) % 24;
+  
   const displayFraction = hoverFraction !== null ? hoverFraction : currentFraction;
+  const shiftedDisplayFraction = getShiftedFraction(displayFraction);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -40,8 +44,10 @@ const MarketHours: React.FC = () => {
     const x = e.clientX - timelineLeft;
     
     if (x >= 0 && x <= timelineWidth) {
-      const fraction = (x / timelineWidth) * 24;
-      setHoverFraction(fraction);
+      const fractionAtX = (x / timelineWidth) * 24;
+      // Convert fraction back to real UTC
+      const realUTC = (fractionAtX + 22) % 24;
+      setHoverFraction(realUTC);
 
       // Reset the 5s timer
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
@@ -64,13 +70,11 @@ const MarketHours: React.FC = () => {
     const hours = Math.floor(fraction);
     const mins = Math.floor((fraction % 1) * 60);
     
-    // Add timezone offset to match Local Desk
-    const localOffset = -nowUTC.getTimezoneOffset() / 60;
-    let localHours = (hours + localOffset + 24) % 24;
-    const ampm = localHours >= 12 ? 'PM' : 'AM';
-    localHours = localHours % 12 || 12;
+    // Create a date object to handle local formatting correctly
+    const d = new Date(nowUTC);
+    d.setUTCHours(hours, mins, 0, 0);
     
-    return `${localHours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${ampm}`;
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -87,9 +91,6 @@ const MarketHours: React.FC = () => {
       cursor: 'crosshair'
     }}
     onMouseMove={handleMouseMove}
-    onMouseLeave={() => {
-      // Don't clear immediately, let the timer handle it unless we want immediate snap
-    }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
@@ -117,10 +118,10 @@ const MarketHours: React.FC = () => {
       </div>
 
       <div style={{ position: 'relative', height: '240px', marginTop: '1rem', pointerEvents: 'none' }}>
-        {/* Hour markers */}
+        {/* Hour markers shifted to start at 22:00 Sydney */}
         <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '120px', marginBottom: '10px' }}>
-          {[0, 4, 8, 12, 16, 20, 24].map(h => (
-            <span key={h} style={{ fontSize: '10px', color: '#475569', fontWeight: 800 }}>{h.toString().padStart(2, '0')}:00</span>
+          {[22, 2, 6, 10, 14, 18, 22].map(h => (
+            <span key={h} style={{ fontSize: '10px', color: '#475569', fontWeight: 800 }}>{(h % 24).toString().padStart(2, '0')}:00</span>
           ))}
         </div>
 
@@ -129,7 +130,7 @@ const MarketHours: React.FC = () => {
           className={hoverFraction === null ? "pulsing-laser" : ""}
           style={{
             position: 'absolute',
-            left: `calc(120px + (100% - 120px - 80px) * (${displayFraction} / 24))`,
+            left: `calc(120px + (100% - 120px - 80px) * (${shiftedDisplayFraction} / 24))`,
             top: '20px',
             bottom: '0',
             width: '2px',
@@ -182,10 +183,10 @@ const MarketHours: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {SESSIONS.map(session => {
             const isOpen = isSessionOpen(session.startUTC, session.endUTC, displayFraction);
-            const left = (session.startUTC / 24) * 100;
-            const width = session.startUTC < session.endUTC 
-              ? ((session.endUTC - session.startUTC) / 24) * 100
-              : ((24 - session.startUTC + session.endUTC) / 24) * 100;
+            const shiftedStart = getShiftedFraction(session.startUTC);
+            const left = (shiftedStart / 24) * 100;
+            const duration = (session.endUTC - session.startUTC + 24) % 24;
+            const width = (duration / 24) * 100;
 
             return (
               <div key={session.id} style={{ display: 'flex', alignItems: 'center', height: '24px' }}>
@@ -194,23 +195,16 @@ const MarketHours: React.FC = () => {
                   <span style={{ fontSize: '0.7rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '10px', position: 'relative', overflow: 'hidden', marginRight: '80px' }}>
-                  {session.startUTC < session.endUTC ? (
-                    <div style={{
-                      position: 'absolute',
-                      left: `${left}%`,
-                      width: `${width}%`,
-                      height: '100%',
-                      background: session.color,
-                      opacity: isOpen ? 1 : 0.2,
-                      borderRadius: '10px',
-                      transition: 'all 0.5s ease'
-                    }} />
-                  ) : (
-                    <>
-                      <div style={{ position: 'absolute', left: `${left}%`, width: `${100 - left}%`, height: '100%', background: session.color, opacity: isOpen ? 1 : 0.2, borderRadius: '10px 0 0 10px' }} />
-                      <div style={{ position: 'absolute', left: '0', width: `${(session.endUTC / 24) * 100}%`, height: '100%', background: session.color, opacity: isOpen ? 1 : 0.2, borderRadius: '0 10px 10px 0' }} />
-                    </>
-                  )}
+                  <div style={{
+                    position: 'absolute',
+                    left: `${left}%`,
+                    width: `${width}%`,
+                    height: '100%',
+                    background: session.color,
+                    opacity: isOpen ? 1 : 0.2,
+                    borderRadius: '10px',
+                    transition: 'all 0.5s ease'
+                  }} />
                 </div>
               </div>
             );

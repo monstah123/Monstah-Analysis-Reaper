@@ -115,10 +115,38 @@ const AITerminal: React.FC = () => {
               maxWidth: '80%',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.25rem'
-            }}>
-              <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: m.role === 'user' ? '#3b82f6' : '#22c55e', marginLeft: m.role === 'assistant' ? '4px' : '0', marginRight: m.role === 'user' ? '4px' : '0', textAlign: m.role === 'user' ? 'right' : 'left' }}>
-                {m.role === 'user' ? 'You' : 'Monstah AI'}
+              gap: '0.25rem',
+              position: 'relative'
+            }}
+            className="message-bubble-group"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: m.role === 'user' ? '#3b82f6' : '#22c55e', marginLeft: m.role === 'assistant' ? '4px' : '0', marginRight: m.role === 'user' ? '4px' : '0', textAlign: m.role === 'user' ? 'right' : 'left' }}>
+                  {m.role === 'user' ? 'You' : 'Monstah AI'}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(m.content);
+                    const btn = document.getElementById(`copy-${i}`);
+                    if (btn) {
+                      btn.innerText = 'COPIED!';
+                      setTimeout(() => { if (btn) btn.innerText = 'COPY'; }, 2000);
+                    }
+                  }}
+                  id={`copy-${i}`}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#64748b',
+                    fontSize: '9px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    padding: '0 4px',
+                    opacity: 0.6
+                  }}
+                >
+                  COPY
+                </button>
               </div>
               <div style={{
                 background: m.role === 'user' ? '#1e293b' : 'rgba(15, 22, 35, 0.8)',
@@ -130,9 +158,9 @@ const AITerminal: React.FC = () => {
                 fontSize: '0.95rem',
                 whiteSpace: 'pre-wrap'
               }}>
-                {m.content.replace(/#/g, '').split(/(\*\*.*?\*\*)/g).map((part, i) => {
+                {m.content.replace(/#/g, '').split(/(\*\*.*?\*\*)/g).map((part, idx) => {
                   if (part.startsWith('**') && part.endsWith('**')) {
-                    return <strong key={i} style={{ color: '#60a5fa', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
+                    return <strong key={idx} style={{ color: '#60a5fa', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
                   }
                   return part;
                 })}

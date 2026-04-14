@@ -20,11 +20,15 @@ export default async function handler(req, res) {
 
   // ─── 1. CFTC COT DATA ────────────────────────────────────────────────────
   try {
-    const cftcRes = await axios.get(
-      'https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=800&$order=report_date_as_yyyy_mm_dd DESC',
-      { timeout: 15000 }
-    );
-    const cftcData = cftcRes.data;
+    // We must query BOTH the Disaggregated format (Commodities/Crypto) AND the Legacy format (Currencies/Financials)
+    const [cftcRes1, cftcRes2] = await Promise.allSettled([
+      axios.get('https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=800&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 }),
+      axios.get('https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=800&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 })
+    ]);
+
+    const cftcData = [];
+    if (cftcRes1.status === 'fulfilled' && cftcRes1.value?.data) cftcData.push(...cftcRes1.value.data);
+    if (cftcRes2.status === 'fulfilled' && cftcRes2.value?.data) cftcData.push(...cftcRes2.value.data);
 
     const cftcMap = {
       'EURO FX': 'EURUSD',
@@ -46,7 +50,8 @@ export default async function handler(req, res) {
       'SILVER': 'SILVER',
       'COPPER-Grade #1': 'COPPER',
       'CRUDE OIL, LIGHT SWEET': 'USOIL',
-      'BITCOIN': 'BITCOIN'
+      'BITCOIN': 'BITCOIN',
+      'ETHER': 'ETHEREUM'
     };
 
     if (cftcData && cftcData.length > 0) {

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useApp } from '../contexts/AppContext';
 
 interface Session {
   name: string;
@@ -18,7 +17,6 @@ const SESSIONS: Session[] = [
 ];
 
 const MarketHours: React.FC = () => {
-  const { assets } = useApp();
   const [nowUTC, setNowUTC] = useState(new Date());
   const [hoverFraction, setHoverFraction] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'golden' | 'worst' | 'none'>('golden');

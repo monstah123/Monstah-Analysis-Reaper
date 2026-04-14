@@ -19,7 +19,7 @@ const SESSIONS: Session[] = [
 const MarketHours: React.FC = () => {
   const [nowUTC, setNowUTC] = useState(new Date());
   const [hoverFraction, setHoverFraction] = useState<number | null>(null);
-  const resetTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const resetTimerRef = React.useRef<any>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNowUTC(new Date()), 60000);

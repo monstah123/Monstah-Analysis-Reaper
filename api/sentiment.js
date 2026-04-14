@@ -28,11 +28,14 @@ export default async function handler(req, res) {
 
     const cftcMap = {
       'EURO FX': 'EURUSD',
+      'EURO CURRENCY': 'EURUSD',
       'BRITISH POUND': 'GBPUSD',
+      'BRITISH POUND STERLING': 'GBPUSD',
       'JAPANESE YEN': 'USDJPY',
       'CANADIAN DOLLAR': 'USDCAD',
       'AUSTRALIAN DOLLAR': 'AUDUSD',
       'NEW ZEALAND DOLLAR': 'NZDUSD',
+      'NZ DOLLAR': 'NZDUSD',
       'SWISS FRANC': 'USDCHF',
       'E-MINI S&P 500': 'SP500',
       'NASDAQ-100 Consolidated': 'NASDAQ',

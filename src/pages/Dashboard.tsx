@@ -13,6 +13,7 @@ const CAT_FILTERS: FilterCat[] = ['All', 'Forex', 'Indices', 'Commodities', 'Cry
 
 import AddAssetModal from '../components/AddAssetModal';
 import RelativePerformance from '../components/RelativePerformance';
+import MarketHours from '../components/MarketHours';
 
 const Dashboard: React.FC = () => {
   const { assets, isRefreshing, lastRefresh, refreshData, setSelectedAsset, activeView, setActiveView } = useApp();
@@ -76,6 +77,8 @@ const Dashboard: React.FC = () => {
       {showAddModal && <AddAssetModal onClose={() => setShowAddModal(false)} />}
 
       <StatsBar assets={processed} />
+
+      <MarketHours />
 
       {filterCat === 'Forex' && <RelativePerformance />}
 

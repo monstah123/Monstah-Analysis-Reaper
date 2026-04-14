@@ -64,6 +64,15 @@ button { cursor: pointer; font-family: inherit; }
   50%       { opacity: 0.5; box-shadow: 0 0 12px #22c55e; }
 }
 
+@keyframes pulse-laser {
+  0%, 100% { opacity: 0.6; box-shadow: 0 0 4px #3b82f6; }
+  50%       { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); }
+}
+
+.pulsing-laser {
+  animation: pulse-laser 2s infinite ease-in-out;
+}
+
 /* ─── Main Content ───────────────────────────────────── */
 .main-content { flex-grow: 1; overflow-y: auto; min-width: 0; }
 .page-container { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; }

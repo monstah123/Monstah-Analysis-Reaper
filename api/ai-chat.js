@@ -1,0 +1,51 @@
+import axios from 'axios';
+
+/**
+ * Monstah AI Terminal - Specialized Chat Engine
+ * This endpoint handles the conversation logic for the Trading AI Assistant.
+ */
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  const { messages } = req.body;
+  const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.DEEPSEEK_API_KEY;
+  const baseUrl = 'https://api.deepseek.com/v1';
+
+  if (!apiKey) {
+    return res.status(401).json({ success: false, error: 'DeepSeek API Key missing. Please add it to your environment variables.' });
+  }
+
+  try {
+    // Stage 1: Initial setup (General assistant for now, as requested)
+    const response = await axios.post(`${baseUrl}/chat/completions`, {
+      model: 'deepseek-chat',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are the Monstah AI Terminal, a high-fidelity intelligence assistant. For now, you can answer any question including general knowledge. Soon, you will be locked to professional trading intelligence only.' 
+        },
+        ...messages
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
+    }, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: response.data.choices[0].message.content
+    });
+
+  } catch (error) {
+    console.error('[AI Chat Error]:', error.response?.data || error.message);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to communicate with DeepSeek Intelligence engine.'
+    });
+  }
+}

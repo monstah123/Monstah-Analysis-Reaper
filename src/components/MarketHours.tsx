@@ -19,6 +19,7 @@ const SESSIONS: Session[] = [
 const MarketHours: React.FC = () => {
   const [nowUTC, setNowUTC] = useState(new Date());
   const [hoverFraction, setHoverFraction] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'golden' | 'worst' | 'none'>('golden');
   const resetTimerRef = React.useRef<any>(null);
 
   useEffect(() => {
@@ -31,7 +32,6 @@ const MarketHours: React.FC = () => {
   };
 
   const currentFraction = getUTCFraction(nowUTC);
-  // Shift the fraction so 22:00 UTC is '0' on the chart
   const getShiftedFraction = (f: number) => (f - 22 + 24) % 24;
   
   const displayFraction = hoverFraction !== null ? hoverFraction : currentFraction;
@@ -45,11 +45,9 @@ const MarketHours: React.FC = () => {
     
     if (x >= 0 && x <= timelineWidth) {
       const fractionAtX = (x / timelineWidth) * 24;
-      // Convert fraction back to real UTC
       const realUTC = (fractionAtX + 22) % 24;
       setHoverFraction(realUTC);
 
-      // Reset the 5s timer
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
       resetTimerRef.current = setTimeout(() => {
         setHoverFraction(null);
@@ -65,15 +63,11 @@ const MarketHours: React.FC = () => {
     }
   };
 
-  // Model logic for local time in bubble
   const getDisplayTime = (fraction: number) => {
     const hours = Math.floor(fraction);
     const mins = Math.floor((fraction % 1) * 60);
-    
-    // Create a date object to handle local formatting correctly
     const d = new Date(nowUTC);
     d.setUTCHours(hours, mins, 0, 0);
-    
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -117,15 +111,29 @@ const MarketHours: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ position: 'relative', height: '240px', marginTop: '1rem', pointerEvents: 'none' }}>
-        {/* Hour markers shifted to start at 22:00 Sydney */}
+      <div style={{ position: 'relative', height: '260px', marginTop: '1rem', pointerEvents: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '120px', marginBottom: '10px' }}>
           {[22, 2, 6, 10, 14, 18, 22].map(h => (
             <span key={h} style={{ fontSize: '10px', color: '#475569', fontWeight: 800 }}>{(h % 24).toString().padStart(2, '0')}:00</span>
           ))}
         </div>
 
-        {/* Live / Forecast Indicator Laser */}
+        {/* Backdrop highlights for Golden/Worst zones */}
+        <div style={{ position: 'absolute', left: '120px', right: '80px', top: '30px', bottom: '0', display: 'flex', zIndex: 0 }}>
+          {Array.from({ length: 48 }).map((_, i) => {
+            const h = (i / 2 + 22) % 24;
+            let bgColor = 'transparent';
+            if (viewMode === 'golden') {
+              if (h >= 12 && h < 16) bgColor = 'rgba(234, 179, 8, 0.15)'; // Overlap #1
+              if (h >= 7 && h < 9) bgColor = 'rgba(234, 179, 8, 0.1)';   // London Open #2
+              if (h >= 22 || h < 0) bgColor = 'rgba(234, 179, 8, 0.05)'; // Sydney Open #3
+            } else if (viewMode === 'worst') {
+              if (h >= 21 && h < 22) bgColor = 'rgba(239, 68, 68, 0.2)'; // NY Close / Rollover
+            }
+            return <div key={i} style={{ flex: 1, background: bgColor, borderLeft: bgColor !== 'transparent' ? '1px solid rgba(255,255,255,1.5%)' : 'none' }} />;
+          })}
+        </div>
+
         <div 
           className={hoverFraction === null ? "pulsing-laser" : ""}
           style={{
@@ -137,10 +145,9 @@ const MarketHours: React.FC = () => {
             background: hoverFraction !== null ? '#6366f1' : 'linear-gradient(to bottom, #818cf8, #6366f1, transparent)',
             zIndex: 10,
             transition: hoverFraction === null ? 'left 1.5s cubic-bezier(0.19, 1, 0.22, 1)' : 'none',
-            boxShadow: hoverFraction !== null ? '0 0 20px #6366f1' : 'none'
+            boxShadow: hoverFraction !== null ? '0 0 10px #6366f1' : 'none'
           }}
         >
-          {/* The Time Bubble */}
           <div style={{
             position: 'absolute',
             top: '-35px',
@@ -157,30 +164,15 @@ const MarketHours: React.FC = () => {
             minWidth: '70px',
             transition: 'all 0.3s ease'
           }}>
-            <div style={{ fontSize: '10px', fontWeight: 900, color: 'white' }}>
-              {getDisplayTime(displayFraction)}
-            </div>
+            <div style={{ fontSize: '10px', fontWeight: 900, color: 'white' }}>{getDisplayTime(displayFraction)}</div>
             <div style={{ fontSize: '7px', fontWeight: 700, color: hoverFraction !== null ? '#6366f1' : 'rgba(255,255,255,0.8)', textTransform: 'uppercase' }}>
               {hoverFraction !== null ? 'FORECAST' : 'LIVE'}
             </div>
-            
-            {/* Pointer triangle */}
-            <div style={{
-              position: 'absolute',
-              bottom: '-6px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '0',
-              height: '0',
-              borderLeft: '6px solid transparent',
-              borderRight: '6px solid transparent',
-              borderTop: `6px solid ${hoverFraction !== null ? '#1f2937' : '#6366f1'}`
-            }} />
+            <div style={{ position: 'absolute', bottom: '-6px', left: '50%', transform: 'translateX(-50%)', width: '0', height: '0', borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `6px solid ${hoverFraction !== null ? '#1f2937' : '#6366f1'}` }} />
           </div>
         </div>
 
-        {/* Sessions Rows */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative', zIndex: 1 }}>
           {SESSIONS.map(session => {
             const isOpen = isSessionOpen(session.startUTC, session.endUTC, displayFraction);
             const shiftedStart = getShiftedFraction(session.startUTC);
@@ -195,65 +187,34 @@ const MarketHours: React.FC = () => {
                   <span style={{ fontSize: '0.7rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '10px', position: 'relative', overflow: 'hidden', marginRight: '80px' }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: `${left}%`,
-                    width: `${width}%`,
-                    height: '100%',
-                    background: session.color,
-                    opacity: isOpen ? 1 : 0.2,
-                    borderRadius: '10px',
-                    transition: 'all 0.5s ease'
-                  }} />
+                  <div style={{ position: 'absolute', left: `${left}%`, width: `${width}%`, height: '100%', background: session.color, opacity: isOpen ? 1 : 0.2, borderRadius: '10px', transition: 'all 0.5s ease' }} />
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* TRADING VOLUME GRAPH */}
-        <div style={{ marginTop: '20px', paddingLeft: '120px', paddingRight: '80px' }}>
-          <div style={{ fontSize: '9px', fontWeight: 800, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Institutional Money Flow (Forecasted Turnover)</div>
+        <div style={{ marginTop: '20px', paddingLeft: '120px', paddingRight: '80px', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: '9px', fontWeight: 800, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Institutional Money Flow</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', height: '60px', gap: '2px', position: 'relative' }}>
             {Array.from({ length: 48 }).map((_, i) => {
-              const h = i / 2;
-              // Institutional Liquidity Model (Based on $9.6T Daily Turnover)
-              const vol = 
-                (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.8) + // London Heavy Session
-                (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 2.6) + // Peak Overlap Surge ($5T+ Session)
-                (Math.exp(-Math.pow(h - 18, 2) / 8) * 1.4) + // US Afternoon Session
-                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.6) +  // Tokyo/Asia
-                0.2; // Global Baseline
-              
-              const isCurrent = Math.abs(h - displayFraction) < 0.25;
-              const height = (vol / 3.0) * 100; // Scaled for higher throughput
+              const h = (i / 2 + 22) % 24;
+              const vol = (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.8) + (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 2.6) + (Math.exp(-Math.pow(h - 18, 2) / 8) * 1.4) + (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.6) + 0.2;
+              const isCurrent = Math.abs((i / 2) - shiftedDisplayFraction) < 0.25;
+              const height = (vol / 3.0) * 100;
+
+              let barColor = vol > 1.4 ? 'rgba(99, 102, 241, 0.6)' : 'rgba(71, 85, 105, 0.3)';
+              if (viewMode === 'golden' && ((h >= 12 && h < 16) || (h >= 7 && h < 9))) {
+                barColor = 'rgba(234, 179, 8, 0.6)';
+              } else if (viewMode === 'worst' && (h >= 21 && h < 22)) {
+                barColor = 'rgba(239, 68, 68, 0.6)';
+              }
+              if (isCurrent) barColor = viewMode === 'golden' ? '#eab308' : (viewMode === 'worst' ? '#ef4444' : '#6366f1');
 
               return (
-                <div key={i} style={{
-                  flex: 1,
-                  height: `${height}%`,
-                  background: isCurrent ? '#6366f1' : (vol > 1.2 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(71, 85, 105, 0.2)'),
-                  borderRadius: '1px',
-                  position: 'relative',
-                  transition: 'background 0.2s'
-                }}>
+                <div key={i} style={{ flex: 1, height: `${height}%`, background: barColor, borderRadius: '1px', position: 'relative', transition: 'all 0.3s ease' }}>
                   {isCurrent && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '-35px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: '#1e2d48',
-                      border: '1px solid #3b82f6',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      whiteSpace: 'nowrap',
-                      display: 'flex',
-                      alignItems: 'baseline',
-                      gap: '4px',
-                      boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)',
-                      zIndex: 20
-                    }}>
+                    <div style={{ position: 'absolute', top: '-35px', left: '50%', transform: 'translateX(-50%)', background: '#1e2d48', border: `1px solid ${barColor}`, padding: '4px 8px', borderRadius: '4px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'baseline', gap: '4px', boxShadow: `0 0 15px ${barColor}`, zIndex: 20 }}>
                       <span style={{ fontSize: '11px', fontWeight: 900, color: 'white' }}>${(vol * 1.6).toFixed(2)} Trillion</span>
                     </div>
                   )}
@@ -264,22 +225,60 @@ const MarketHours: React.FC = () => {
         </div>
       </div>
 
-      {/* Overlap Highlights */}
-      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
-        {isSessionOpen(8, 17, currentFraction) && isSessionOpen(13, 22, currentFraction) && (
-          <div style={{
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            <span className="live-dot live" style={{ width: '6px', height: '6px' }} />
-            <span style={{ fontSize: '10px', fontWeight: 800, color: '#22c55e' }}>PEAK LIQUIDITY: LONDON/NY OVERLAP</span>
-          </div>
-        )}
+      <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative', zIndex: 10 }}>
+        <div style={{ display: 'flex', gap: '1px', background: 'rgba(30, 41, 59, 0.5)', padding: '2px', borderRadius: '8px', width: 'fit-content', border: '1px solid #1e2d48' }}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setViewMode('golden'); }}
+            style={{ 
+              background: viewMode === 'golden' ? '#1e293b' : 'transparent', 
+              border: 'none', color: viewMode === 'golden' ? '#eab308' : '#64748b', 
+              padding: '8px 16px', borderRadius: '6px', fontSize: '11px', fontWeight: 800, 
+              display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            👍 Golden time
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setViewMode('worst'); }}
+            style={{ 
+              background: viewMode === 'worst' ? '#1e293b' : 'transparent', 
+              border: 'none', color: viewMode === 'worst' ? '#ef4444' : '#64748b', 
+              padding: '8px 16px', borderRadius: '6px', fontSize: '11px', fontWeight: 800, 
+              display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            👎 Worst time
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {viewMode === 'golden' && (
+            <>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <span style={{ color: '#eab308', fontWeight: 900, fontSize: '0.75rem', width: '24px' }}>#1</span>
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4', margin: 0 }}>
+                  <strong style={{ color: '#f8fafc' }}>London/New York Overlap</strong> has the highest trading volumes and volatility. Therefore it tends to also have the tightest spreads. The bigger the trading volume the bigger the price movements, thus more pips can be made.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <span style={{ color: '#eab308', fontWeight: 900, fontSize: '0.75rem', width: '24px' }}>#2</span>
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4', margin: 0 }}>
+                  The most active session is London's session. The first hour after a major market opens is considered very important and often indicates how the session might develop.
+                </p>
+              </div>
+            </>
+          )}
+          {viewMode === 'worst' && (
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <span style={{ color: '#ef4444', fontWeight: 900, fontSize: '0.75rem', width: '24px' }}>!!</span>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4', margin: 0 }}>
+                <strong style={{ color: '#f8fafc' }}>The Rollover / Gap Zone</strong> is the period after NY close and before Tokyo picks up. Spreads widen significantly and liquidity is thin. High risk of slippage.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

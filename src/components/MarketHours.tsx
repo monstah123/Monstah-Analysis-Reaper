@@ -196,12 +196,21 @@ const MarketHours: React.FC = () => {
 
             return (
               <div key={session.id} style={{ display: 'flex', alignItems: 'center', height: '28px' }}>
-                <div style={{ width: '150px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '160px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '14px' }}>{session.flag}</span>
-                    <span style={{ fontSize: '0.7rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: isOpen ? 900 : 700, color: isOpen ? '#f8fafc' : '#475569', letterSpacing: '0.02em' }}>{session.name}</span>
                   </div>
-                  <div style={{ fontSize: '8px', color: isOpen ? (session.id === 'new-york' ? '#4ade80' : '#3b82f6') : '#64748b', fontWeight: 700, marginLeft: '22px', fontFamily: 'monospace' }}>
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: isOpen ? (session.id === 'new-york' ? '#4ade80' : '#3b82f6') : '#94a3b8', 
+                    fontWeight: 900, 
+                    marginLeft: '22px', 
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
+                    opacity: isOpen ? 1 : 0.8
+                  }}>
                     {countdown}
                   </div>
                 </div>

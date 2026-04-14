@@ -18,6 +18,8 @@ const SESSIONS: Session[] = [
 
 const MarketHours: React.FC = () => {
   const [nowUTC, setNowUTC] = useState(new Date());
+  const [hoverFraction, setHoverFraction] = useState<number | null>(null);
+  const resetTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNowUTC(new Date()), 60000);
@@ -29,14 +31,46 @@ const MarketHours: React.FC = () => {
   };
 
   const currentFraction = getUTCFraction(nowUTC);
+  const displayFraction = hoverFraction !== null ? hoverFraction : currentFraction;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const timelineLeft = rect.left + 120; // 120px offset for session labels
+    const timelineWidth = rect.width - 120 - 80; // subtracting offsets
+    const x = e.clientX - timelineLeft;
+    
+    if (x >= 0 && x <= timelineWidth) {
+      const fraction = (x / timelineWidth) * 24;
+      setHoverFraction(fraction);
+
+      // Reset the 5s timer
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = setTimeout(() => {
+        setHoverFraction(null);
+      }, 5000);
+    }
+  };
 
   const isSessionOpen = (start: number, end: number, current: number) => {
     if (start < end) {
       return current >= start && current < end;
     } else {
-      // Over-midnight (e.g., 22:00 to 07:00)
       return current >= start || current < end;
     }
+  };
+
+  // Model logic for local time in bubble
+  const getDisplayTime = (fraction: number) => {
+    const hours = Math.floor(fraction);
+    const mins = Math.floor((fraction % 1) * 60);
+    
+    // Add timezone offset to match Local Desk
+    const localOffset = -nowUTC.getTimezoneOffset() / 60;
+    let localHours = (hours + localOffset + 24) % 24;
+    const ampm = localHours >= 12 ? 'PM' : 'AM';
+    localHours = localHours % 12 || 12;
+    
+    return `${localHours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${ampm}`;
   };
 
   return (
@@ -49,24 +83,30 @@ const MarketHours: React.FC = () => {
       marginBottom: '2rem',
       position: 'relative',
       overflow: 'hidden',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
-    }}>
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      cursor: 'crosshair'
+    }}
+    onMouseMove={handleMouseMove}
+    onMouseLeave={() => {
+      // Don't clear immediately, let the timer handle it unless we want immediate snap
+    }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
           <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#f8fafc', marginBottom: '0.25rem', letterSpacing: '0.05em' }}>
             GLOBAL LIQUIDITY CLOCK
           </h3>
-          <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>MONSTAH REAL-TIME MARKET CONVERTER</p>
+          <p style={{ fontSize: '0.75rem', color: hoverFraction !== null ? '#6366f1' : '#64748b', fontWeight: 600 }}>
+            {hoverFraction !== null ? '⚡ FORECAST MODE: PREDICTING VOLUME' : 'MONSTAH REAL-TIME MARKET CONVERTER'}
+          </p>
         </div>
         <div style={{ textAlign: 'right', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-          {/* Local Desk Time */}
           <div style={{ borderRight: '1px solid #1e2d48', paddingRight: '1.5rem' }}>
             <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#f8fafc', fontFamily: 'monospace' }}>
               {nowUTC.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>LOCAL DESK</div>
           </div>
-          {/* UTC Standard */}
           <div>
             <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#3b82f6', fontFamily: 'monospace' }}>
               {nowUTC.getUTCHours().toString().padStart(2, '0')}:{nowUTC.getUTCMinutes().toString().padStart(2, '0')} <span style={{ fontSize: '0.7rem' }}>UTC</span>
@@ -76,7 +116,7 @@ const MarketHours: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ position: 'relative', height: '240px', marginTop: '1rem' }}>
+      <div style={{ position: 'relative', height: '240px', marginTop: '1rem', pointerEvents: 'none' }}>
         {/* Hour markers */}
         <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '120px', marginBottom: '10px' }}>
           {[0, 4, 8, 12, 16, 20, 24].map(h => (
@@ -84,40 +124,44 @@ const MarketHours: React.FC = () => {
           ))}
         </div>
 
-        {/* Live Indicator Laser */}
+        {/* Live / Forecast Indicator Laser */}
         <div 
-          className="pulsing-laser"
+          className={hoverFraction === null ? "pulsing-laser" : ""}
           style={{
             position: 'absolute',
-            left: `calc(120px + (100% - 120px) * (${currentFraction} / 24))`,
+            left: `calc(120px + (100% - 120px - 80px) * (${displayFraction} / 24))`,
             top: '20px',
             bottom: '0',
             width: '2px',
-            background: 'linear-gradient(to bottom, #818cf8, #6366f1, transparent)',
+            background: hoverFraction !== null ? '#6366f1' : 'linear-gradient(to bottom, #818cf8, #6366f1, transparent)',
             zIndex: 10,
-            transition: 'left 1s linear',
+            transition: hoverFraction === null ? 'left 1.5s cubic-bezier(0.19, 1, 0.22, 1)' : 'none',
+            boxShadow: hoverFraction !== null ? '0 0 20px #6366f1' : 'none'
           }}
         >
-          {/* The Purple Time Bubble */}
+          {/* The Time Bubble */}
           <div style={{
             position: 'absolute',
             top: '-35px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+            background: hoverFraction !== null ? '#1f2937' : 'linear-gradient(135deg, #818cf8, #6366f1)',
             padding: '4px 8px',
             borderRadius: '8px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.6)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            minWidth: '60px'
+            boxShadow: hoverFraction !== null ? '0 4px 15px rgba(0,0,0,0.5)' : '0 4px 15px rgba(99, 102, 241, 0.6)',
+            border: hoverFraction !== null ? '1px solid #6366f1' : '1px solid rgba(255,255,255,0.2)',
+            minWidth: '70px',
+            transition: 'all 0.3s ease'
           }}>
             <div style={{ fontSize: '10px', fontWeight: 900, color: 'white' }}>
-              {nowUTC.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {getDisplayTime(displayFraction)}
             </div>
-            <div style={{ fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase' }}>LOCAL</div>
+            <div style={{ fontSize: '7px', fontWeight: 700, color: hoverFraction !== null ? '#6366f1' : 'rgba(255,255,255,0.8)', textTransform: 'uppercase' }}>
+              {hoverFraction !== null ? 'FORECAST' : 'LIVE'}
+            </div>
             
             {/* Pointer triangle */}
             <div style={{
@@ -129,7 +173,7 @@ const MarketHours: React.FC = () => {
               height: '0',
               borderLeft: '6px solid transparent',
               borderRight: '6px solid transparent',
-              borderTop: '6px solid #6366f1'
+              borderTop: `6px solid ${hoverFraction !== null ? '#1f2937' : '#6366f1'}`
             }} />
           </div>
         </div>
@@ -137,7 +181,7 @@ const MarketHours: React.FC = () => {
         {/* Sessions Rows */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {SESSIONS.map(session => {
-            const isOpen = isSessionOpen(session.startUTC, session.endUTC, currentFraction);
+            const isOpen = isSessionOpen(session.startUTC, session.endUTC, displayFraction);
             const left = (session.startUTC / 24) * 100;
             const width = session.startUTC < session.endUTC 
               ? ((session.endUTC - session.startUTC) / 24) * 100
@@ -149,7 +193,7 @@ const MarketHours: React.FC = () => {
                   <span style={{ fontSize: '14px' }}>{session.flag}</span>
                   <span style={{ fontSize: '0.7rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
                 </div>
-                <div style={{ flex: 1, height: '10px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '10px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ flex: 1, height: '10px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '10px', position: 'relative', overflow: 'hidden', marginRight: '80px' }}>
                   {session.startUTC < session.endUTC ? (
                     <div style={{
                       position: 'absolute',
@@ -168,40 +212,25 @@ const MarketHours: React.FC = () => {
                     </>
                   )}
                 </div>
-                <div style={{ width: '80px', textAlign: 'right' }}>
-                  <span style={{ 
-                    fontSize: '8px', 
-                    fontWeight: 900, 
-                    padding: '1px 5px', 
-                    borderRadius: '4px',
-                    background: isOpen ? `${session.color}22` : 'rgba(71, 85, 105, 0.1)',
-                    color: isOpen ? session.color : '#475569',
-                    border: `1px solid ${isOpen ? `${session.color}44` : 'transparent'}`
-                  }}>
-                    {isOpen ? 'OPEN' : 'CLOSED'}
-                  </span>
-                </div>
               </div>
             );
           })}
         </div>
 
         {/* TRADING VOLUME GRAPH */}
-        <div style={{ marginTop: '20px', paddingLeft: '120px' }}>
-          <div style={{ fontSize: '9px', fontWeight: 800, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Institutional Money Flow (Daily Turnover)</div>
+        <div style={{ marginTop: '20px', paddingLeft: '120px', paddingRight: '80px' }}>
+          <div style={{ fontSize: '9px', fontWeight: 800, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Institutional Money Flow (Forecasted Turnover)</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', height: '60px', gap: '2px', position: 'relative' }}>
             {Array.from({ length: 48 }).map((_, i) => {
               const h = i / 2;
-              // Recalibrated Liquidity Model
-              // High points: 9-11 (LDN Surge), 13-16 (Overlap Peak), 16-19 (US Surge)
               const vol = 
-                (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.1) + // London Heavy Session
-                (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 1.4) + // Peak Overlap Surge
-                (Math.exp(-Math.pow(h - 18, 2) / 8) * 0.9) + // US Afternoon Session
-                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.4) +  // Tokyo/Asia
-                0.15; // Global Baseline
+                (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.1) + 
+                (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 1.4) + 
+                (Math.exp(-Math.pow(h - 18, 2) / 8) * 0.9) + 
+                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.4) +  
+                0.15;
               
-              const isCurrent = Math.abs(h - currentFraction) < 0.25;
+              const isCurrent = Math.abs(h - displayFraction) < 0.25;
               const height = (vol / 1.5) * 100;
 
               return (
@@ -210,7 +239,8 @@ const MarketHours: React.FC = () => {
                   height: `${height}%`,
                   background: isCurrent ? '#6366f1' : (vol > 0.8 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(71, 85, 105, 0.2)'),
                   borderRadius: '1px',
-                  position: 'relative'
+                  position: 'relative',
+                  transition: 'background 0.2s'
                 }}>
                   {isCurrent && (
                     <div style={{

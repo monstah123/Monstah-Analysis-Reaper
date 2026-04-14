@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useApp } from '../contexts/AppContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -10,11 +11,12 @@ const EXAMPLES = [
   "How does EUR/USD retail sentiment currently look?",
   "Explain the relationship between Treasury yields and GOLD.",
   "What is the impact of a hot NFP print on JPY pairs?",
-  "Who is the current President of the United States?", // General question as requested for test
-  "Analyze the COT data for the BRITISH POUND."
+  "Analyze the current market liquidity - are we in a Golden Zone?",
+  "Analyze the COT data for my most extreme positions."
 ];
 
 const AITerminal: React.FC = () => {
+  const { assets, yields } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +33,37 @@ const AITerminal: React.FC = () => {
   const handleSend = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    const userMsg: Message = { role: 'user', content: text, timestamp: new Date() };
+    // --- Build Context Bridge ---
+    const now = new Date();
+    const h = now.getUTCHours();
+    
+    // Quick session analysis for AI context
+    const openSessions = [];
+    if (h >= 22 || h < 7) openSessions.push('Sydney');
+    if (h >= 0 && h < 9) openSessions.push('Tokyo');
+    if (h >= 7 && h < 16) openSessions.push('London');
+    if (h >= 12 && h < 21) openSessions.push('New York');
+    
+    const isGolden = (h >= 12 && h < 16) || (h >= 7 && h < 9);
+    
+    // Capture COT extremes
+    const sortedCOT = [...assets].sort((a, b) => {
+      const aPct = (a.cotLong || 0) / ((a.cotLong || 0) + (a.cotShort || 1)) * 100;
+      const bPct = (b.cotLong || 0) / ((b.cotLong || 0) + (b.cotShort || 1)) * 100;
+      return bPct - aPct;
+    });
+    const topLong = sortedCOT[0];
+    const topShort = sortedCOT[sortedCOT.length - 1];
+
+    const contextBriefing = {
+      timestampUTC: now.toISOString(),
+      activeSessions: openSessions.join(', '),
+      marketPhase: isGolden ? 'GOLDEN ZONE (High Liquidity)' : 'Standard Liquidity',
+      yields: `2Y: ${yields.y2}%, 10Y: ${yields.y10}%`,
+      cotExtremes: `Most Long: ${topLong?.name || 'N/A'}, Most Short: ${topShort?.name || 'N/A'}`
+    };
+
+    const userMsg: Message = { role: 'user', content: text, timestamp: now };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
@@ -41,7 +73,8 @@ const AITerminal: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content }))
+          messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+          context: contextBriefing
         })
       });
 
@@ -58,7 +91,7 @@ const AITerminal: React.FC = () => {
     } catch (error: any) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `⚠️ Error: ${error.message || 'The DeepSeek intelligence link was interrupted. Check your API key.'}`,
+        content: `⚠️ Error: ${error.message || 'The DeepSeek intelligence link was interrupted.'}`,
         timestamp: new Date()
       }]);
     } finally {
@@ -67,7 +100,7 @@ const AITerminal: React.FC = () => {
   };
 
   return (
-    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', paddingBottom: '2rem' }}>
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: '2rem' }}>
       <header className="header" style={{ marginBottom: '1rem' }}>
         <div className="header-title">
           <h1>🌪️ Monstah AI Terminal</h1>
@@ -84,7 +117,8 @@ const AITerminal: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        maxHeight: '70vh'
       }}>
         {/* Chat History */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -92,7 +126,7 @@ const AITerminal: React.FC = () => {
             <div style={{ textAlign: 'center', marginTop: '4rem', opacity: 0.6 }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🤖</div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f8fafc' }}>Awaiting Input...</h2>
-              <p style={{ maxWidth: '400px', margin: '0.5rem auto 2rem' }}>Ask about market sentiment, macro-economic correlations, or general knowledge.</p>
+              <p style={{ maxWidth: '400px', margin: '0.5rem auto 2rem' }}>Ask about market sentiment, liquidity phases, or COT institutional data.</p>
               
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem' }}>
                 {EXAMPLES.map((ex, i) => (
@@ -115,38 +149,12 @@ const AITerminal: React.FC = () => {
               maxWidth: '80%',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.25rem',
-              position: 'relative'
-            }}
-            className="message-bubble-group"
-            >
+              gap: '0.25rem'
+            }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: m.role === 'user' ? '#3b82f6' : '#22c55e', marginLeft: m.role === 'assistant' ? '4px' : '0', marginRight: m.role === 'user' ? '4px' : '0', textAlign: m.role === 'user' ? 'right' : 'left' }}>
+                <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: m.role === 'user' ? '#3b82f6' : '#22c55e', textAlign: m.role === 'user' ? 'right' : 'left' }}>
                   {m.role === 'user' ? 'You' : 'Monstah AI'}
                 </div>
-                <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(m.content);
-                    const btn = document.getElementById(`copy-${i}`);
-                    if (btn) {
-                      btn.innerText = 'COPIED!';
-                      setTimeout(() => { if (btn) btn.innerText = 'COPY'; }, 2000);
-                    }
-                  }}
-                  id={`copy-${i}`}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#64748b',
-                    fontSize: '9px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    padding: '0 4px',
-                    opacity: 0.6
-                  }}
-                >
-                  COPY
-                </button>
               </div>
               <div style={{
                 background: m.role === 'user' ? '#1e293b' : 'rgba(15, 22, 35, 0.8)',
@@ -158,19 +166,14 @@ const AITerminal: React.FC = () => {
                 fontSize: '0.95rem',
                 whiteSpace: 'pre-wrap'
               }}>
-                {m.content.replace(/#/g, '').split(/(\*\*.*?\*\*)/g).map((part, idx) => {
-                  if (part.startsWith('**') && part.endsWith('**')) {
-                    return <strong key={idx} style={{ color: '#60a5fa', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
-                  }
-                  return part;
-                })}
+                {m.content}
               </div>
             </div>
           ))}
           {isLoading && (
             <div style={{ alignSelf: 'flex-start', display: 'flex', gap: '0.5rem', padding: '1rem' }}>
               <div className="pulse-dot pulsing" style={{ background: '#22c55e' }} />
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Neural Processing...</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#22c55e' }}>Neural Processing...</span>
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -207,7 +210,7 @@ const AITerminal: React.FC = () => {
             </button>
           </form>
           <p style={{ fontSize: '10px', color: '#64748b', marginTop: '1rem', textAlign: 'center' }}>
-            Powered by DeepSeek V3 Neural Engine. Live market data is available via terminal memory.
+            Context Bridge Active: DeepSeek V3 now has real-time dashboard awareness.
           </p>
         </div>
       </div>

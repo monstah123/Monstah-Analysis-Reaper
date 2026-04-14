@@ -7,16 +7,25 @@ import axios from 'axios';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const { messages } = req.body;
+  const { messages, context } = req.body;
   const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.DEEPSEEK_API_KEY;
   const baseUrl = 'https://api.deepseek.com/v1';
 
   if (!apiKey) {
-    return res.status(401).json({ success: false, error: 'DeepSeek API Key missing. Please add it to your environment variables.' });
+    return res.status(401).json({ success: false, error: 'DeepSeek API Key missing.' });
   }
 
+  // --- Monstah Context Injection ---
+  const sessionBriefing = `
+CURRENT TERMINAL CONTEXT:
+- Timestamp: ${context?.timestampUTC || 'Unknown'}
+- Active Market Sessions: ${context?.activeSessions || 'Monitoring...'}
+- Market Phase: ${context?.marketPhase || 'Standard'}
+- Real-Time Yields: ${context?.yields || 'N/A'}
+- Institutional COT Extremes: ${context?.cotExtremes || 'N/A'}
+`;
+
   try {
-    // Stage 1: Initial setup (General assistant for now, as requested)
     const response = await axios.post(`${baseUrl}/chat/completions`, {
       model: 'deepseek-chat',
       messages: [
@@ -24,12 +33,14 @@ export default async function handler(req, res) {
           role: 'system', 
           content: `You are the Monstah AI Terminal, a high-fidelity institutional trading intelligence engine. 
           
+          ${sessionBriefing}
+
           STRICT OPERATING RULES:
           1. Only answer questions related to trading, finance, macro-economics, sentiment analysis, technical analysis, and global markets.
           2. Adhere to a professional, sophisticated, and direct "Institutional Desk" persona.
-          3. If a user asks a non-trading or general knowledge question (e.g., about history, celebrities, or general science), politely but firmly decline and redirect them to market analysis. Use phrases like "This terminal is reserved for institutional intelligence" or "Neural focus restricted to global markets."
-          4. You have access to the Monstah environment memory including COT data, retail sentiment, and yield spreads. Provide high-conviction insights.
-          5. NEVER use markdown headers like #, ##, or ###. Use **BOLD ALL CAPS** for section headings instead.`
+          3. Use the CURRENT TERMINAL CONTEXT above to provide hyper-accurate advice tailored to the current session and positioning.
+          4. If a user asks a non-trading question, politely but firmly decline.
+          5. NEVER use markdown headers like # or ##. Use **BOLD ALL CAPS** for section headings.`
         },
         ...messages
       ],

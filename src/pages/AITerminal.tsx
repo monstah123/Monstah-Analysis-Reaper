@@ -130,7 +130,12 @@ const AITerminal: React.FC = () => {
                 fontSize: '0.95rem',
                 whiteSpace: 'pre-wrap'
               }}>
-                {m.content}
+                {m.content.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+                  if (part.startsWith('**') && part.endsWith('**')) {
+                    return <strong key={i} style={{ color: '#60a5fa', fontWeight: 800 }}>{part.slice(2, -2)}</strong>;
+                  }
+                  return part;
+                })}
               </div>
             </div>
           ))}

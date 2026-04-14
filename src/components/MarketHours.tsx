@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useApp } from '../contexts/AppContext';
 
 interface Session {
   name: string;
@@ -17,21 +18,32 @@ const SESSIONS: Session[] = [
 ];
 
 const MarketHours: React.FC = () => {
+  const { assets } = useApp();
   const [nowUTC, setNowUTC] = useState(new Date());
   const [hoverFraction, setHoverFraction] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'golden' | 'worst' | 'none'>('golden');
   const resetTimerRef = React.useRef<any>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => setNowUTC(new Date()), 60000);
+    // 1-second pulse for real-time institutional countdown
+    const timer = setInterval(() => setNowUTC(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   const getUTCFraction = (date: Date) => {
-    return date.getUTCHours() + date.getUTCMinutes() / 60;
+    return date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  };
+
+  const getTimeRemaining = (targetHour: number, currentHour: number) => {
+    let diff = (targetHour - currentHour + 24) % 24;
+    const h = Math.floor(diff);
+    const m = Math.floor((diff % 1) * 60);
+    const s = Math.floor(((diff * 60) % 1) * 60);
+    return `${h}h ${m}m ${s}s`;
   };
 
   const currentFraction = getUTCFraction(nowUTC);
+  // Shift the fraction so 22:00 UTC is '0' on the chart
   const getShiftedFraction = (f: number) => (f - 22 + 24) % 24;
   
   const displayFraction = hoverFraction !== null ? hoverFraction : currentFraction;
@@ -39,8 +51,8 @@ const MarketHours: React.FC = () => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const timelineLeft = rect.left + 120; // 120px offset for session labels
-    const timelineWidth = rect.width - 120 - 80; // subtracting offsets
+    const timelineLeft = rect.left + 150; // increased for longer countdown labels
+    const timelineWidth = rect.width - 150 - 80;
     const x = e.clientX - timelineLeft;
     
     if (x >= 0 && x <= timelineWidth) {
@@ -98,28 +110,28 @@ const MarketHours: React.FC = () => {
         <div style={{ textAlign: 'right', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
           <div style={{ borderRight: '1px solid #1e2d48', paddingRight: '1.5rem' }}>
             <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#f8fafc', fontFamily: 'monospace' }}>
-              {nowUTC.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {nowUTC.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>LOCAL DESK</div>
           </div>
           <div>
             <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#3b82f6', fontFamily: 'monospace' }}>
-              {nowUTC.getUTCHours().toString().padStart(2, '0')}:{nowUTC.getUTCMinutes().toString().padStart(2, '0')} <span style={{ fontSize: '0.7rem' }}>UTC</span>
+              {nowUTC.getUTCHours().toString().padStart(2, '0')}:{nowUTC.getUTCMinutes().toString().padStart(2, '0')}:{nowUTC.getUTCSeconds().toString().padStart(2, '0')} <span style={{ fontSize: '0.7rem' }}>UTC</span>
             </div>
             <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>GLOBAL STANDARD</div>
           </div>
         </div>
       </div>
 
-      <div style={{ position: 'relative', height: '260px', marginTop: '1rem', pointerEvents: 'none' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '120px', marginBottom: '10px' }}>
+      <div style={{ position: 'relative', height: '280px', marginTop: '1rem', pointerEvents: 'none' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '150px', marginBottom: '10px' }}>
           {[22, 2, 6, 10, 14, 18, 22].map(h => (
             <span key={h} style={{ fontSize: '10px', color: '#475569', fontWeight: 800 }}>{(h % 24).toString().padStart(2, '0')}:00</span>
           ))}
         </div>
 
         {/* Backdrop highlights for Golden/Worst zones */}
-        <div style={{ position: 'absolute', left: '120px', right: '80px', top: '30px', bottom: '0', display: 'flex', zIndex: 0 }}>
+        <div style={{ position: 'absolute', left: '150px', right: '80px', top: '30px', bottom: '0', display: 'flex', zIndex: 0 }}>
           {Array.from({ length: 48 }).map((_, i) => {
             const h = (i / 2 + 22) % 24;
             let bgColor = 'transparent';
@@ -138,7 +150,7 @@ const MarketHours: React.FC = () => {
           className={hoverFraction === null ? "pulsing-laser" : ""}
           style={{
             position: 'absolute',
-            left: `calc(120px + (100% - 120px - 80px) * (${shiftedDisplayFraction} / 24))`,
+            left: `calc(150px + (100% - 150px - 80px) * (${shiftedDisplayFraction} / 24))`,
             top: '20px',
             bottom: '0',
             width: '2px',
@@ -172,19 +184,28 @@ const MarketHours: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', zIndex: 1 }}>
           {SESSIONS.map(session => {
-            const isOpen = isSessionOpen(session.startUTC, session.endUTC, displayFraction);
+            const isOpen = isSessionOpen(session.startUTC, session.endUTC, currentFraction);
             const shiftedStart = getShiftedFraction(session.startUTC);
             const left = (shiftedStart / 24) * 100;
             const duration = (session.endUTC - session.startUTC + 24) % 24;
             const width = (duration / 24) * 100;
+            
+            const countdown = isOpen 
+              ? `closes in ${getTimeRemaining(session.endUTC, currentFraction)}`
+              : `opens in ${getTimeRemaining(session.startUTC, currentFraction)}`;
 
             return (
-              <div key={session.id} style={{ display: 'flex', alignItems: 'center', height: '24px' }}>
-                <div style={{ width: '120px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '14px' }}>{session.flag}</span>
-                  <span style={{ fontSize: '0.7rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
+              <div key={session.id} style={{ display: 'flex', alignItems: 'center', height: '28px' }}>
+                <div style={{ width: '150px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '14px' }}>{session.flag}</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
+                  </div>
+                  <div style={{ fontSize: '8px', color: isOpen ? (session.id === 'new-york' ? '#4ade80' : '#3b82f6') : '#64748b', fontWeight: 700, marginLeft: '22px', fontFamily: 'monospace' }}>
+                    {countdown}
+                  </div>
                 </div>
                 <div style={{ flex: 1, height: '10px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '10px', position: 'relative', overflow: 'hidden', marginRight: '80px' }}>
                   <div style={{ position: 'absolute', left: `${left}%`, width: `${width}%`, height: '100%', background: session.color, opacity: isOpen ? 1 : 0.2, borderRadius: '10px', transition: 'all 0.5s ease' }} />
@@ -194,7 +215,7 @@ const MarketHours: React.FC = () => {
           })}
         </div>
 
-        <div style={{ marginTop: '20px', paddingLeft: '120px', paddingRight: '80px', position: 'relative', zIndex: 1 }}>
+        <div style={{ marginTop: '20px', paddingLeft: '150px', paddingRight: '80px', position: 'relative', zIndex: 1 }}>
           <div style={{ fontSize: '9px', fontWeight: 800, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Institutional Money Flow</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', height: '60px', gap: '2px', position: 'relative' }}>
             {Array.from({ length: 48 }).map((_, i) => {

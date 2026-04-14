@@ -56,14 +56,22 @@ const MarketHours: React.FC = () => {
           <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#f8fafc', marginBottom: '0.25rem', letterSpacing: '0.05em' }}>
             GLOBAL LIQUIDITY CLOCK
           </h3>
-          <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>MONSTAH REAL-TIME MARKET CONVERTER (UTC)</p>
+          <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>MONSTAH REAL-TIME MARKET CONVERTER</p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#3b82f6', fontFamily: 'monospace' }}>
-            {nowUTC.getUTCHours().toString().padStart(2, '0')}:{nowUTC.getUTCMinutes().toString().padStart(2, '0')} <span style={{ fontSize: '0.7rem' }}>UTC</span>
+        <div style={{ textAlign: 'right', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          {/* Local Desk Time */}
+          <div style={{ borderRight: '1px solid #1e2d48', paddingRight: '1.5rem' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#f8fafc', fontFamily: 'monospace' }}>
+              {nowUTC.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>LOCAL DESK</div>
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
-            {nowUTC.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+          {/* UTC Standard */}
+          <div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#3b82f6', fontFamily: 'monospace' }}>
+              {nowUTC.getUTCHours().toString().padStart(2, '0')}:{nowUTC.getUTCMinutes().toString().padStart(2, '0')} <span style={{ fontSize: '0.7rem' }}>UTC</span>
+            </div>
+            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>GLOBAL STANDARD</div>
           </div>
         </div>
       </div>
@@ -184,12 +192,14 @@ const MarketHours: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'flex-end', height: '60px', gap: '2px', position: 'relative' }}>
             {Array.from({ length: 48 }).map((_, i) => {
               const h = i / 2;
-              // Liquidity model: peaks at 9 (London open), 14 (NY open/overlap), low at 22-0
+              // Recalibrated Liquidity Model
+              // High points: 9-11 (LDN Surge), 13-16 (Overlap Peak), 16-19 (US Surge)
               const vol = 
-                (Math.exp(-Math.pow(h - 9, 2) / 10) * 0.8) + // London Peak
-                (Math.exp(-Math.pow(h - 15, 2) / 8) * 1.0) + // US Peak
-                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.3) +  // Tokyo Peak
-                0.1; // Baseline
+                (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.1) + // London Heavy Session
+                (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 1.4) + // Peak Overlap Surge
+                (Math.exp(-Math.pow(h - 18, 2) / 8) * 0.9) + // US Afternoon Session
+                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.4) +  // Tokyo/Asia
+                0.15; // Global Baseline
               
               const isCurrent = Math.abs(h - currentFraction) < 0.25;
               const height = (vol / 1.5) * 100;
@@ -219,7 +229,7 @@ const MarketHours: React.FC = () => {
                       boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)',
                       zIndex: 20
                     }}>
-                      <span style={{ fontSize: '11px', fontWeight: 900, color: 'white' }}>${(vol * 1.4).toFixed(2)} Trillion</span>
+                      <span style={{ fontSize: '11px', fontWeight: 900, color: 'white' }}>${Math.min(2.5, (vol * 0.9)).toFixed(2)} Trillion</span>
                     </div>
                   )}
                 </div>

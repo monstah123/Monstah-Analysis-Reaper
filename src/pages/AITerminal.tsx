@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useApp } from '../contexts/AppContext';
 
 interface Message {
   role: 'user' | 'assistant';

@@ -24,6 +24,7 @@ export default async function handler(req, res) {
       { id: 'AUDUSD', name: 'AUSTRALIAN DOLLAR' },
       { id: 'USDCAD', name: 'CANADIAN DOLLAR' },
       { id: 'NZDUSD', name: 'NZ DOLLAR' },
+      { id: 'USDCHF', name: 'SWISS FRANC' },
       { id: 'SP500', name: 'S&P 500 STOCK INDEX' },
       { id: 'NASDAQ', name: 'NASDAQ 100 STOCK INDEX' },
       { id: 'US30', name: 'DOW JONES INDUSTRIAL' }

@@ -127,7 +127,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
           const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
           const history = await fetchForexHistory(a.avFrom!, a.avTo!).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
-          updates[a.id] = { price: rate.rate, change24h: 0, history, currency: a.avTo, lastUpdated: Date.now() };
+          
+          let change24h = 0;
+          if (history.length >= 2) {
+            const last = history[history.length - 1].value;
+            const prev = history[history.length - 2].value;
+            change24h = ((last - prev) / prev) * 100;
+          }
+          
+          updates[a.id] = { price: rate.rate, change24h, history, currency: a.avTo, lastUpdated: Date.now() };
         } catch (e) {}
       }
 

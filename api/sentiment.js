@@ -33,6 +33,7 @@ export default async function handler(req, res) {
       'CANADIAN DOLLAR': 'USDCAD',
       'AUSTRALIAN DOLLAR': 'AUDUSD',
       'NEW ZEALAND DOLLAR': 'NZDUSD',
+      'SWISS FRANC': 'USDCHF',
       'E-MINI S&P 500': 'SP500',
       'NASDAQ-100 Consolidated': 'NASDAQ',
       'DJIA Consolidated': 'US30',

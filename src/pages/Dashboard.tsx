@@ -12,6 +12,7 @@ const BIAS_FILTERS: FilterBias[] = ['All', 'Very Bullish', 'Bullish', 'Neutral',
 const CAT_FILTERS: FilterCat[] = ['All', 'Forex', 'Indices', 'Commodities', 'Crypto'];
 
 import AddAssetModal from '../components/AddAssetModal';
+import RelativePerformance from '../components/RelativePerformance';
 
 const Dashboard: React.FC = () => {
   const { assets, isRefreshing, lastRefresh, refreshData, setSelectedAsset, activeView, setActiveView } = useApp();
@@ -75,6 +76,8 @@ const Dashboard: React.FC = () => {
       {showAddModal && <AddAssetModal onClose={() => setShowAddModal(false)} />}
 
       <StatsBar assets={processed} />
+
+      {filterCat === 'Forex' && <RelativePerformance />}
 
       {/* Filters */}
       <div className="filter-bar">

@@ -68,7 +68,7 @@ const MarketHours: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ position: 'relative', height: '160px', marginTop: '1rem' }}>
+      <div style={{ position: 'relative', height: '240px', marginTop: '1rem' }}>
         {/* Hour markers */}
         <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '120px', marginBottom: '10px' }}>
           {[0, 4, 8, 12, 16, 20, 24].map(h => (
@@ -127,7 +127,7 @@ const MarketHours: React.FC = () => {
         </div>
 
         {/* Sessions Rows */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {SESSIONS.map(session => {
             const isOpen = isSessionOpen(session.startUTC, session.endUTC, currentFraction);
             const left = (session.startUTC / 24) * 100;
@@ -136,13 +136,12 @@ const MarketHours: React.FC = () => {
               : ((24 - session.startUTC + session.endUTC) / 24) * 100;
 
             return (
-              <div key={session.id} style={{ display: 'flex', alignItems: 'center', height: '28px' }}>
+              <div key={session.id} style={{ display: 'flex', alignItems: 'center', height: '24px' }}>
                 <div style={{ width: '120px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '14px' }}>{session.flag}</span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
+                  <span style={{ fontSize: '0.7rem', fontWeight: isOpen ? 800 : 600, color: isOpen ? '#f8fafc' : '#475569' }}>{session.name}</span>
                 </div>
-                <div style={{ flex: 1, height: '14px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '10px', position: 'relative', overflow: 'hidden' }}>
-                  {/* The session bar */}
+                <div style={{ flex: 1, height: '10px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '10px', position: 'relative', overflow: 'hidden' }}>
                   {session.startUTC < session.endUTC ? (
                     <div style={{
                       position: 'absolute',
@@ -152,63 +151,81 @@ const MarketHours: React.FC = () => {
                       background: session.color,
                       opacity: isOpen ? 1 : 0.2,
                       borderRadius: '10px',
-                      boxShadow: isOpen ? `0 0 15px ${session.color}44` : 'none',
                       transition: 'all 0.5s ease'
                     }} />
                   ) : (
                     <>
-                      <div style={{
-                        position: 'absolute',
-                        left: `${left}%`,
-                        width: `${100 - left}%`,
-                        height: '100%',
-                        background: session.color,
-                        opacity: isOpen ? 1 : 0.2,
-                        borderRadius: '10px 0 0 10px',
-                        transition: 'all 0.5s ease'
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        left: '0',
-                        width: `${(session.endUTC / 24) * 100}%`,
-                        height: '100%',
-                        background: session.color,
-                        opacity: isOpen ? 1 : 0.2,
-                        borderRadius: '0 10px 10px 0',
-                        transition: 'all 0.5s ease'
-                      }} />
+                      <div style={{ position: 'absolute', left: `${left}%`, width: `${100 - left}%`, height: '100%', background: session.color, opacity: isOpen ? 1 : 0.2, borderRadius: '10px 0 0 10px' }} />
+                      <div style={{ position: 'absolute', left: '0', width: `${(session.endUTC / 24) * 100}%`, height: '100%', background: session.color, opacity: isOpen ? 1 : 0.2, borderRadius: '0 10px 10px 0' }} />
                     </>
-                  )}
-
-                  {/* Open Status Pulse */}
-                  {isOpen && (
-                    <div style={{
-                      position: 'absolute',
-                      left: `${(currentFraction / 24) * 100}%`,
-                      height: '100%',
-                      width: '4px',
-                      background: 'white',
-                      opacity: 0.4,
-                      filter: 'blur(2px)'
-                    }} className="pulsing" />
                   )}
                 </div>
                 <div style={{ width: '80px', textAlign: 'right' }}>
                   <span style={{ 
-                    fontSize: '9px', 
+                    fontSize: '8px', 
                     fontWeight: 900, 
-                    padding: '2px 6px', 
+                    padding: '1px 5px', 
                     borderRadius: '4px',
                     background: isOpen ? `${session.color}22` : 'rgba(71, 85, 105, 0.1)',
                     color: isOpen ? session.color : '#475569',
                     border: `1px solid ${isOpen ? `${session.color}44` : 'transparent'}`
                   }}>
-                    {isOpen ? 'SESSION OPEN' : 'CLOSED'}
+                    {isOpen ? 'OPEN' : 'CLOSED'}
                   </span>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        {/* TRADING VOLUME GRAPH */}
+        <div style={{ marginTop: '20px', paddingLeft: '120px' }}>
+          <div style={{ fontSize: '9px', fontWeight: 800, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Institutional Money Flow (Daily Turnover)</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', height: '60px', gap: '2px', position: 'relative' }}>
+            {Array.from({ length: 48 }).map((_, i) => {
+              const h = i / 2;
+              // Liquidity model: peaks at 9 (London open), 14 (NY open/overlap), low at 22-0
+              const vol = 
+                (Math.exp(-Math.pow(h - 9, 2) / 10) * 0.8) + // London Peak
+                (Math.exp(-Math.pow(h - 15, 2) / 8) * 1.0) + // US Peak
+                (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.3) +  // Tokyo Peak
+                0.1; // Baseline
+              
+              const isCurrent = Math.abs(h - currentFraction) < 0.25;
+              const height = (vol / 1.5) * 100;
+
+              return (
+                <div key={i} style={{
+                  flex: 1,
+                  height: `${height}%`,
+                  background: isCurrent ? '#6366f1' : (vol > 0.8 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(71, 85, 105, 0.2)'),
+                  borderRadius: '1px',
+                  position: 'relative'
+                }}>
+                  {isCurrent && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-35px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: '#1e2d48',
+                      border: '1px solid #3b82f6',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      gap: '4px',
+                      boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)',
+                      zIndex: 20
+                    }}>
+                      <span style={{ fontSize: '11px', fontWeight: 900, color: 'white' }}>${(vol * 1.4).toFixed(2)} Trillion</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

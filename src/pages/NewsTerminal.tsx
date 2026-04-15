@@ -162,6 +162,39 @@ const NewsTerminal: React.FC = () => {
         </div>
       </div>
 
+      {/* Full-Width Institutional Video Matrix */}
+      <div className="settings-card" style={{ marginTop: '1.5rem', padding: 0, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', animation: 'pulse-dot 2s infinite' }} />
+            <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>SAT-LINK ACTIVE</span>
+          </div>
+          <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, marginLeft: 'auto' }}>
+            INSTITUTIONAL VIDEO MATRIX
+          </h3>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'rgba(255,255,255,0.1)' }}>
+          {/* Channel 1: Bloomberg */}
+          <div 
+            style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
+            onClick={() => bloombergRef.current?.requestFullscreen()}
+          >
+            <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH1: BLOOMBERG</div>
+            <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
+            <video ref={bloombergRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
+          </div>
+          {/* Channel 2: Street Wire */}
+          <div 
+            style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
+            onClick={() => streetWireRef.current?.requestFullscreen()}
+          >
+            <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH2: STREET WIRE</div>
+            <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
+            <video ref={streetWireRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
+          </div>
+        </div>
+      </div>
+
       <div className="settings-row-2" style={{ marginTop: '1.5rem', minHeight: '600px' }}>
         
         {/* Squawk Feed Terminal */}
@@ -209,42 +242,8 @@ const NewsTerminal: React.FC = () => {
           </div>
         </div>
 
-        {/* Global News Sidebar & Live TV */}
+        {/* Global News Sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', overflow: 'hidden' }}>
-          
-           {/* Dual TV Satellite Matrix */}
-           <div className="settings-card" style={{ padding: 0, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', animation: 'pulse-dot 2s infinite' }} />
-                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>SAT-LINK ACTIVE</span>
-                </div>
-                <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, marginLeft: 'auto' }}>
-                  INSTITUTIONAL VIDEO MATRIX
-                </h3>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'rgba(255,255,255,0.1)' }}>
-                {/* Channel 1: Bloomberg */}
-                <div 
-                  style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
-                  onClick={() => bloombergRef.current?.requestFullscreen()}
-                >
-                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH1: BLOOMBERG</div>
-                  <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
-                  <video ref={bloombergRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
-                </div>
-                {/* Channel 2: Street Wire */}
-                <div 
-                  style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
-                  onClick={() => streetWireRef.current?.requestFullscreen()}
-                >
-                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH2: STREET WIRE</div>
-                  <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
-                  <video ref={streetWireRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
-                </div>
-              </div>
-           </div>
-
            {/* TradingView Widget Card */}
            <div className="settings-card" style={{ padding: 0, flex: 1, overflow: 'hidden' }}>
               <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)' }}>

@@ -13,21 +13,30 @@ import * as cheerio from 'cheerio';
 // ─── LIVE WEB SEARCH FETCHER ──────────────────────────────────────────────────
 async function fetchWebSearch(query) {
   try {
-    const res = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' finance news')}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept-Language': 'en-US,en;q=0.9'
-      },
-      timeout: 6000
+    // DuckDuckGo aggressively blocks automated Axios requests now.
+    // Instead, we query Yahoo Finance RSS News Search to ensure reliable live data.
+    const cleanQuery = query.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(w => w.length > 2).join('+');
+    const url = `https://finance.yahoo.com/rss/headline?s=${cleanQuery}`;
+    
+    // We also pull the general market pulse if the specific ticker search fails
+    const generalUrl = 'https://finance.yahoo.com/news/rssindex';
+
+    // Try specific first, then general
+    let res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 }).catch(() => null);
+    if (!res || !res.data || !res.data.includes('<item>')) {
+        res = await axios.get(generalUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 });
+    }
+
+    const items = res.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
+    const results = items.slice(0, 5).map(item => {
+      const title = item.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '';
+      const desc = item.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '';
+      return title.replace('<![CDATA[', '').replace(']]>', '') + ' - ' + desc.replace(/<[^>]+>/g, '').substring(0, 150);
     });
-    const $ = cheerio.load(res.data);
-    const results = [];
-    $('.result__snippet').each((i, el) => {
-      if (i < 5) results.push($(el).text().trim());
-    });
-    return results.length > 0 ? results.join('\n\n') : 'No recent news found.';
+
+    return results.length > 0 ? results.join('\n\n') : 'No specific news found, rely on core macro and COT data.';
   } catch (e) {
-    return 'Web search temporarily unavailable: ' + e.message;
+    return 'Live web sync currently degraded. Refer strictly to real-time CFTC and FRED parameters.';
   }
 }
 

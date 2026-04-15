@@ -79,7 +79,7 @@ export default async function handler(req, res) {
     // Sort by most recent and dedup by title
     const finalNews = combinedNews
       .sort((a, b) => b.timestamp - a.timestamp)
-      .reduce((acc: any[], curr) => {
+      .reduce((acc, curr) => {
         if (!acc.find(item => item.title === curr.title)) acc.push(curr);
         return acc;
       }, [])

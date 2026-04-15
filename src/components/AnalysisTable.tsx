@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { AssetData } from '../data/mockData';
 
 const getValueClass = (value: number): string => {
@@ -43,6 +43,34 @@ const getScoreColor = (score: number): string => {
 };
 
 const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => {
+  const playedSqueeze = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    let hasNewSqueeze = false;
+
+    assets.forEach(asset => {
+      const iLongPct = ( (asset.cotLong || 0) / ((asset.cotLong || 0) + (asset.cotShort || 0)) ) * 100;
+      const rLongPct = ( (asset.retailLong || 0) / ((asset.retailLong || 0) + (asset.retailShort || 0)) ) * 100;
+      const isSqueeze = (iLongPct >= 65 && rLongPct <= 35) || (iLongPct <= 35 && rLongPct >= 65);
+
+      if (isSqueeze && !playedSqueeze.current.has(asset.id)) {
+        hasNewSqueeze = true;
+        playedSqueeze.current.add(asset.id);
+      } else if (!isSqueeze) {
+        // Remove from set if it's no longer a squeeze, so it can re-trigger if it happens again later
+        playedSqueeze.current.delete(asset.id);
+      }
+    });
+
+    if (hasNewSqueeze) {
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
+        audio.volume = 0.6;
+        audio.play().catch(() => { /* Ignore autoplay block errors */ });
+      } catch (err) {}
+    }
+  }, [assets]);
+
   return (
     <div className="table-container">
       <div className="table-scroll">

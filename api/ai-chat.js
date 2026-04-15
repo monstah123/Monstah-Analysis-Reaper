@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 /**
  * Monstah AI Terminal - Live Data-Grounded Chat Engine
@@ -8,6 +9,27 @@ import axios from 'axios';
  * system prompt so DeepSeek answers from CURRENT institutional data — not its
  * stale training cutoff.
  */
+
+// ─── LIVE WEB SEARCH FETCHER ──────────────────────────────────────────────────
+async function fetchWebSearch(query) {
+  try {
+    const res = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' finance news')}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
+      },
+      timeout: 6000
+    });
+    const $ = cheerio.load(res.data);
+    const results = [];
+    $('.result__snippet').each((i, el) => {
+      if (i < 5) results.push($(el).text().trim());
+    });
+    return results.length > 0 ? results.join('\n\n') : 'No recent news found.';
+  } catch (e) {
+    return 'Web search temporarily unavailable: ' + e.message;
+  }
+}
 
 // ─── LIVE COT FETCHER ────────────────────────────────────────────────────────
 async function fetchLiveCOT() {
@@ -208,16 +230,25 @@ export default async function handler(req, res) {
     });
   }
 
-  // Fetch live CFTC + FRED data IN PARALLEL before sending to AI
-  // This grounds the model in current reality rather than its training cutoff
-  const [cotResult, macroResult] = await Promise.allSettled([
+  // Determine if the user's latest query requires a web search
+  const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() || '';
+  const needsSearch = lastMsg.match(/search|news|latest|current|today|update|now/i);
+
+  // Fetch live CFTC + FRED + Web Search IN PARALLEL
+  const [cotResult, macroResult, webResult] = await Promise.allSettled([
     fetchLiveCOT(),
-    fetchLiveMacro()
+    fetchLiveMacro(),
+    needsSearch ? fetchWebSearch(messages[messages.length - 1].content) : Promise.resolve(null)
   ]);
 
   const cotData   = cotResult.status   === 'fulfilled' ? cotResult.value   : null;
   const macroData = macroResult.status === 'fulfilled' ? macroResult.value : null;
-  const liveDataContext = buildLiveDataContext(cotData, macroData);
+  const webData   = webResult.status   === 'fulfilled' ? webResult.value   : null;
+  
+  let liveDataContext = buildLiveDataContext(cotData, macroData);
+  if (webData) {
+    liveDataContext += `\n\n--- LIVE WEB INTELLIGENCE SEARCH RESULTS ---\n${webData}\n\nUSE THESE ARTICLES TO ANSWER THE USER'S LATEST QUESTION.`;
+  }
 
   try {
     const response = await axios.post(
@@ -232,7 +263,7 @@ export default async function handler(req, res) {
 STRICT OPERATING RULES:
 1. Only answer questions related to trading, finance, macro-economics, sentiment analysis, technical analysis, and global markets.
 2. Adhere to a professional, sophisticated, and direct "Institutional Desk" persona.
-3. If a user asks a non-trading or general knowledge question, politely but firmly decline and redirect them to market analysis. Use phrases like "This terminal is reserved for institutional intelligence" or "Neural focus restricted to global markets."
+3. You HAVE access to LIVE external web search results which are injected below. You MUST use them if the user asks for current news, prices, or recent events. DO NOT DECLINE SEARCH REQUESTS.
 4. NEVER use markdown headers like #, ##, or ###. Use **BOLD ALL CAPS** for section headings instead.
 5. You have been injected with LIVE, REAL-TIME institutional data below. This is your ONLY source of truth for COT positioning and macro figures. Your training data is OVERRIDDEN for these specific numbers.
 

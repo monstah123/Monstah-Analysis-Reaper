@@ -13,28 +13,26 @@ import * as cheerio from 'cheerio';
 // ─── LIVE WEB SEARCH FETCHER ──────────────────────────────────────────────────
 async function fetchWebSearch(query) {
   try {
-    // DuckDuckGo aggressively blocks automated Axios requests now.
-    // Instead, we query Yahoo Finance RSS News Search to ensure reliable live data.
+    // We use Google News RSS because it supports full natural language queries (Yahoo strictly requires tickers).
+    // This allows prompts like "search online for latest euro/usd institutional position news" to return actual results.
     const cleanQuery = query.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(w => w.length > 2).join('+');
-    const url = `https://finance.yahoo.com/rss/headline?s=${cleanQuery}`;
-    
-    // We also pull the general market pulse if the specific ticker search fails
-    const generalUrl = 'https://finance.yahoo.com/news/rssindex';
+    const url = `https://news.google.com/rss/search?q=${cleanQuery}&hl=en-US&gl=US&ceid=US:en`;
 
-    // Try specific first, then general
-    let res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 }).catch(() => null);
-    if (!res || !res.data || !res.data.includes('<item>')) {
-        res = await axios.get(generalUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 });
+    const res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 });
+    const items = res.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
+    
+    if (items.length === 0) {
+      return 'No specific news found. Rely on core macro and COT data.';
     }
 
-    const items = res.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
     const results = items.slice(0, 5).map(item => {
       const title = item.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '';
-      const desc = item.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '';
-      return title.replace('<![CDATA[', '').replace(']]>', '') + ' - ' + desc.replace(/<[^>]+>/g, '').substring(0, 150);
+      const source = item.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] || 'Web';
+      const pubDate = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
+      return title.replace('<![CDATA[', '').replace(']]>', '') + ` (Source: ${source.replace(/<[^>]+>/g, '')}, Date: ${pubDate})`;
     });
 
-    return results.length > 0 ? results.join('\n\n') : 'No specific news found, rely on core macro and COT data.';
+    return results.join('\n\n');
   } catch (e) {
     return 'Live web sync currently degraded. Refer strictly to real-time CFTC and FRED parameters.';
   }

@@ -5,7 +5,8 @@ import { type NewsHeadline } from '../services/alphaVantage';
 const NewsTerminal: React.FC = () => {
   const { } = useApp();
   const newsContainerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const bloombergRef = useRef<HTMLVideoElement>(null);
+  const streetWireRef = useRef<HTMLVideoElement>(null);
   const [headlines, setHeadlines] = useState<NewsHeadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,14 +68,13 @@ const NewsTerminal: React.FC = () => {
     newsContainerRef.current.appendChild(script);
   }, []);
 
-  // Bloomberg Live Satellite Feed - HLS Sync
+  // Institutional Live Satellite Feeds - Dual HLS Sync
   useEffect(() => {
-    if (videoRef.current) {
-      const video = videoRef.current;
-      const streamUrl = "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8";
+    const setupStream = (video: HTMLVideoElement | null, url: string) => {
+      if (!video) return;
       
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = streamUrl;
+        video.src = url;
       } else {
         const script = document.createElement('script');
         script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
@@ -83,14 +83,20 @@ const NewsTerminal: React.FC = () => {
           if (window.Hls && window.Hls.isSupported()) {
             // @ts-ignore
             const hls = new window.Hls();
-            hls.loadSource(streamUrl);
+            hls.loadSource(url);
             hls.attachMedia(video);
           }
         };
         document.body.appendChild(script);
-        return () => { try { document.body.removeChild(script); } catch(e) {} };
       }
-    }
+    };
+
+    setupStream(bloombergRef.current, "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8");
+    setupStream(streetWireRef.current, "https://d1ewctnvcwvvvu.cloudfront.net/playlist.m3u8");
+
+    return () => {
+      // Cleanup script injection if needed, though multiple injections of hls.js are generally fine
+    };
   }, []);
 
   // Use real sentiment data to determine global mood
@@ -206,23 +212,28 @@ const NewsTerminal: React.FC = () => {
         {/* Global News Sidebar & Live TV */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', overflow: 'hidden' }}>
           
-           {/* Bloomberg Live TV Card */}
-           <div className="settings-card" style={{ padding: 0, overflow: 'hidden', background: '#000' }}>
-              <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', animation: 'pulse-dot 2s infinite' }} />
-                <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', fontWeight: 800, color: '#f8fafc', margin: 0 }}>
-                  BLOOMBERG TV <span style={{ color: '#ef4444', marginLeft: '4px' }}>LIVE</span>
+           {/* Dual TV Satellite Matrix */}
+           <div className="settings-card" style={{ padding: 0, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', animation: 'pulse-dot 2s infinite' }} />
+                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>SAT-LINK ACTIVE</span>
+                </div>
+                <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, marginLeft: 'auto' }}>
+                  INSTITUTIONAL VIDEO MATRIX
                 </h3>
               </div>
-              <div style={{ width: '100%', aspectRatio: '16/9', background: '#000', position: 'relative' }}>
-                <video 
-                  ref={videoRef}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  autoPlay 
-                  muted 
-                  controls 
-                  playsInline
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'rgba(255,255,255,0.1)' }}>
+                {/* Channel 1: Bloomberg */}
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
+                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>CH1: BLOOMBERG</div>
+                  <video ref={bloombergRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted controls playsInline />
+                </div>
+                {/* Channel 2: Street Wire */}
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
+                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>CH2: STREET WIRE</div>
+                  <video ref={streetWireRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted controls playsInline />
+                </div>
               </div>
            </div>
 

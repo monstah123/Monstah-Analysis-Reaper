@@ -173,7 +173,7 @@ const NewsTerminal: React.FC = () => {
             INSTITUTIONAL VIDEO MATRIX
           </h3>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'rgba(255,255,255,0.1)' }}>
+        <div className="video-matrix-grid" style={{ background: 'rgba(255,255,255,0.1)' }}>
           {/* Channel 1: Bloomberg */}
           <div 
             style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}

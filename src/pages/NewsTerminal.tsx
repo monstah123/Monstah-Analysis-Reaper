@@ -18,32 +18,32 @@ const NewsTerminal: React.FC = () => {
       
       if (data.success && data.news) {
         const mapped = data.news.map((item: any, index: number) => ({
-          id: index.toString(),
+          id: `live-${index}-${Date.now()}`,
           title: item.title,
           url: item.url,
           time: item.time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           source: item.source || 'Institutional Wire',
-          summary: item.summary || item.title,
-          sentiment: item.title.match(/Bullish|Positive|Gain|Up|Rise|Rally/i) ? 'Bullish' : item.title.match(/Bearish|Negative|Loss|Down|Fall|Crash/i) ? 'Bearish' : 'Neutral',
-          sentimentScore: item.title.match(/Bullish|Positive|Gain|Up|Rise|Rally/i) ? 0.4 : item.title.match(/Bearish|Negative|Loss|Down|Fall|Crash/i) ? -0.4 : 0
+          summary: item.title,
+          sentiment: item.sentiment || 'Neutral',
+          sentimentScore: item.sentiment === 'Bullish' ? 0.4 : item.sentiment === 'Bearish' ? -0.4 : 0
         }));
         setHeadlines(mapped);
         setError(null);
       }
     } catch (e) {
-      // Fallback Engine: Dynamic Diversified Headlines (No more static mockups)
+      console.error('Terminal Sync Failure:', e);
+      // Fallback Engine: High-Engagement Simulated Headlines for structural stability
       const newsBank = [
-        { title: 'FED: Officials weigh impact of tightening financial conditions on policy', source: 'Shadow Feed', s: 'Neutral', scr: 0 },
-        { title: 'ECB: Wage growth slowing faster than ECB staff projections', source: 'Euro Wire', s: 'Bullish', scr: 0.4 },
-        { title: 'GOLD: Surges to record highs as haven demand intensifies', source: 'Metals Desk', s: 'Bullish', scr: 0.6 },
-        { title: 'USD: Dollar index retreats as yields cool across the curve', source: 'FX Wire', s: 'Bearish', scr: -0.5 },
-        { title: 'OIL: Brent crude holds steady amid Middle East risk assessments', source: 'Energy Wire', s: 'Neutral', scr: 0.1 },
-        { title: 'BTC: Network activity spikes as institutional adoption deepens', source: 'Cryto Wire', s: 'Bullish', scr: 0.45 },
-        { title: 'BOJ: Ueda hints at potential shift in yield curve controls', source: 'Asia Wire', s: 'Bearish', scr: -0.3 }
+        { title: 'FED: Officials monitoring bank liquidity as policy shift looms', source: 'Shadow Feed', s: 'Neutral', scr: 0 },
+        { title: 'ECB: Inflation data suggests potential for early summer rate cut', source: 'Euro Wire', s: 'Bullish', scr: 0.4 },
+        { title: 'MT: Monstah Terminal detecting institutional accumulation in metals', source: 'Metals Desk', s: 'Bullish', scr: 0.6 },
+        { title: 'USD: Positioning shifts suggest technical rebound in DXY imminent', source: 'FX Wire', s: 'Bullish', scr: 0.5 },
+        { title: 'OIL: Energy markets price in geopolitical risk premiums', source: 'Energy Wire', s: 'Bearish', scr: -0.3 },
+        { title: 'BTC: Network hash rate hits new highs as ETF inflows continue', source: 'Crypto Wire', s: 'Bullish', scr: 0.45 },
+        { title: 'REAPER: Institutional sentiment matrix suggests overextended retail longs', source: 'Reaper Core', s: 'Bearish', scr: -0.5 }
       ];
 
-      // Shuffle and take 5
-      const dynamic = [...newsBank].sort(() => 0.5 - Math.random()).slice(0, 5).map((n, i) => ({
+      setHeadlines(prev => prev.length > 0 ? prev : [...newsBank].sort(() => 0.5 - Math.random()).map((n, i) => ({
         id: `dyn-${i}`,
         title: n.title,
         url: '#',
@@ -52,10 +52,8 @@ const NewsTerminal: React.FC = () => {
         summary: n.title,
         sentiment: n.s,
         sentimentScore: n.scr
-      }));
-
-      setHeadlines(dynamic);
-      setError(null);
+      })));
+      setError('LIVE FEED DEGRADED - USING SHADOW DATA');
     } finally {
       setIsLoading(false);
     }

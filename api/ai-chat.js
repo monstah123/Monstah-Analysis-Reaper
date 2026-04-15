@@ -13,31 +13,13 @@ import * as cheerio from 'cheerio';
 // ─── LIVE WEB SEARCH FETCHER ──────────────────────────────────────────────────
 async function fetchWebSearch(query) {
   try {
-    const tavilyKey = process.env.TAVILY_API_KEY;
-
     // Filter out conversational filler to isolate the exact financial entities
     const stopWords = ['search', 'online', 'to', 'get', 'the', 'latest', 'for', 'about', 'tell', 'me', 'what', 'is', 'are', 'in', 'on', 'at', 'now', 'today', 'news', 'update', 'updates', 'please', 'can', 'you', 'give', 'show', 'of', 'and', 'a', 'an'];
     const cleanQuery = query.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(' ')
       .filter(w => w.length > 2 && !stopWords.includes(w))
       .join(' ');
 
-    // 1. TAVILY ADVANCED CRAWLER (DeepSeek Website Parity)
-    if (tavilyKey) {
-       const searchRes = await axios.post('https://api.tavily.com/search', {
-          api_key: tavilyKey,
-          query: cleanQuery + " institutional analyst bank views forecast",
-          search_depth: "advanced",
-          include_answer: true,
-          include_raw_content: false,
-          max_results: 5
-       });
-       if (searchRes.data && searchRes.data.results) {
-          const snippets = searchRes.data.results.map(r => `TITLE: ${r.title}\nSOURCE: ${r.url}\nCONTENT: ${r.content}`).join('\n\n');
-          return `TAVILY AI SEARCH ENGINE RESULTS:\n${snippets}\n\nAI SEARCH SUMMARY:\n${searchRes.data.answer || ''}`;
-       }
-    }
-
-    // 2. FALLBACK (Google News RSS)
+    // Google News RSS Engine (Unlimited, No Quota)
     const rssQuery = cleanQuery.replace(/ /g, '+') + '+when:14d';
     const url = `https://news.google.com/rss/search?q=${rssQuery}&hl=en-US&gl=US&ceid=US:en`;
     const res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 });

@@ -13,15 +13,31 @@ import * as cheerio from 'cheerio';
 // ─── LIVE WEB SEARCH FETCHER ──────────────────────────────────────────────────
 async function fetchWebSearch(query) {
   try {
-    // We use Google News RSS because it supports full natural language queries.
-    // We strip out conversational filler words to ensure Google only searches the core financial entities.
+    const tavilyKey = process.env.TAVILY_API_KEY;
+
+    // 1. TAVILY ADVANCED CRAWLER (DeepSeek Website Parity)
+    if (tavilyKey) {
+       const searchRes = await axios.post('https://api.tavily.com/search', {
+          api_key: tavilyKey,
+          query: query,
+          search_depth: "advanced",
+          include_answer: true,
+          include_raw_content: false,
+          max_results: 5
+       });
+       if (searchRes.data && searchRes.data.results) {
+          const snippets = searchRes.data.results.map(r => `TITLE: ${r.title}\nSOURCE: ${r.url}\nCONTENT: ${r.content}`).join('\n\n');
+          return `TAVILY AI SEARCH ENGINE RESULTS:\n${snippets}\n\nAI SEARCH SUMMARY:\n${searchRes.data.answer || ''}`;
+       }
+    }
+
+    // 2. FALLBACK (Google News RSS)
     const stopWords = ['search', 'online', 'to', 'get', 'the', 'latest', 'for', 'about', 'tell', 'me', 'what', 'is', 'are', 'in', 'on', 'at', 'now', 'today', 'news', 'update', 'updates', 'please', 'can', 'you', 'give', 'show', 'of', 'and', 'a', 'an'];
     const cleanQuery = query.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(' ')
       .filter(w => w.length > 2 && !stopWords.includes(w))
-      .join('+') + '+when:14d'; // Force recency to the last 14 days
+      .join('+') + '+when:14d'; 
 
     const url = `https://news.google.com/rss/search?q=${cleanQuery}&hl=en-US&gl=US&ceid=US:en`;
-
     const res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 });
     const items = res.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
     

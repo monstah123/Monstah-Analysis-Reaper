@@ -162,7 +162,7 @@ const NewsTerminal: React.FC = () => {
         </div>
       </div>
 
-      <div className="settings-row-2" style={{ marginTop: '1.5rem', height: '600px' }}>
+      <div className="settings-row-2" style={{ marginTop: '1.5rem', minHeight: '600px' }}>
         
         {/* Squawk Feed Terminal */}
         <div className="settings-card" style={{ display: 'flex', flexDirection: 'column', padding: 0 }}>

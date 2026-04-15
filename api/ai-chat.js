@@ -106,17 +106,25 @@ async function fetchLiveCOT() {
             : 'Unknown';
           const l     = parseFloat(row.noncomm_positions_long_all)  || 0;
           const s     = parseFloat(row.noncomm_positions_short_all) || 0;
+          const rL    = parseFloat(row.nonreport_positions_long_all) || 0;
+          const rS    = parseFloat(row.nonreport_positions_short_all) || 0;
           const total = l + s;
 
           if (total > 0) {
             const longPct = Math.round((l / total) * 100);
             const bias    = longPct >= 60 ? 'BULLISH' : longPct <= 40 ? 'BEARISH' : 'NEUTRAL';
+            
+            const rTotal = rL + rS;
+            const rLongPct = rTotal > 0 ? Math.round((rL / rTotal) * 100) : 50;
+
             cotSummary[assetLabel] = {
               date: rowDate,
               nonCommLong:  Math.round(l),
               nonCommShort: Math.round(s),
               longPct,
               shortPct: 100 - longPct,
+              retailLong: rLongPct,
+              retailShort: 100 - rLongPct,
               bias
             };
           }
@@ -186,9 +194,9 @@ function buildLiveDataContext(cot, macro) {
     if (Object.keys(cot.cotSummary).length > 0) {
       for (const [asset, d] of Object.entries(cot.cotSummary)) {
         ctx +=
-          `${asset} (report date ${d.date}): ` +
-          `Non-Commercial LONG ${d.nonCommLong.toLocaleString()} (${d.longPct}%) | ` +
-          `SHORT ${d.nonCommShort.toLocaleString()} (${d.shortPct}%) → Bias: ${d.bias}\n`;
+          `${asset} (as of ${d.date}): ` +
+          `[INST] L:${d.longPct}% S:${d.shortPct}% (${d.bias}) | ` +
+          `[RETAIL] L:${d.retailLong}% S:${d.retailShort}%\n`;
       }
     } else {
       ctx += `COT rows fetched but no recognized asset positions found.\n`;

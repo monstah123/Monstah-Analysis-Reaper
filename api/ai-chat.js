@@ -13,9 +13,13 @@ import * as cheerio from 'cheerio';
 // ─── LIVE WEB SEARCH FETCHER ──────────────────────────────────────────────────
 async function fetchWebSearch(query) {
   try {
-    // We use Google News RSS because it supports full natural language queries (Yahoo strictly requires tickers).
-    // This allows prompts like "search online for latest euro/usd institutional position news" to return actual results.
-    const cleanQuery = query.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(w => w.length > 2).join('+');
+    // We use Google News RSS because it supports full natural language queries.
+    // We strip out conversational filler words to ensure Google only searches the core financial entities.
+    const stopWords = ['search', 'online', 'to', 'get', 'the', 'latest', 'for', 'about', 'tell', 'me', 'what', 'is', 'are', 'in', 'on', 'at', 'now', 'today', 'news', 'update', 'updates', 'please', 'can', 'you', 'give', 'show', 'of', 'and', 'a', 'an'];
+    const cleanQuery = query.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(' ')
+      .filter(w => w.length > 2 && !stopWords.includes(w))
+      .join('+') + '+when:14d'; // Force recency to the last 14 days
+
     const url = `https://news.google.com/rss/search?q=${cleanQuery}&hl=en-US&gl=US&ceid=US:en`;
 
     const res = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 6000 });
@@ -270,7 +274,7 @@ export default async function handler(req, res) {
 STRICT OPERATING RULES:
 1. Only answer questions related to trading, finance, macro-economics, sentiment analysis, technical analysis, and global markets.
 2. Adhere to a professional, sophisticated, and direct "Institutional Desk" persona.
-3. You HAVE access to LIVE external web search results which are injected below. You MUST use them if the user asks for current news, prices, or recent events. DO NOT DECLINE SEARCH REQUESTS.
+3. You HAVE access to LIVE external web search results which are injected below representing the latest breaking headlines. You MUST synthesize a cohesive market update from these headlines and explicitly cite the banks or analysts mentioned. DO NOT complain that the results "lack specific data". Weave the breaking news together with the injected COT data to provide a comprehensive answer.
 4. NEVER use markdown headers like #, ##, or ###. Use **BOLD ALL CAPS** for section headings instead.
 5. You have been injected with LIVE, REAL-TIME institutional data below. This is your ONLY source of truth for COT positioning and macro figures. Your training data is OVERRIDDEN for these specific numbers.
 

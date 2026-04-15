@@ -4,6 +4,20 @@ import axios from 'axios';
  * Institutional News Terminal (Real-Time Wire)
  * Pulls from Google News RSS (Macro) and Investing.com RSS (FX/Institutional)
  */
+
+function decodeEntities(text) {
+  if (!text) return '';
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&ldquo;/g, '"')
+    .replace(/&rdquo;/g, '"')
+    .replace(/&nbsp;/g, ' ');
+}
+
 export default async function handler(req, res) {
   try {
     // Queries
@@ -31,7 +45,7 @@ export default async function handler(req, res) {
           const pubDate = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
           const source = item.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] || 'Institutional Wire';
           
-          const cleanTitle = title.replace('<![CDATA[', '').replace(']]>', '').split(' - ')[0].trim();
+          const cleanTitle = decodeEntities(title.replace('<![CDATA[', '').replace(']]>', '').split(' - ')[0].trim());
           
           return {
             title: cleanTitle,
@@ -56,7 +70,7 @@ export default async function handler(req, res) {
         const link = item.match(/<link>([\s\S]*?)<\/link>/)?.[1] || '#';
         const pubDate = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '';
         
-        const cleanTitle = title.replace('<![CDATA[', '').replace(']]>', '').trim();
+        const cleanTitle = decodeEntities(title.replace('<![CDATA[', '').replace(']]>', '').trim());
         
         return {
           title: cleanTitle,

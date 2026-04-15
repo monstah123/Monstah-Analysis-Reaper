@@ -8,7 +8,6 @@ import Dashboard from './pages/Dashboard';
 import Sentiment from './pages/Sentiment';
 import Fundamental from './pages/Fundamental';
 import Technical from './pages/Technical';
-import AIInsight from './pages/AIInsight';
 import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
 import Watchlist from './pages/Watchlist';
@@ -36,7 +35,6 @@ function AppContent() {
       case 'technical':    return <Technical />;
       case 'yield-spreads':  return <YieldSpreads />;
       case 'news-terminal':  return <NewsTerminal />;
-      case 'ai-insight':     return <AIInsight />;
       case 'calendar':       return <Calendar />;
       case 'correlation':    return <Correlation />;
       case 'cot-deep-dive':  return <COTDeepDive />;

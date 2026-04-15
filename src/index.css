@@ -322,7 +322,7 @@ tr:hover td { background: rgba(255,255,255,0.025); }
 .settings-actions { display: flex; gap: 1rem; }
 .settings-footer { text-align: center; color: var(--text-muted); font-size: 0.75rem; padding-top: 0.5rem; }
 .accent { color: var(--accent); }
-.video-matrix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; }
+.video-matrix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; }
 
 /* ─── Mobile Navigation ──────────────────────────────── */
 .mobile-navbar { display: none; height: 60px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); padding: 0 1.25rem; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }

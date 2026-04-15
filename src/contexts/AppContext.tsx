@@ -164,10 +164,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Update global Macro scores from Neural Matrix 9.0
       if (neuralMacro) {
-        scores.gdp = (neuralMacro.GDP || 2.0) >= 3 ? 2 : (neuralMacro.GDP || 2.0) >= 2 ? 1 : 0;
-        scores.inflation = (neuralMacro.CPI || 3.0) >= 4.5 ? -2 : (neuralMacro.CPI || 3.0) >= 3.5 ? -1 : 0;
-        scores.interestRates = (neuralMacro.FedRate || 5.0) >= 5.5 ? -1 : 0;
-        scores.employmentChange = (neuralMacro.NFP || 200000) >= 250000 ? 2 : 1;
+        scores.gdp = (neuralMacro.GDP || 0) >= 3 ? 2 : (neuralMacro.GDP || 0) >= 2 ? 1 : 0;
+        scores.inflation = (neuralMacro.CPI || 0) >= 4.5 ? -2 : (neuralMacro.CPI || 0) >= 3.5 ? -1 : 0;
+        scores.interestRates = (neuralMacro.FedRate || 0) >= 5.5 ? -1 : 0;
+        scores.employmentChange = (neuralMacro.NFP || 0) >= 250000 ? 2 : 1;
       }
 
       setAssets(prevAssets => {

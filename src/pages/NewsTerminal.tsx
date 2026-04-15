@@ -32,28 +32,8 @@ const NewsTerminal: React.FC = () => {
       }
     } catch (e) {
       console.error('Terminal Sync Failure:', e);
-      // Fallback Engine: High-Engagement Simulated Headlines for structural stability
-      const newsBank = [
-        { title: 'FED: Officials monitoring bank liquidity as policy shift looms', source: 'Shadow Feed', s: 'Neutral', scr: 0 },
-        { title: 'ECB: Inflation data suggests potential for early summer rate cut', source: 'Euro Wire', s: 'Bullish', scr: 0.4 },
-        { title: 'MT: Monstah Terminal detecting institutional accumulation in metals', source: 'Metals Desk', s: 'Bullish', scr: 0.6 },
-        { title: 'USD: Positioning shifts suggest technical rebound in DXY imminent', source: 'FX Wire', s: 'Bullish', scr: 0.5 },
-        { title: 'OIL: Energy markets price in geopolitical risk premiums', source: 'Energy Wire', s: 'Bearish', scr: -0.3 },
-        { title: 'BTC: Network hash rate hits new highs as ETF inflows continue', source: 'Crypto Wire', s: 'Bullish', scr: 0.45 },
-        { title: 'REAPER: Institutional sentiment matrix suggests overextended retail longs', source: 'Reaper Core', s: 'Bearish', scr: -0.5 }
-      ];
-
-      setHeadlines(prev => prev.length > 0 ? prev : [...newsBank].sort(() => 0.5 - Math.random()).map((n, i) => ({
-        id: `dyn-${i}`,
-        title: n.title,
-        url: '#',
-        time: new Date(Date.now() - (i * 420000)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        source: n.source,
-        summary: n.title,
-        sentiment: n.s,
-        sentimentScore: n.scr
-      })));
-      setError('LIVE FEED DEGRADED - USING SHADOW DATA');
+      setError('INSTITUTIONAL FEED OFFLINE - SYNCING...');
+      // Note: We keep the old headlines if we have them, rather than showing fake news
     } finally {
       setIsLoading(false);
     }

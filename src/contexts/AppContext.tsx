@@ -201,7 +201,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           // 5-tier COT scoring: strong signals at extremes, mild signals for moderate positioning
           cI = cPct >= 70 ? 2 : cPct >= 57 ? 1 : cPct <= 30 ? -2 : cPct <= 43 ? -1 : 0;
 
-          const newTotals = (a.trend || 0) + cI + rP + (a.seasonality || 0) + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange;
+          const newTotals = cI + rP + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange;
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
           // Neutral = exactly 0. Any positive score is Bullish, any negative is Bearish.

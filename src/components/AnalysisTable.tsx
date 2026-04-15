@@ -27,8 +27,6 @@ interface AnalysisTableProps {
 
 const columns = [
   { key: 'cot', label: 'COT', hideMobile: false },
-  { key: 'seasonality', label: 'Season', hideMobile: false },
-  { key: 'trend', label: 'Trend', hideMobile: false },
   { key: 'gdp', label: 'GDP', hideMobile: true },
   { key: 'inflation', label: 'CPI', hideMobile: true },
   { key: 'employmentChange', label: 'Jobs', hideMobile: true },

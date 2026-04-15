@@ -54,6 +54,12 @@ export default async function handler(req, res) {
       'ETHER': 'ETHEREUM'
     };
 
+    // USD-quote pairs: CFTC reports the FOREIGN currency's positioning.
+    // e.g., "34% Long CANADIAN DOLLAR" = specs are 66% SHORT CAD = Bullish USD/CAD.
+    // We must invert iLong/iShort for these pairs so the bias correctly reflects
+    // the pair direction (USD/CAD, USD/JPY, USD/CHF), not the foreign currency.
+    const INVERTED_COT_PAIRS = new Set(['USDCAD', 'USDJPY', 'USDCHF']);
+
     if (cftcData && cftcData.length > 0) {
       cftcData.forEach(row => {
         for (const [cftcName, assetId] of Object.entries(cftcMap)) {
@@ -66,17 +72,20 @@ export default async function handler(req, res) {
 
               if (l > 0 || s > 0) {
                 const total = l + s;
-                const iL = Math.round((l / total) * 100);
-                
+                const rawLongPct = Math.round((l / total) * 100);
+
+                // Invert for USD-quote pairs so long% = bullish bias ON the pair
+                const iL = INVERTED_COT_PAIRS.has(assetId) ? 100 - rawLongPct : rawLongPct;
+
                 const rTotal = rL + rS;
                 const rLPct = rTotal > 0 ? Math.round((rL / rTotal) * 100) : 50;
 
-                finalBatch[assetId] = { 
-                  iLong: iL, 
-                  iShort: 100 - iL, 
-                  long: rLPct, 
-                  short: 100 - rLPct,
-                  source: 'Official CFTC COT' 
+                finalBatch[assetId] = {
+                  iLong:  iL,
+                  iShort: 100 - iL,
+                  long:   rLPct,
+                  short:  100 - rLPct,
+                  source: 'Official CFTC COT'
                 };
               }
             }

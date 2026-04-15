@@ -225,14 +225,22 @@ const NewsTerminal: React.FC = () => {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'rgba(255,255,255,0.1)' }}>
                 {/* Channel 1: Bloomberg */}
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
-                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>CH1: BLOOMBERG</div>
-                  <video ref={bloombergRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted controls playsInline />
+                <div 
+                  style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
+                  onClick={() => bloombergRef.current?.requestFullscreen()}
+                >
+                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH1: BLOOMBERG</div>
+                  <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
+                  <video ref={bloombergRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
                 </div>
                 {/* Channel 2: Street Wire */}
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
-                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>CH2: STREET WIRE</div>
-                  <video ref={streetWireRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted controls playsInline />
+                <div 
+                  style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
+                  onClick={() => streetWireRef.current?.requestFullscreen()}
+                >
+                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH2: STREET WIRE</div>
+                  <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
+                  <video ref={streetWireRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
                 </div>
               </div>
            </div>

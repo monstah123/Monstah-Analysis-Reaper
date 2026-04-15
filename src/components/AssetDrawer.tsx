@@ -47,6 +47,7 @@ const AssetDrawer: React.FC = () => {
   const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing, removeAsset } = useApp();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
   const [isFullscreenChart, setIsFullscreenChart] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const open = !!selectedAsset;
 
   // Handle ESC key to close fullscreen
@@ -89,7 +90,7 @@ const AssetDrawer: React.FC = () => {
       <div className="drawer-overlay visible" onClick={() => setSelectedAsset(null)} />
       <aside className="asset-drawer open">
         {/* Header */}
-        <div className="drawer-header">
+        <div className="drawer-header" style={{ position: 'relative' }}>
           <div className="drawer-title-group">
             <h2 className="drawer-asset-name">{selectedAsset.name}</h2>
             <span className={`bias-badge ${getBiasClass(selectedAsset.bias)}`}>{selectedAsset.bias}</span>
@@ -108,19 +109,47 @@ const AssetDrawer: React.FC = () => {
             >
               {isInWatchlist(selectedAsset.id) ? '⭐ Watching' : '☆ Watch'}
             </button>
-            <button 
-              className="drawer-close" 
-              onClick={() => {
-                if (window.confirm(`Remove ${selectedAsset.name} from your asset list?`)) {
-                  removeAsset(selectedAsset.id);
-                  setSelectedAsset(null);
-                }
-              }} 
-              title="Remove asset"
-              style={{ fontSize: '1rem', opacity: 0.5 }}
-            >
-              🗑️
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button 
+                className="drawer-close" 
+                onClick={() => setShowDeleteConfirm(true)} 
+                title="Remove asset"
+                style={{ fontSize: '1rem', opacity: 0.5, border: showDeleteConfirm ? '1px solid #ef4444' : undefined }}
+              >
+                🗑️
+              </button>
+              
+              {showDeleteConfirm && (
+                <div style={{
+                  position: 'absolute', top: '120%', right: 0, width: 'max-content',
+                  background: '#1a2333', border: '1px solid #ef4444', padding: '12px',
+                  borderRadius: '8px', zIndex: 100, boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                  display: 'flex', flexDirection: 'column', gap: '10px'
+                }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#f8fafc' }}>
+                    Are you sure you want to delete {selectedAsset.name}?
+                  </span>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button 
+                      onClick={() => setShowDeleteConfirm(false)}
+                      style={{ background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        removeAsset(selectedAsset.id);
+                        setSelectedAsset(null);
+                      }}
+                      style={{ background: '#ef4444', border: 'none', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      Yes, Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             <button className="drawer-close" onClick={() => setSelectedAsset(null)} aria-label="Close">✕</button>
           </div>
         </div>

@@ -92,6 +92,42 @@ export default async function handler(req, res) {
           }
         }
       });
+
+      // ─── SYNTHESIZE CROSS PAIRS FROM CONSTITUENT LEGS ─────────────────────
+      // Cross pairs aren't directly reported by CFTC. We calculate them mathematically.
+      const synthAvg = (c1, c2) => ({
+        iLong: Math.round((c1.iLong + c2.iLong) / 2),
+        long: Math.round((c1.long + c2.long) / 2)
+      });
+
+      // GBP/JPY = GBP/USD (Bullish GBP) + USD/JPY (Bearish JPY)
+      // Since USDJPY was inverted above to reflect Bullish USD/Bearish JPY, we just average.
+      if (finalBatch['GBPUSD'] && finalBatch['USDJPY']) {
+        const synth = synthAvg(finalBatch['GBPUSD'], finalBatch['USDJPY']);
+        finalBatch['GBPJPY'] = { iLong: synth.iLong, iShort: 100 - synth.iLong, long: synth.long, short: 100 - synth.long, source: 'Derived CFTC (GBP/USD + USD/JPY)' };
+      }
+
+      // GBP/NZD = GBP/USD (Bullish GBP) + NZD/USD (Bearish NZD)
+      // We want Bearish NZD, so we take 100 - iLong from NZD/USD.
+      if (finalBatch['GBPUSD'] && finalBatch['NZDUSD']) {
+        const invNZD = { iLong: 100 - finalBatch['NZDUSD'].iLong, long: 100 - finalBatch['NZDUSD'].long };
+        const synth = synthAvg(finalBatch['GBPUSD'], invNZD);
+        finalBatch['GBPNZD'] = { iLong: synth.iLong, iShort: 100 - synth.iLong, long: synth.long, short: 100 - synth.long, source: 'Derived CFTC (GBP/USD + inv NZD/USD)' };
+      }
+
+      // EUR/JPY = EUR/USD + USD/JPY
+      if (finalBatch['EURUSD'] && finalBatch['USDJPY']) {
+        const synth = synthAvg(finalBatch['EURUSD'], finalBatch['USDJPY']);
+        finalBatch['EURJPY'] = { iLong: synth.iLong, iShort: 100 - synth.iLong, long: synth.long, short: 100 - synth.long, source: 'Derived CFTC (EUR/USD + USD/JPY)' };
+      }
+
+      // EUR/GBP = EUR/USD + inv GBP/USD
+      if (finalBatch['EURUSD'] && finalBatch['GBPUSD']) {
+        const invGBP = { iLong: 100 - finalBatch['GBPUSD'].iLong, long: 100 - finalBatch['GBPUSD'].long };
+        const synth = synthAvg(finalBatch['EURUSD'], invGBP);
+        finalBatch['EURGBP'] = { iLong: synth.iLong, iShort: 100 - synth.iLong, long: synth.long, short: 100 - synth.long, source: 'Derived CFTC (EUR/USD + inv GBP/USD)' };
+      }
+
     }
   } catch (error) {
     console.error('CFTC Error:', error.message);

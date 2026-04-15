@@ -5,6 +5,7 @@ import { type NewsHeadline } from '../services/alphaVantage';
 const NewsTerminal: React.FC = () => {
   const { } = useApp();
   const newsContainerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [headlines, setHeadlines] = useState<NewsHeadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +67,32 @@ const NewsTerminal: React.FC = () => {
     newsContainerRef.current.appendChild(script);
   }, []);
 
+  // Bloomberg Live Satellite Feed - HLS Sync
+  useEffect(() => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const streamUrl = "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8";
+      
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+      } else {
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
+        script.onload = () => {
+          // @ts-ignore
+          if (window.Hls && window.Hls.isSupported()) {
+            // @ts-ignore
+            const hls = new window.Hls();
+            hls.loadSource(streamUrl);
+            hls.attachMedia(video);
+          }
+        };
+        document.body.appendChild(script);
+        return () => { try { document.body.removeChild(script); } catch(e) {} };
+      }
+    }
+  }, []);
+
   // Use real sentiment data to determine global mood
   const currentNarrative = useMemo(() => {
     if (headlines.length === 0) return { mood: 'Syncing...', reason: 'Market data is being processed.', topAsset: 'Scan Pending...', riskFactor: 'N/A' };
@@ -83,6 +110,13 @@ const NewsTerminal: React.FC = () => {
 
   return (
     <div className="page-container">
+      <style>{`
+        @keyframes pulse-dot {
+          0% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
       <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
           <h1>📻 Monstah Squawk Terminal</h1>
@@ -169,12 +203,36 @@ const NewsTerminal: React.FC = () => {
           </div>
         </div>
 
-        {/* Global News Sidebar (Interactive Widget) */}
-        <div className="settings-card" style={{ padding: 0, overflow: 'hidden' }}>
-           <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
-             <h2 className="settings-section-title" style={{ margin: 0 }}>Global Market Wire</h2>
+        {/* Global News Sidebar & Live TV */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', overflow: 'hidden' }}>
+          
+           {/* Bloomberg Live TV Card */}
+           <div className="settings-card" style={{ padding: 0, overflow: 'hidden', background: '#000' }}>
+              <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', animation: 'pulse-dot 2s infinite' }} />
+                <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', fontWeight: 800, color: '#f8fafc', margin: 0 }}>
+                  BLOOMBERG TV <span style={{ color: '#ef4444', marginLeft: '4px' }}>LIVE</span>
+                </h3>
+              </div>
+              <div style={{ width: '100%', aspectRatio: '16/9', background: '#000', position: 'relative' }}>
+                <video 
+                  ref={videoRef}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  autoPlay 
+                  muted 
+                  controls 
+                  playsInline
+                />
+              </div>
            </div>
-           <div ref={newsContainerRef} style={{ width: '100%', height: '100%' }} />
+
+           {/* TradingView Widget Card */}
+           <div className="settings-card" style={{ padding: 0, flex: 1, overflow: 'hidden' }}>
+              <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
+                <h2 className="settings-section-title" style={{ margin: 0 }}>Global Market Wire</h2>
+              </div>
+              <div ref={newsContainerRef} style={{ width: '100%', height: '100%' }} />
+           </div>
         </div>
 
       </div>

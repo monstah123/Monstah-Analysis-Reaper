@@ -246,8 +246,77 @@ const AssetDrawer: React.FC = () => {
         </div>
 
         {/* AI Button */}
-        <div className="drawer-footer">
-          <button className="btn btn-primary drawer-ai-btn" onClick={handleAI} id="btn-drawer-ai">
+        <div className="drawer-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          
+          {/* INSTITUTIONAL HERO SETUP MANAGER (v28.0) */}
+          <div style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+             <p style={{ fontSize: '10px', color: '#71717a', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 900 }}>🎯 Hero Setup Manager</p>
+             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div>
+                   <label style={{ display: 'block', fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>ENTRY</label>
+                   <input 
+                     type="number" 
+                     id="hero-entry" 
+                     defaultValue={md?.price || selectedAsset.basePrice}
+                     step="0.00001"
+                     style={{ width: '100%', background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc', padding: '6px', borderRadius: '4px', fontSize: '12px' }} 
+                   />
+                </div>
+                <div>
+                   <label style={{ display: 'block', fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>TARGET</label>
+                   <input 
+                     type="number" 
+                     id="hero-target" 
+                     placeholder="TP Level"
+                     step="0.00001"
+                     style={{ width: '100%', background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc', padding: '6px', borderRadius: '4px', fontSize: '12px' }} 
+                   />
+                </div>
+             </div>
+             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button 
+                  id="hero-type-short"
+                  onClick={() => {(window as any)._heroType = 'SHORT'; document.getElementById('hero-type-short')!.style.background = '#ef4444'; document.getElementById('hero-type-long')!.style.background = '#1e293b';}}
+                  style={{ flex: 1, background: '#ef4444', border: 'none', color: '#fff', padding: '6px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}
+                >
+                  SHORT
+                </button>
+                <button 
+                  id="hero-type-long"
+                  onClick={() => {(window as any)._heroType = 'LONG'; document.getElementById('hero-type-long')!.style.background = '#10b981'; document.getElementById('hero-type-short')!.style.background = '#1e293b';}}
+                  style={{ flex: 1, background: '#1e293b', border: 'none', color: '#fff', padding: '6px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}
+                >
+                   LONG
+                </button>
+             </div>
+             <button 
+               className="btn btn-secondary" 
+               style={{ width: '100%', padding: '10px', fontSize: '11px', fontWeight: 900, background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)', border: 'none' }}
+               onClick={() => {
+                  const entry = parseFloat((document.getElementById('hero-entry') as HTMLInputElement).value);
+                  const target = parseFloat((document.getElementById('hero-target') as HTMLInputElement).value);
+                  const type = (window as any)._heroType || 'SHORT';
+                  
+                  // @ts-ignore
+                  const { setActiveSetup, playMoneySound } = (window as any)._appCtx; 
+                  
+                  setActiveSetup({
+                    assetId: selectedAsset.id,
+                    name: selectedAsset.name,
+                    entry,
+                    target,
+                    type,
+                    status: 'IRON HOLD'
+                  });
+                  playMoneySound(true);
+                  setSelectedAsset(null);
+               }}
+             >
+                🎯 LOCK HERO SETUP
+             </button>
+          </div>
+
+          <button className="btn btn-primary drawer-ai-btn" onClick={handleAI} id="btn-drawer-ai" style={{ width: '100%' }}>
             🤖 Generate AI Analysis
           </button>
         </div>

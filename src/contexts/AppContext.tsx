@@ -22,6 +22,15 @@ export interface AssetMarketData {
   lastUpdated?: number;
 }
 
+export interface HeroSetup {
+  assetId: string;
+  name: string;
+  entry: number;
+  target: number;
+  type: 'LONG' | 'SHORT';
+  status: 'IRON HOLD' | 'DISTRIBUTING' | 'REVERSING' | 'LIQUIDATED';
+}
+
 interface AppContextType {
   apiKeys: ApiKeys;
   setApiKeys: (keys: Partial<ApiKeys>) => void;
@@ -44,6 +53,8 @@ interface AppContextType {
   audioEnabled: boolean;
   setAudioEnabled: (v: boolean) => void;
   playMoneySound: (isForce?: boolean) => void;
+  activeSetup: HeroSetup | null;
+  setActiveSetup: (s: HeroSetup | null) => void;
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -77,6 +88,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [yields, setYields] = useState({ y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 });
   const [macroData, setMacroData] = useState<any>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [activeSetup, setActiveSetup] = useLocalStorage<HeroSetup | null>('mar_hero_setup', {
+    assetId: 'EUR/USD',
+    name: 'Euro / US Dollar',
+    entry: 1.18045,
+    target: 1.1600,
+    type: 'SHORT',
+    status: 'IRON HOLD'
+  });
   const lastSqueezeRef = useRef<Set<string>>(new Set());
   const refreshRef = useRef(false);
 
@@ -364,14 +383,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     lastSqueezeRef.current = currentSqueezes;
   }, [assets, audioEnabled, playMoneySound]);
 
+  const contextValue = {
+    apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
+    refreshData: fetchMarketData, selectedAsset, setSelectedAsset,
+    activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
+    updateMarketPrice, addAsset, removeAsset, yields, macroData,
+    audioEnabled, setAudioEnabled, playMoneySound,
+    activeSetup, setActiveSetup
+  };
+
+  useEffect(() => {
+    (window as any)._appCtx = contextValue;
+  }, [contextValue]);
+
   return (
-    <Ctx.Provider value={{
-      apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
-      refreshData: fetchMarketData, selectedAsset, setSelectedAsset,
-      activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
-      updateMarketPrice, addAsset, removeAsset, yields, macroData,
-      audioEnabled, setAudioEnabled, playMoneySound
-    }}>
+    <Ctx.Provider value={contextValue}>
       {children}
     </Ctx.Provider>
   );

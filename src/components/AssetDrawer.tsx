@@ -250,7 +250,18 @@ const AssetDrawer: React.FC = () => {
           
           {/* INSTITUTIONAL HERO SETUP MANAGER (v28.0) */}
           <div style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-             <p style={{ fontSize: '10px', color: '#71717a', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 900 }}>🎯 Hero Setup Manager</p>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <p style={{ fontSize: '10px', color: '#71717a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 900 }}>🎯 Hero Setup Manager</p>
+                {/* @ts-ignore */}
+                {((window as any)._appCtx?.activeSetup) && (
+                   <button 
+                     onClick={() => (window as any)._appCtx?.setActiveSetup(null)}
+                     style={{ background: '#ef444422', border: '1px solid #ef444444', color: '#ef4444', fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '3px', cursor: 'pointer' }}
+                   >
+                     CLEAR ACTIVE
+                   </button>
+                )}
+             </div>
              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
                 <div>
                    <label style={{ display: 'block', fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>ENTRY</label>

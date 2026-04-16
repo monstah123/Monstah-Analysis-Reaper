@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const InstitutionalSpotlight: React.FC = () => {
-  const { marketData, activeView, activeSetup } = useApp();
+  const { marketData, activeView, activeSetup, setActiveSetup } = useApp();
   
   if (activeView === 'landing' || !activeSetup) return null;
 
@@ -39,6 +39,13 @@ const InstitutionalSpotlight: React.FC = () => {
                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                   <span style={{ fontSize: '9px', background: type === 'SHORT' ? '#ef4444' : '#10b981', color: '#fff', padding: '1px 5px', borderRadius: '2px', fontWeight: 900, textTransform: 'uppercase' }}>Active Setup</span>
                   <h2 style={{ fontSize: '0.9rem', fontWeight: 900, color: '#f8fafc', margin: 0 }}>🏛️ {name} Institutional {type === 'SHORT' ? 'Fade' : 'Rally'}</h2>
+                  <button 
+                    onClick={() => setActiveSetup(null)}
+                    style={{ background: 'transparent', border: 'none', color: '#71717a', cursor: 'pointer', fontSize: '10px', marginLeft: '0.5rem', padding: '2px' }}
+                    title="Clear Setup"
+                  >
+                    ✕
+                  </button>
                </div>
                <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                  <span style={{ color: type === 'SHORT' ? '#ef4444' : '#10b981' }}>{status} (Stress-Free)</span> 

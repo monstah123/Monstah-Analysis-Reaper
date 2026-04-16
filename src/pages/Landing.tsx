@@ -74,11 +74,11 @@ const Landing: React.FC = () => {
       color: '#06b6d4'
     },
     {
-      id: 'dashboard',
-      title: 'Global Liquidity Engine',
-      desc: 'Predictive session volume and institutional money flow forecasting.',
-      icon: '🌊',
-      color: '#8b5cf6'
+      id: 'heatmap',
+      title: 'Institutional Heatmap',
+      desc: 'Live cross-asset performance matrix with real-time volatility tracking.',
+      icon: '🔥',
+      color: '#fbbf24'
     },
     {
       id: 'ai-terminal',
@@ -93,6 +93,34 @@ const Landing: React.FC = () => {
       desc: 'Ultra-low latency institutional squawk and real-time news aggregation.',
       icon: '📻',
       color: '#ec4899'
+    },
+    {
+      id: 'calendar',
+      title: 'Economic Calendar',
+      desc: 'Real-time tracking of high-impact institutional data releases.',
+      icon: '📅',
+      color: '#34d399'
+    },
+    {
+      id: 'technical',
+      title: 'Multi-TF Bias Matrix',
+      desc: 'Real-time institutional momentum alignment across M15 to Monthly charts.',
+      icon: '📡',
+      color: '#f97316'
+    },
+    {
+      id: 'watchlist',
+      title: 'Institutional Watchlist',
+      desc: 'Curated list of high-confluence assets for immediate execution.',
+      icon: '⭐',
+      color: '#e879f9'
+    },
+    {
+      id: 'dashboard',
+      title: 'Global Liquidity Engine',
+      desc: 'Predictive session volume and institutional money flow forecasting.',
+      icon: '🌊',
+      color: '#8b5cf6'
     }
   ];
 

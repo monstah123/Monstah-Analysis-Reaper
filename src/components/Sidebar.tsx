@@ -11,6 +11,7 @@ const analysisItems = [
   { id: 'technical',   label: 'Technical',    icon: '📈' },
   { id: 'yield-spreads',  label: 'Yield Spreads',  icon: '🏛️' },
   { id: 'news-terminal',  label: 'News Terminal',  icon: '📻' },
+  { id: 'heatmap',        label: 'Heatmap',        icon: '🔥' },
   { id: 'ai-terminal',    label: 'AI Terminal',    icon: '🌪️' },
   { id: 'calendar',       label: 'Calendar',       icon: '📅' },
   { id: 'correlation',    label: 'Correlation',    icon: '🌡️' },

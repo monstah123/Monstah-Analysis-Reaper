@@ -12,6 +12,7 @@ import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
 import Watchlist from './pages/Watchlist';
 import LoginPage from './pages/LoginPage';
+import Heatmap from './pages/Heatmap';
 import './index.css';
 
 import Correlation from './pages/Correlation';
@@ -38,6 +39,7 @@ function AppContent() {
       case 'technical':    return <Technical />;
       case 'yield-spreads':  return <YieldSpreads />;
       case 'news-terminal':  return <NewsTerminal />;
+      case 'heatmap':        return <Heatmap />;
       case 'calendar':       return <Calendar />;
       case 'correlation':    return <Correlation />;
       case 'cot-deep-dive':  return <COTDeepDive />;

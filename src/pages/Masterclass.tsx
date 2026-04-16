@@ -84,7 +84,7 @@ const TrainingModules = [
            <ul style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
               <li>✅ **{'>'} 60% Net Long:** Institutional ACCUMULATION (Prepare to Buy)</li>
               <li>❌ **{'>'} 60% Net Short:** Institutional DISTRIBUTION (Prepare to Sell)</li>
-              <li>⚠️ **Extremes (> 80%):** Market Overextension (Possible Reversal Soon)</li>
+              <li>⚠️ **Extremes ({'>'} 80%):** Market Overextension (Possible Reversal Soon)</li>
            </ul>
         </div>
 

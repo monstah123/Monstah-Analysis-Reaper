@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { useApp } from '../contexts/AppContext';
+
 const TrainingModules = [
   {
     id: 'sentiment',

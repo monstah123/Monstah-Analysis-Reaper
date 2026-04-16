@@ -157,7 +157,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
           // Stagger to respect free tier (5req/min)
           if (i < stockAssets.length - 1) await new Promise(res => setTimeout(res, 12500));
-        } catch (e) {
+        } catch (e: any) {
           console.warn(`[Refresher] Failed to fetch ${a.id}, retaining previous state. Error:`, e.message);
         }
       }

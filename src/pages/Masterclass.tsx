@@ -31,7 +31,7 @@ const TrainingModules = [
         <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
            <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#fff' }}>Example: EUR/USD Hunt</h3>
            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
-             If the **Herd (Retail)** is **82% Long**, and the **Matrix Score** is **-5 (Banks Selling)**: You ignore the retail news and **Short (Sell)** the pair. You are trading with the smart money, hunting the retail crowd.
+             If the Herd (Retail) is 82% Long, and the Matrix Score is -5 (Banks Selling): You ignore the retail news and Short (Sell) the pair. You are trading with the smart money, hunting the retail crowd.
            </p>
         </div>
       </div>
@@ -62,9 +62,9 @@ const TrainingModules = [
         <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', borderLeft: '4px solid #eab308' }}>
            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#eab308' }}>RULE OF THUMB</h3>
            <p style={{ fontSize: '0.9rem', color: '#e2e8f0', lineHeight: 1.6 }}>
-             **BUY** the currency with High GDP, High Interest Rates, and High Employment.
+             BUY the currency with High GDP, High Interest Rates, and High Employment.
              <br />
-             **SELL** the currency with Negative GDP, Low Inflation, and Rising Unemployment.
+             SELL the currency with Negative GDP, Low Inflation, and Rising Unemployment.
            </p>
         </div>
       </div>
@@ -79,18 +79,18 @@ const TrainingModules = [
         <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
            <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#fff' }}>The COT "Overflow" Numbers</h3>
            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
-             Look at the **Net Long/Short ratio** for Non-Commercials (Banks).
+             Look at the Net Long/Short ratio for Non-Commercials (Banks).
            </p>
            <ul style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-              <li>✅ **{'>'} 60% Net Long:** Institutional ACCUMULATION (Prepare to Buy)</li>
-              <li>❌ **{'>'} 60% Net Short:** Institutional DISTRIBUTION (Prepare to Sell)</li>
-              <li>⚠️ **Extremes ({'>'} 80%):** Market Overextension (Possible Reversal Soon)</li>
+              <li>✅ {'>'} 60% Net Long: Institutional ACCUMULATION (Prepare to Buy)</li>
+              <li>❌ {'>'} 60% Net Short: Institutional DISTRIBUTION (Prepare to Sell)</li>
+              <li>⚠️ Extremes ({'>'} 80%): Market Overextension (Possible Reversal Soon)</li>
            </ul>
         </div>
 
         <div style={{ padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px', borderLeft: '4px solid #6366f1' }}>
            <strong style={{ display: 'block', marginBottom: '0.5rem' }}>BULLISH EXAMPLE:</strong>
-           <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>Non-Commercials are 70% Net Long (Buying) + Retail is 80% Short (Selling) = **Extreme Bullish Confluence.** You enter **Long (Buy).**</p>
+           <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>Non-Commercials are 70% Net Long (Buying) + Retail is 80% Short (Selling) = Extreme Bullish Confluence. You enter Long (Buy).</p>
         </div>
       </div>
     )

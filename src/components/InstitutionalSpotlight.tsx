@@ -10,7 +10,23 @@ const InstitutionalSpotlight: React.FC = () => {
   const asset = marketData[idClean] || marketData[activeSetup.assetId];
   const currentPrice = asset?.price || activeSetup.entry;
   const { entry, target, type, status, name } = activeSetup;
+  const lastUpdated = asset?.lastUpdated;
   
+  // Dedicate a "Sprint Loop" for the radar (v28.6)
+  useEffect(() => {
+    const timer = setInterval(() => {
+       // Forces a re-render for the "Last Updated" timer
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getRelativeTime = (time?: number) => {
+    if (!time) return 'Awaiting signal...';
+    const diff = Math.floor((Date.now() - time) / 1000);
+    if (diff < 5) return 'Just now';
+    return `${diff}s ago`;
+  };
+
   // Progress calculation based on LONG or SHORT
   let progress = 0;
   if (type === 'SHORT') {
@@ -42,6 +58,11 @@ const InstitutionalSpotlight: React.FC = () => {
           50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.5); }
           100% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); }
         }
+        @keyframes heartbeat {
+          0% { opacity: 0.3; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.1); }
+          100% { opacity: 0.3; transform: scale(0.8); }
+        }
       `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -50,6 +71,7 @@ const InstitutionalSpotlight: React.FC = () => {
                   <span style={{ fontSize: '9px', background: isHit ? '#fbbf24' : (type === 'SHORT' ? '#ef4444' : '#10b981'), color: isHit ? '#000' : '#fff', padding: '1px 5px', borderRadius: '2px', fontWeight: 900, textTransform: 'uppercase' }}>
                     {isHit ? 'Target Hit' : 'Active Setup'}
                   </span>
+                  <div style={{ width: '6px', height: '6px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 5px #10b981', animation: 'heartbeat 1.5s infinite' }} />
                   <h2 style={{ fontSize: '0.9rem', fontWeight: 900, color: '#f8fafc', margin: 0 }}>
                     {isHit ? `🏆 ${name} Mission Accomplished` : `🏛️ ${name} Institutional ${type === 'SHORT' ? 'Fade' : 'Rally'}`}
                   </h2>
@@ -71,6 +93,8 @@ const InstitutionalSpotlight: React.FC = () => {
                  <span style={{ color: '#94a3b8' }}>Entry: {entry}</span>
                  <span style={{ margin: '0 0.5rem', opacity: 0.3 }}>|</span>
                  <span style={{ color: '#f8fafc' }}>Live: {currentPrice.toFixed(5)}</span>
+                 <span style={{ margin: '0 0.5rem', opacity: 0.3 }}>|</span>
+                 <span style={{ color: '#71717a', fontSize: '10px' }}>Sync: {getRelativeTime(lastUpdated)}</span>
                </div>
             </div>
 

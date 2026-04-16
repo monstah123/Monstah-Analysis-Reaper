@@ -89,7 +89,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [macroData, setMacroData] = useState<any>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [activeSetup, setActiveSetup] = useLocalStorage<HeroSetup | null>('mar_hero_setup', {
-    assetId: 'EUR/USD',
+    assetId: 'EURUSD',
     name: 'Euro / US Dollar',
     entry: 1.18045,
     target: 1.1600,

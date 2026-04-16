@@ -6,7 +6,8 @@ const InstitutionalSpotlight: React.FC = () => {
   
   if (activeView === 'landing' || !activeSetup) return null;
 
-  const asset = marketData[activeSetup.assetId];
+  const idClean = activeSetup.assetId.replace(/\//g, '');
+  const asset = marketData[idClean] || marketData[activeSetup.assetId];
   const currentPrice = asset?.price || activeSetup.entry;
   const { entry, target, type, status, name } = activeSetup;
   

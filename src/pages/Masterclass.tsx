@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { useApp } from '../contexts/AppContext';
+
 const TrainingModules = [
   {
     id: 'sentiment',
@@ -19,7 +22,7 @@ const TrainingModules = [
         <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
            <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#6366f1' }}>The "Golden Cross" Rule</h3>
            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
-             The highest probability setups occur when <strong>Retail Sentiment is at an extreme (>75%)</strong> while the <strong>Institutional Score is pushing in the opposite direction</strong>.
+             The highest probability setups occur when <strong>Retail Sentiment is at an extreme (&gt;75%)</strong> while the <strong>Institutional Score is pushing in the opposite direction</strong>.
              <br /><br />
              Example: EUR/USD retail is 80% Long (Herding) + Institutional score is -5 (Banks Selling) = <strong>REAPER SHORT MISSION.</strong>
            </p>
@@ -83,7 +86,7 @@ const TrainingModules = [
 
 const Masterclass: React.FC = () => {
   const { setActiveView } = useApp();
-  const [activeModule, setActiveModule] = useState(0);
+  const [activeModule, setActiveModule] = useState<number>(0);
 
   return (
     <div className="page-container" style={{ paddingBottom: '5rem' }}>
@@ -137,14 +140,14 @@ const Masterclass: React.FC = () => {
               <button 
                 className="btn btn-secondary" 
                 disabled={activeModule === 0}
-                onClick={() => setActiveModule(prev => prev - 1)}
+                onClick={() => setActiveModule((prev: number) => prev - 1)}
               >
                 Previous Module
               </button>
               {activeModule < TrainingModules.length - 1 ? (
                 <button 
                   className="btn btn-primary" 
-                  onClick={() => setActiveModule(prev => prev + 1)}
+                  onClick={() => setActiveModule((prev: number) => prev + 1)}
                   style={{ minWidth: '150px' }}
                 >
                   Continue →

@@ -81,10 +81,10 @@ export default async function handler(req, res) {
                 const rLPct = rTotal > 0 ? Math.round((rL / rTotal) * 100) : 50;
 
                 finalBatch[assetId] = {
-                  iLong:  iL,
+                  iLong: iL,
                   iShort: 100 - iL,
-                  long:   rLPct,
-                  short:  100 - rLPct,
+                  long: rLPct,
+                  short: 100 - rLPct,
                   source: 'Official CFTC COT'
                 };
               }
@@ -176,18 +176,18 @@ export default async function handler(req, res) {
 
     // Yields
     finalYields = {
-      y2:  y2.status  === 'fulfilled' ? y2.value  : null,
+      y2: y2.status === 'fulfilled' ? y2.value : null,
       y10: y10.status === 'fulfilled' ? y10.value : null,
       y30: y30.status === 'fulfilled' ? y30.value : null,
       y3m: y3m.status === 'fulfilled' ? y3m.value : null,
     };
 
     finalMacro = {
-      GDP:     gdpGrowth,
-      CPI:     cpiYoY,
+      GDP: gdpGrowth,
+      CPI: cpiYoY,
       FedRate: fedRate,
-      NFP:     nfpChange,  // in thousands, matches BLS / TradingView
-      PMI:     null        // No free reliable PMI — show dash, not fake number
+      NFP: nfpChange,  // in thousands, matches BLS / TradingView
+      PMI: null        // No free reliable PMI — show dash, not fake number
     };
 
     sourceLabel = 'BLS/FRED (Live)';
@@ -200,10 +200,10 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     success: true,
-    batch:   finalBatch,
-    macro:   finalMacro,
-    yields:  finalYields,
-    source:  sourceLabel,
+    batch: finalBatch,
+    macro: finalMacro,
+    yields: finalYields,
+    source: sourceLabel,
     timestamp: now
   });
 }

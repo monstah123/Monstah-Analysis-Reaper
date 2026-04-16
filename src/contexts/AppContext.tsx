@@ -40,6 +40,7 @@ interface AppContextType {
   addAsset: (asset: AssetData) => void;
   removeAsset: (id: string) => void;
   yields: { y2: number; y10: number; y30: number; y3m: number };
+  macroData: { GDP: number | null; CPI: number | null; FedRate: number | null; NFP: number | null; PMI: number | null } | null;
   audioEnabled: boolean;
   setAudioEnabled: (v: boolean) => void;
   playMoneySound: (isForce?: boolean) => void;
@@ -74,6 +75,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeView, setActiveView] = useState('landing');
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
   const [yields, setYields] = useState({ y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 });
+  const [macroData, setMacroData] = useState<any>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const lastSqueezeRef = useRef<Set<string>>(new Set());
   const refreshRef = useRef(false);
@@ -160,6 +162,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (neuralYields) {
         setYields(neuralYields);
+      }
+
+      if (neuralMacro) {
+        setMacroData(neuralMacro);
       }
 
       // Update global Macro scores from Neural Matrix 9.0
@@ -309,7 +315,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
       refreshData: fetchMarketData, selectedAsset, setSelectedAsset,
       activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
-      updateMarketPrice, addAsset, removeAsset, yields,
+      updateMarketPrice, addAsset, removeAsset, yields, macroData,
       audioEnabled, setAudioEnabled, playMoneySound
     }}>
       {children}

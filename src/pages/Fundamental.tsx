@@ -1,25 +1,8 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const Fundamental: React.FC = () => {
-  const { assets } = useApp();
-  const [macroData, setMacroData] = useState<any>(null);
-  
-  // Real-time Macro Sync from Institutional Wire
-  useEffect(() => {
-    const fetchMacro = async () => {
-      try {
-        const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success) { setMacroData(json.macro); }
-        }
-      } catch (e) {
-        console.error('Core Sync Failure:', e);
-      }
-    };
-    fetchMacro();
-  }, []);
+  const { assets, macroData } = useApp();
 
   const getStatus = (label: string, val: number | null) => {
     if (val === null) {

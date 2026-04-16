@@ -15,7 +15,6 @@ const COTDeepDive: React.FC = () => {
       const total = cLong + cShort;
       
       const longPct = total > 0 ? Math.round((cLong / total) * 100) : 50;
-      const netShort = cShort - cLong;
       
       // Conviction Logic: Calculate the extremity of the smart money positioning
       const conviction = Math.min(100, Math.abs(longPct - 50) * 2.5);

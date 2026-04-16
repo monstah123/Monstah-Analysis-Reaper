@@ -78,6 +78,8 @@ const Dashboard: React.FC = () => {
 
       <StatsBar assets={processed} />
 
+      <MarketHours />
+
       {filterCat === 'Forex' && <RelativePerformance />}
 
       {/* Filters */}

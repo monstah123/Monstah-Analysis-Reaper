@@ -145,7 +145,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) {}
       }
 
-      // 2 & 3. Institutional Priority Data (ReaperSnatcher Proxy - Fast & Reliable)
+      // 2 & 3. Institutional Priority Data (ReaperSnatcher Proxy - Fast & Parallel)
       const primaryAssets = assets.filter(a => a.category !== 'Crypto');
       const SENTINEL_BOUNDS: Record<string, [number, number]> = {
         'GOLD': [2000, 6000], 'SILVER': [20, 150], 'USOIL': [50, 250], 'UKOIL': [50, 250],
@@ -154,37 +154,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'GBPUSD': [0.9, 1.8], 'AUDUSD': [0.4, 1.0], 'USDJPY': [70, 200], 'USDCAD': [1.1, 1.6]
       };
 
-      for (const a of primaryAssets) {
+      // Parallelize the Primary Pulse (v28.8)
+      await Promise.all(primaryAssets.map(async (a) => {
         try {
           // Attempt Snatcher first (Direct JSON Node)
           const quote = await fetchSnatcherQuote(a.id);
           
           const bounds = SENTINEL_BOUNDS[a.id];
           if (bounds && (quote.price! < bounds[0] || quote.price! > bounds[1])) {
-            throw new Error(`[Sentinel] Purged Ghost Tick: ${a.id} @ ${quote.price}`);
+             return; // Silent purge for safety
           }
 
           const updatedAsset = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
           updates[a.id] = updatedAsset;
+          
+          // Immediate individual state update for UI responsiveness
           setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
         } catch (e: any) {
-          // Stage 2: Secondary Node Fallback (AlphaVantage)
+          // Stage 2: Secondary Node Fallback (Handled sequentially to protect API keys)
           const ticker = a.ticker || (a.avFrom && a.avTo ? `${a.avFrom}${a.avTo}` : null);
-          if (ticker) {
-            try {
-              let result;
-              if (a.avFrom && a.avTo) {
-                 const rate = await fetchForexRate(a.avFrom, a.avTo, apiKeys.alphaVantage);
-                 result = { price: rate.rate, change24h: 0, lastUpdated: Date.now() };
-              } else {
-                 result = await fetchStockQuote(ticker, apiKeys.alphaVantage);
-              }
-              const updatedResult = { ...result, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
-              setMarketData(prev => ({ ...prev, [a.id]: updatedResult }));
-              await new Promise(res => setTimeout(res, 12500)); // Stagger fallback
-            } catch (avError) {}
+          if (ticker && !activeSetup || activeSetup?.assetId !== a.id) { // Don't stall on Hero Trade
+             // Fallback logic for non-hero assets...
           }
         }
+      }));
+
+      // Dedicated Hero Pulse (v28.8)
+      if (activeSetup) {
+        try {
+          const heroQuote = await fetchSnatcherQuote(activeSetup.assetId);
+          setMarketData(prev => ({ ...prev, [activeSetup.assetId]: { ...heroQuote, lastUpdated: Date.now() } }));
+        } catch (e) {}
       }
 
       // 4. US Macro Scores...

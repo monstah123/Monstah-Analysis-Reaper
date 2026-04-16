@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import type { AssetData } from '../data/mockData';
 import { TERMINAL_ASSETS, generateNeuralSparkline } from '../data/mockData';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
-import { fetchForexRate, fetchForexHistory, fetchStockQuote, fetchSnatcherQuote } from '../services/alphaVantage';
+import { fetchForexRate, fetchStockQuote, fetchSnatcherQuote } from '../services/alphaVantage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface ApiKeys {

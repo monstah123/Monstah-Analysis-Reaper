@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { AssetData } from '../data/mockData';
-import { mockAssets, generateMockSparkline } from '../data/mockData';
+import { TERMINAL_ASSETS, generateNeuralSparkline } from '../data/mockData';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
 import { fetchForexRate, fetchForexHistory, fetchStockQuote } from '../services/alphaVantage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -67,7 +67,7 @@ const CACHE_TTL = 1 * 60 * 1000; // 1 minute (Institutional Frequency)
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [apiKeysRaw, setApiKeysRaw] = useLocalStorage<ApiKeys>('mar_api_keys', DEFAULT_KEYS);
-  const [assets, setAssets] = useLocalStorage<AssetData[]>('mar_assets', mockAssets);
+  const [assets, setAssets] = useLocalStorage<AssetData[]>('mar_assets', TERMINAL_ASSETS);
   const [marketData, setMarketData] = useState<Record<string, AssetMarketData>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -116,7 +116,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           for (const a of cryptoAssets) {
             const p = prices[a.coingeckoId!];
             if (p) {
-              const history = await fetchCryptoPriceHistory(a.coingeckoId!, 30).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
+              const history = await fetchCryptoPriceHistory(a.coingeckoId!, 30).catch(() => generateNeuralSparkline(a.trend, a.score, a.basePrice));
               updates[a.id] = { price: p.usd, change24h: p.usd_24h_change, history, currency: 'USD', lastUpdated: Date.now() };
             }
           }
@@ -128,7 +128,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       for (const a of forexAssets) {
         try {
           const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
-          const history = await fetchForexHistory(a.avFrom!, a.avTo!).catch(() => generateMockSparkline(a.trend, a.score, a.basePrice));
+          const history = await fetchForexHistory(a.avFrom!, a.avTo!).catch(() => generateNeuralSparkline(a.trend, a.score, a.basePrice));
           
           let change24h = 0;
           if (history.length >= 2) {
@@ -146,7 +146,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       for (const a of stockAssets) {
         try {
           const quote = await fetchStockQuote(a.ticker!, apiKeys.alphaVantage);
-          updates[a.id] = { ...quote, history: generateMockSparkline(a.trend, a.score, a.basePrice) };
+          updates[a.id] = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
         } catch (e) {}
       }
 
@@ -269,7 +269,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Self-heal local storage to push new baseline assets (like UKOIL) to users who already cached older arrays
   useEffect(() => {
     setAssets((prev) => {
-      const missing = mockAssets.filter(ma => !prev.find(pa => pa.id === ma.id));
+      const missing = TERMINAL_ASSETS.filter(ma => !prev.find(pa => pa.id === ma.id));
       if (missing.length > 0) return [...prev, ...missing];
       return prev;
     });

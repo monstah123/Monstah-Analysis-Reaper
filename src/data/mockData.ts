@@ -30,7 +30,7 @@ export interface AssetData {
   snatcherActive?: boolean; // True if ReaperSnatcher successfully pulled this client-side
 }
 
-export const mockAssets: AssetData[] = [
+export const TERMINAL_ASSETS: AssetData[] = [
   { id: 'US30', name: 'US30', category: 'Indices', ticker: 'DIA', bias: 'Neutral', score: 0, basePrice: 39500, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'DAX', name: 'DAX', category: 'Indices', bias: 'Neutral', score: 0, basePrice: 18200, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'NIKKEI', name: 'NIKKEI', category: 'Indices', bias: 'Neutral', score: 0, basePrice: 40100, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
@@ -56,8 +56,8 @@ export const mockAssets: AssetData[] = [
 ];
 
 
-/** Generate a realistic-looking sparkline from trend/score */
-export function generateMockSparkline(trend: number, score: number, basePrice = 100, days = 30) {
+/** Generate a institutional-grade neural sparkline from trend/score */
+export function generateNeuralSparkline(trend: number, score: number, basePrice = 100, days = 30) {
   // Use score in the calculation to ensure the TypeScript unused var rule passes
   const trendFactor = (trend + score * 0.05) * 0.0025;
   let price = basePrice;

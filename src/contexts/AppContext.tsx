@@ -299,6 +299,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             category: baseline.category // Ensure commodities aren't miscategorized
           };
         }
+        // Nuclear Force Sync (v17.5): Strip legacy coingeckoIds from Commodities to fix Safari/Cache loops
+        if (pa.category === 'Commodities' && pa.coingeckoId) {
+          const { coingeckoId, ...rest } = pa;
+          return rest;
+        }
         return pa;
       });
       

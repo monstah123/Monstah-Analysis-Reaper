@@ -55,10 +55,11 @@ export default async function handler(req, res) {
     let change24h = 0;
 
     if (urlUsed.includes('yahoo.com')) {
-      // Institutional Yahoo Extraction Pattern
-      priceText = $('fin-streamer[data-field="regularMarketPrice"]').first().attr('value') 
-               || $('fin-streamer[data-field="regularMarketPrice"]').first().text()
-               || $('.livePrice').first().text();
+      // Institutional Yahoo Extraction Pattern - Target main price directly
+      priceText = $('.Fw\\(b\\).Fz\\(36px\\).Mb\\(-4px\\).D\\(ib\\)').text() 
+               || $('[data-test="qsp-price"]').text() 
+               || $('fin-streamer[data-field="regularMarketPrice"]').first().attr('value') 
+               || $('fin-streamer[data-field="regularMarketPrice"]').first().text();
       
       let changeVal = $('fin-streamer[data-field="regularMarketChangePercent"]').first().attr('value')
                    || $('fin-streamer[data-field="regularMarketChangePercent"]').first().text();
@@ -66,7 +67,8 @@ export default async function handler(req, res) {
           change24h = parseFloat(changeVal.toString().replace(/[()%]/g, ''));
       }
     } else if (urlUsed.includes('google.com')) {
-      priceText = $('.fxKbKc').first().text() || $('.YMlSbe.fxKbKc').first().text();
+      // Direct Main Price Selector to avoid related-index mirror pricing
+      priceText = $('.fxKbKc').first().text();
       let changeText = $('.Jw797b').first().text() || $('.EnC39d').first().text();
       if (changeText) {
         const match = changeText.match(/([+-]?\d+\.?\d*)%/);

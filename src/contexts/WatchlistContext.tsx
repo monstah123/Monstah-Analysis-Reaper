@@ -76,6 +76,13 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return;
     const ref = doc(db, 'watchlists', user.uid);
     await updateDoc(ref, { items: arrayUnion(item) });
+    
+    // Play Money Sound
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    } catch (e) {}
   }, [user]);
 
   const removeFromWatchlist = useCallback(async (id: string) => {

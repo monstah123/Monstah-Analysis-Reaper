@@ -80,6 +80,13 @@ const AssetDrawer: React.FC = () => {
     : null;
 
   const handleAI = () => {
+    // Play Money Sound
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    } catch (e) {}
+
     setAiInsightAsset(selectedAsset);
     setActiveView('ai-insight');
     setSelectedAsset(null);

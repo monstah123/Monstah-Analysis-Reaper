@@ -20,49 +20,49 @@ const Landing: React.FC = () => {
     { 
       id: 'sentiment', 
       title: 'Neural Sentiment Matrix', 
-      desc: 'Institutional vs Retail Sentiment Leaderboards with 1:1 parity.',
+      desc: '100% Live Institutional vs Retail Sentiment Leaderboards with 0% mock data.',
       icon: '📊',
       color: '#3b82f6'
     },
     { 
+      id: 'calculator', 
+      title: 'Institutional Calculator', 
+      desc: 'Precision Lot Sizing and Risk Management based on institutional math.',
+      icon: '🧮',
+      color: '#6366f1'
+    },
+    { 
       id: 'research', 
       title: 'Global Intel Portal', 
-      desc: 'Live neural web-crawler for real-time institutional alpha and news.',
+      desc: 'Real-time neural web-crawler for verified institutional alpha and news.',
       icon: '🌍',
       color: '#10b981'
     },
     { 
       id: 'cot', 
       title: 'COT Deep-Dive', 
-      desc: 'Advanced Institutional Divergence & Smart Money Traps.',
+      desc: 'Official CFTC Public Reporting integration for Smart Money tracking.',
       icon: '🏛️',
       color: '#8b5cf6'
     },
     { 
       id: 'fundamental', 
       title: 'Inst. Fundamental Matrix', 
-      desc: 'The Big Five: GDP, CPI, Fed Rates, Jobs, and PMI Pulse.',
+      desc: 'Direct FRED/BLS heartbeat: GDP, CPI, Fed Rates, and NFP Pulse.',
       icon: '🏦',
       color: '#f59e0b'
     },
-    { 
-      id: 'ai', 
-      title: 'Neural AI Reasoner', 
-      desc: 'DeepSeek R1 step-by-step institutional trade dossiers.',
-      icon: '🧠',
-      color: '#6366f1'
-    },
     {
       id: 'technical',
-      title: 'Technical Confluence',
-      desc: 'Multi-timeframe moving averages and momentum oscillators.',
+      title: 'Institutional Flow',
+      desc: 'Live momentum scanner and Real-Time Institutional Bias Matrix.',
       icon: '📈',
       color: '#14b8a6'
     },
     {
       id: 'yield-spreads',
       title: 'Yield Spread Divergence',
-      desc: 'Bond market differentials tracking the flow of global liquidity.',
+      desc: 'Live Bond market differentials tracking global liquidity flows.',
       icon: '⚖️',
       color: '#f43f5e'
     }

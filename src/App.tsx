@@ -22,6 +22,7 @@ import ReaperSnatcher from './components/ReaperSnatcher';
 import Landing from './pages/Landing';
 import Researcher from './pages/Researcher';
 import AITerminal from './pages/AITerminal';
+import Calculator from './pages/Calculator';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -40,6 +41,7 @@ function AppContent() {
       case 'cot-deep-dive':  return <COTDeepDive />;
       case 'research':       return <Researcher />;
       case 'ai-terminal':    return <AITerminal />;
+      case 'calculator':     return <Calculator />;
       case 'settings':       return <Settings />;
       default:               return <Dashboard />;
     }

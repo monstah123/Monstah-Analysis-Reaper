@@ -148,14 +148,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // 3. Stock/Index/Commodity logic (ReaperSnatcher Proxy - No Rate Limits)
       const snatchAssets = assets.filter(a => (a.category === 'Indices' || a.category === 'Commodities') && !a.coingeckoId);
+      const SENTINEL_BOUNDS: Record<string, [number, number]> = {
+        'GOLD': [1800, 4000], 'SILVER': [15, 60], 'USOIL': [50, 150], 'UKOIL': [50, 150],
+        'DAX': [12000, 20000], 'SP500': [3500, 6500], 'NASDAQ': [12000, 22000], 
+        'US30': [30000, 45000], 'NIKKEI': [30000, 45000]
+      };
+
       for (const a of snatchAssets) {
         try {
           const quote = await fetchSnatcherQuote(a.id);
+          
+          // THE SENTINEL: Direct Data Verification
+          const bounds = SENTINEL_BOUNDS[a.id];
+          if (bounds && (quote.price! < bounds[0] || quote.price! > bounds[1])) {
+            throw new Error(`[Sentinel] Purged Ghost Tick: ${a.id} @ ${quote.price}`);
+          }
+
           const updatedAsset = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
           updates[a.id] = updatedAsset;
           setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
         } catch (e: any) {
-          // If Snatcher fails, try AlphaVantage Ticker (if available)
+          // Fallback logic preserved...
           if (a.ticker) {
             try {
               const quote = await fetchStockQuote(a.ticker, apiKeys.alphaVantage);
@@ -289,26 +302,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updated = prev.map(pa => {
         const baseline = TERMINAL_ASSETS.find(ma => ma.id === pa.id);
         if (baseline) {
-          // THE SENTINEL (v21.0): Nuclear Reality Protection
-          // Hard-coded baseline bounds to kill ghost data hallucinations
-          const SENTINEL_BOUNDS: Record<string, [number, number]> = {
-            'GOLD': [1800, 3000],
-            'SILVER': [15, 60],
-            'USOIL': [60, 120],
-            'UKOIL': [60, 120],
-            'DAX': [14000, 20000],
-            'SP500': [4000, 6500],
-            'NASDAQ': [14000, 20000],
-            'US30': [34000, 42000],
-            'NIKKEI': [33000, 42000]
-          };
-
-          const bounds = SENTINEL_BOUNDS[pa.id];
-          if (bounds && (pa.price < bounds[0] || pa.price > bounds[1])) {
-             console.warn(`[Sentinel] HALTING FOR GHOST DATA: ${pa.id} price ${pa.price} is a hallucination. Purging card.`);
-             return { ...baseline, history: generateNeuralSparkline(baseline.trend, baseline.score, baseline.basePrice) };
-          }
-
           return { 
             ...pa, 
             ticker: baseline.ticker, 

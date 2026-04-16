@@ -149,9 +149,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // 3. Stock/Index/Commodity logic (ReaperSnatcher Proxy - No Rate Limits)
       const snatchAssets = assets.filter(a => (a.category === 'Indices' || a.category === 'Commodities') && !a.coingeckoId);
       const SENTINEL_BOUNDS: Record<string, [number, number]> = {
-        'GOLD': [1800, 4000], 'SILVER': [15, 60], 'USOIL': [50, 150], 'UKOIL': [50, 150],
-        'DAX': [12000, 20000], 'SP500': [3500, 6500], 'NASDAQ': [12000, 22000], 
-        'US30': [30000, 45000], 'NIKKEI': [30000, 45000]
+        'GOLD': [2000, 6000], 'SILVER': [20, 150], 'USOIL': [50, 250], 'UKOIL': [50, 250],
+        'DAX': [15000, 35000], 'SP500': [4000, 10000], 'NASDAQ': [15000, 35000], 
+        'US30': [30000, 60000], 'NIKKEI': [35000, 75000]
       };
 
       for (const a of snatchAssets) {

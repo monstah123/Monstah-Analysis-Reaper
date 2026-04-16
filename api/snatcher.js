@@ -19,18 +19,18 @@ const TICKERS = {
   'COPPER': 'future/copper'
 };
 
-// Strict Institutional Sentinel Bounds
+// Institutional 2026 Sentinel Bounds
 const BASELINES = {
-  'GOLD': [1500, 3000],
-  'SILVER': [15, 60],
-  'USOIL': [40, 150],
-  'UKOIL': [40, 150],
-  'COPPER': [1, 10],
-  'US30': [25000, 50000],
-  'SP500': [3000, 7000],
-  'NASDAQ': [10000, 25000],
-  'DAX': [12000, 22000],
-  'NIKKEI': [25000, 48000]
+  'GOLD': [2000, 6000],
+  'SILVER': [20, 150],
+  'USOIL': [40, 250],
+  'UKOIL': [40, 250],
+  'COPPER': [1, 15],
+  'US30': [30000, 60000],
+  'SP500': [4000, 10000],
+  'NASDAQ': [15000, 35000],
+  'DAX': [15000, 35000],
+  'NIKKEI': [35000, 75000]
 };
 
 export default async function handler(req, res) {

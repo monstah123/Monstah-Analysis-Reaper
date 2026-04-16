@@ -1,39 +1,5 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
-
-// In EdgeFinder, seasonality is 5 or 10-year monthly averages.
-// Here we mock a 12-month seasonality array based on the asset's current seasonality score.
-const generateSeasonalityData = (score: number) => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const baseBias = score > 0 ? 0.3 : score < 0 ? -0.3 : 0;
-  
-  return months.map((m, i) => {
-    // Generate some wave-like seasonality plus noise
-    const wave = Math.sin((i / 11) * Math.PI * 2) * 0.5;
-    const finalVal = baseBias + wave + (Math.random() - 0.5) * 0.5;
-    return {
-      month: m,
-      performance: parseFloat(finalVal.toFixed(2)),
-      fill: finalVal >= 0 ? '#3b82f6' : '#ef4444'
-    };
-  });
-};
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const val = payload[0].value;
-    return (
-      <div style={{ background: '#0f1623', border: '1px solid #1e2d48', padding: '10px', borderRadius: '6px' }}>
-        <p style={{ margin: 0, fontWeight: 700, color: '#f0f4ff' }}>{label}</p>
-        <p style={{ margin: 0, color: val >= 0 ? '#3b82f6' : '#ef4444' }}>
-          Hist. Return: {val > 0 ? '+' : ''}{val}%
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
 
 const Technical: React.FC = () => {
   const { assets } = useApp();
@@ -145,7 +111,7 @@ const Technical: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {assets.slice(0, 10).map((a, i) => {
+                {assets.slice(0, 10).map((a) => {
                   const hasSignal = Math.abs(a.score) >= 5;
                   const signalType = a.score >= 5 ? 'BULLISH OVERFLOW' : a.score <= -5 ? 'BEARISH EXTREME' : 'SIDEWAYS CHOP';
                   const zone = hasSignal ? 'Institutional Imbalance' : 'Equilibrium';

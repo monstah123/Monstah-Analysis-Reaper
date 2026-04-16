@@ -3,7 +3,7 @@ import { useApp } from '../contexts/AppContext';
 import { Calculator as CalcIcon, DollarSign, Percent, Target, AlertTriangle } from 'lucide-react';
 
 export default function Calculator() {
-  const { assets, marketData } = useApp();
+  const { assets } = useApp();
   
   // Position Stats
   const [balance, setBalance] = useState<number>(10000);

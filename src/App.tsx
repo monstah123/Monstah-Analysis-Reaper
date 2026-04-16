@@ -26,6 +26,7 @@ import AITerminal from './pages/AITerminal';
 import Calculator from './pages/Calculator';
 import Masterclass from './pages/Masterclass';
 import ReaperRulebook from './components/ReaperRulebook';
+import InstitutionalSpotlight from './components/InstitutionalSpotlight';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -63,7 +64,10 @@ function AppContent() {
       )}
       <div className="app-body">
         {!isLanding && <MobileNav />}
-        <main className={isLanding ? 'landing-content' : 'main-content'}>{renderPage()}</main>
+        <main className={isLanding ? 'landing-content' : 'main-content'}>
+          {!isLanding && <InstitutionalSpotlight />}
+          {renderPage()}
+        </main>
       </div>
       {!isLanding && <AssetDrawer />}
     </div>

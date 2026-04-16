@@ -5,13 +5,17 @@ import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const Sentiment: React.FC = () => {
   const { assets } = useApp();
+  
   const sortedAssets = useMemo(() => {
-    return [...assets].sort((a, b) => b.cot - a.cot);
+    if (!Array.isArray(assets)) return [];
+    return [...assets].sort((a, b) => (b.cot || 0) - (a.cot || 0));
   }, [assets]);
 
   // Reaper 8.3 - Dual Dynamic Squad Sorting (Institutional Side)
   const cotChartData = useMemo(() => {
+    if (!sortedAssets.length) return [];
     return sortedAssets
+      .filter(a => a.name) // Defensive: Ensure asset exists
       .map(a => {
         const total = (a.cotLong || 0) + (a.cotShort || 0);
         let longPct = 50;
@@ -20,8 +24,8 @@ const Sentiment: React.FC = () => {
         }
         const rankScore = Math.abs(longPct - 50);
         return {
-          name: a.name, // Display the human readable name (e.g., BRENT OIL instead of UKOIL)
-          cotScore: a.cot,
+          name: a.name,
+          cotScore: a.cot || 0,
           long: longPct, 
           short: 100 - longPct,
           rankScore,
@@ -34,10 +38,12 @@ const Sentiment: React.FC = () => {
 
   // --- Reaper Leaderboard Logic (Correct Extremes) ---
   const mostBullish = useMemo(() => {
+    if (!cotChartData.length) return null;
     return [...cotChartData].sort((a, b) => b.long - a.long)[0];
   }, [cotChartData]);
 
   const mostBearish = useMemo(() => {
+    if (!cotChartData.length) return null;
     return [...cotChartData].sort((a, b) => a.long - b.long)[0];
   }, [cotChartData]);
 

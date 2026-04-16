@@ -39,7 +39,7 @@ const Landing: React.FC = () => {
       color: '#10b981'
     },
     { 
-      id: 'cot', 
+      id: 'cot-deep-dive', 
       title: 'COT Deep-Dive', 
       desc: 'Official CFTC Public Reporting integration for Smart Money tracking.',
       icon: '🏛️',
@@ -79,6 +79,20 @@ const Landing: React.FC = () => {
       desc: 'Predictive session volume and institutional money flow forecasting.',
       icon: '🌊',
       color: '#8b5cf6'
+    },
+    {
+      id: 'ai-terminal',
+      title: 'Neural AI Reasoner',
+      desc: 'Advanced decision-support engine for vetting setups against institutional logic.',
+      icon: '🌪️',
+      color: '#a855f7'
+    },
+    {
+      id: 'news-terminal',
+      title: 'Inst. Squawk Wire',
+      desc: 'Ultra-low latency institutional squawk and real-time news aggregation.',
+      icon: '📻',
+      color: '#ec4899'
     }
   ];
 

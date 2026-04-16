@@ -78,9 +78,48 @@ const Dashboard: React.FC = () => {
 
       <StatsBar assets={processed} />
 
-      <MarketHours />
-
       {filterCat === 'Forex' && <RelativePerformance />}
+
+      {/* INSTITUTIONAL SETUP SPOTLIGHT (v27.0) */}
+      <div className="settings-card" style={{ 
+        marginBottom: '2rem', 
+        background: 'linear-gradient(90deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%)', 
+        borderLeft: '4px solid #ef4444',
+        padding: '1.5rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+           <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                 <span style={{ fontSize: '10px', background: '#ef4444', color: '#fff', padding: '2px 6px', borderRadius: '3px', fontWeight: 900, textTransform: 'uppercase' }}>Active Setup</span>
+                 <h2 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#f8fafc' }}>🏛️ EUR/USD Institutional Fade (1.18045)</h2>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', maxWidth: '600px', lineHeight: '1.5' }}>
+                 <strong>Status: <span style={{ color: '#ef4444' }}>IRON HOLD (Stress-Free)</span></strong>. 2026 Macro Delta confirms institutional distribution above 1.1800. Smart Money is targeting the 1.1600 liquidity zone.
+              </p>
+           </div>
+           <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#f8fafc', fontFamily: 'monospace' }}>1.1600</div>
+              <div style={{ fontSize: '10px', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Institutional Target</div>
+           </div>
+        </div>
+        
+        <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '10px', color: '#71717a', marginBottom: '0.25rem' }}>CONVICTION INDEX</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ef4444' }}>94% (High)</div>
+           </div>
+           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '10px', color: '#71717a', marginBottom: '0.25rem' }}>PROFIT GRAVITY</div>
+              <div style={{ width: '100%', height: '6px', background: '#0f172a', borderRadius: '3px', marginTop: '8px', overflow: 'hidden' }}>
+                 <div style={{ width: '15%', background: '#ef4444', height: '100%', boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }} />
+              </div>
+           </div>
+           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '10px', color: '#71717a', marginBottom: '0.25rem' }}>DESK VIEW</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#f8fafc' }}>⚖️ FADING 1.18 SPIKE</div>
+           </div>
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="filter-bar">

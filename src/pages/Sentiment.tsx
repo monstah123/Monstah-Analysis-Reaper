@@ -1,9 +1,24 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const Sentiment: React.FC = () => {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(800);
+
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+    const resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setChartWidth(Math.max(300, entry.contentRect.width - 20));
+        }
+      }
+    });
+    resizeObserver.observe(chartContainerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
   const { assets } = useApp();
   
   const sortedAssets = useMemo(() => {
@@ -94,9 +109,15 @@ const Sentiment: React.FC = () => {
         <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
         <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
         {cotChartData.length > 0 ? (
-          <div style={{ height: Math.max(100, cotChartData.length * 45 + 50), width: '100%', marginTop: '20px' }}>
-            <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
-              <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }} barSize={28}>
+          <div ref={chartContainerRef} style={{ width: '100%', marginTop: '20px', overflowX: 'hidden' }}>
+              <BarChart 
+                width={chartWidth} 
+                height={Math.max(100, cotChartData.length * 45 + 50)}
+                data={cotChartData} 
+                layout="vertical" 
+                margin={{ top: 5, right: 30, left: 10, bottom: 5 }} 
+                barSize={28}
+              >
                 <XAxis type="number" hide domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
                 <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
@@ -115,7 +136,6 @@ const Sentiment: React.FC = () => {
                   isAnimationActive={false}
                 />
               </BarChart>
-            </ResponsiveContainer>
           </div>
         ) : (
           <div style={{ padding: '2rem 0', textAlign: 'center', color: '#4a5775', fontSize: '0.85rem' }}>

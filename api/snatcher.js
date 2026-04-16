@@ -16,7 +16,7 @@ const TARGETS = {
   'USOIL': 'https://www.google.com/finance/quote/CLW00:NYMEX',
   'UKOIL': 'https://www.google.com/finance/quote/BZW00:NYMEX', // Corrected Brent
   'GOLD': 'https://www.google.com/finance/quote/GCW00:COMEX',
-  'SILVER': 'https://www.google.com/finance/quote/SIW00:COMEX',
+  'SILVER': ['https://www.google.com/finance/quote/SIW00:COMEX', 'https://finance.yahoo.com/quote/SI=F'],
   'COPPER': 'https://www.google.com/finance/quote/HGW00:COMEX'
 };
 
@@ -28,33 +28,52 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = TARGETS[symbol];
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9'
-      },
-      timeout: 8000
-    });
+    const urls = Array.isArray(TARGETS[symbol]) ? TARGETS[symbol] : [TARGETS[symbol]];
+    let response = null;
+    let urlUsed = '';
+    
+    // Try each URL until one hits
+    for (const url of urls) {
+      try {
+        urlUsed = url;
+        response = await axios.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9'
+          },
+          timeout: 10000
+        });
+        if (response.data) break;
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!response || !response.data) throw new Error('All institutional nodes failed for ' + symbol);
 
     const $ = cheerio.load(response.data);
-    
-    // Deep Institutional Selection: We prioritze the large hero price element
-    let priceText = $('.fxKbKc').first().text();
-    if (!priceText) {
-      priceText = $('[data-last-price]').first().attr('data-last-price');
-    }
-    if (!priceText) {
-       // Secondary Selector for Commodities
-       priceText = $('.q7vM6c .fxKbKc').text() || $('.YMlSbe.fxKbKc').text();
-    }
-    
-    // Percentage change extraction
-    let changeText = $('.Jw797b').first().text() || $('.EnC39d').first().text() || $('.VfPpkd-vQzf8d').text();
+    let priceText = '';
     let change24h = 0;
-    if (changeText) {
-      const match = changeText.match(/([+-]?\d+\.?\d*)%/);
-      if (match) change24h = parseFloat(match[1]);
+
+    if (urlUsed.includes('google.com')) {
+      // Google Finance Extraction logic
+      priceText = $('.fxKbKc').first().text();
+      if (!priceText) priceText = $('[data-last-price]').first().attr('data-last-price');
+      if (!priceText) priceText = $('.q7vM6c .fxKbKc').text() || $('.YMlSbe.fxKbKc').text();
+      
+      let changeText = $('.Jw797b').first().text() || $('.EnC39d').first().text() || $('.VfPpkd-vQzf8d').text();
+      if (changeText) {
+        const match = changeText.match(/([+-]?\d+\.?\d*)%/);
+        if (match) change24h = parseFloat(match[1]);
+      }
+    } else if (urlUsed.includes('yahoo.com')) {
+      // Yahoo Finance Extraction logic (High-fidelity fallback)
+      priceText = $('[data-test="qsp-price"]').text() || $('fin-streamer[data-field="regularMarketPrice"]').first().text();
+      let changeText = $('fin-streamer[data-field="regularMarketChangePercent"]').first().text();
+      if (changeText) {
+        const match = changeText.match(/([+-]?\d+\.?\d*)%/);
+        if (match) change24h = parseFloat(match[1]);
+      }
     }
 
     if (!priceText) {

@@ -21,7 +21,11 @@ const TICKERS = {
   'GBPUSD': 'GBPUSD=X',
   'AUDUSD': 'AUDUSD=X',
   'USDJPY': 'USDJPY=X',
-  'USDCAD': 'USDCAD=X'
+  'USDCAD': 'USDCAD=X',
+  'USDCHF': 'USDCHF=X',
+  'GBPJPY': 'GBPJPY=X',
+  'GBPNZD': 'GBPNZD=X',
+  'NZDUSD': 'NZDUSD=X'
 };
 
 // 2026 Institutional Sentiment Baselines
@@ -40,7 +44,11 @@ const BASELINES = {
   'GBPUSD': [0.9, 1.8],
   'AUDUSD': [0.4, 1.0],
   'USDJPY': [70, 200],
-  'USDCAD': [1.1, 1.6]
+  'USDCAD': [1.1, 1.6],
+  'USDCHF': [0.7, 1.2],
+  'GBPJPY': [150, 250],
+  'GBPNZD': [1.5, 2.8],
+  'NZDUSD': [0.4, 0.9]
 };
 
 export default async function handler(req, res) {

@@ -1,6 +1,3 @@
-import React, { useState } from 'react';
-import { useApp } from '../contexts/AppContext';
-
 const TrainingModules = [
   {
     id: 'sentiment',
@@ -8,23 +5,30 @@ const TrainingModules = [
     subtitle: 'Hunting the Herd vs the Smart Money',
     content: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-          <div className="settings-card" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <h4 style={{ color: '#f87171', fontSize: '0.8rem', marginBottom: '0.5rem' }}>THE RETAIL HERD</h4>
-            <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Driven by FOMO and emotion. They consistently enter late and exit early. We identify where they are "trapped."</p>
-          </div>
-          <div className="settings-card" style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-            <h4 style={{ color: '#4ade80', fontSize: '0.8rem', marginBottom: '0.5rem' }}>THE INSTITUTIONS</h4>
-            <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Banks and Hedge Funds. They move the market with massive volume. We track their footprints via the Score Matrix.</p>
-          </div>
+        <div style={{ padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '0.8rem', color: '#6366f1' }}>⚡ THE EXECUTION CHEAT SHEET</h3>
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid #ef4444' }}>
+                 <strong style={{ color: '#ef4444', fontSize: '0.85rem' }}>SELL SIGNAL 📉</strong>
+                 <ul style={{ fontSize: '0.8rem', color: '#fca5a5', paddingLeft: '1.2rem', margin: '0.5rem 0' }}>
+                    <li>Retail Long: {'>'} 75%</li>
+                    <li>Matrix Score: -2 or lower</li>
+                 </ul>
+              </div>
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid #22c55e' }}>
+                 <strong style={{ color: '#22c55e', fontSize: '0.85rem' }}>BUY SIGNAL 📈</strong>
+                 <ul style={{ fontSize: '0.8rem', color: '#86efac', paddingLeft: '1.2rem', margin: '0.5rem 0' }}>
+                    <li>Retail Long: {'<'} 25%</li>
+                    <li>Matrix Score: +2 or higher</li>
+                 </ul>
+              </div>
+           </div>
         </div>
-        
+
         <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#6366f1' }}>The "Golden Cross" Rule</h3>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#fff' }}>Example: EUR/USD Hunt</h3>
            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
-             The highest probability setups occur when <strong>Retail Sentiment is at an extreme (&gt;75%)</strong> while the <strong>Institutional Score is pushing in the opposite direction</strong>.
-             <br /><br />
-             Example: EUR/USD retail is 80% Long (Herding) + Institutional score is -5 (Banks Selling) = <strong>REAPER SHORT MISSION.</strong>
+             If the **Herd (Retail)** is **82% Long**, and the **Matrix Score** is **-5 (Banks Selling)**: You ignore the retail news and **Short (Sell)** the pair. You are trading with the smart money, hunting the retail crowd.
            </p>
         </div>
       </div>
@@ -38,10 +42,9 @@ const TrainingModules = [
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
           {[
-            { label: 'GDP (Growth)', desc: 'Is the economy expanding or contracting?', icon: '📉' },
-            { label: 'CPI (Inflation)', desc: 'Is purchasing power decreasing? (High CPI = Rate Hikes)', icon: '💸' },
-            { label: 'Fed Rates', desc: 'The price of money. Higher rates = Stronger currency.', icon: '🏦' },
-            { label: 'NFP (Jobs)', desc: 'The health of the consumer. High jobs = Bullish pressure.', icon: '👷' }
+            { label: 'GDP (Growth)', desc: 'Target > 2.0% for a strong economy. Below 0% is Recession.', icon: '📉' },
+            { label: 'Fed Rates', desc: 'Higher Rates (> 4%) = Stronger Currency Value.', icon: '🏦' },
+            { label: 'NFP (Jobs)', desc: 'Target > 200k/mo for Bullish economic pressure.', icon: '👷' }
           ].map(m => (
             <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
               <span style={{ fontSize: '1.5rem' }}>{m.icon}</span>
@@ -52,6 +55,15 @@ const TrainingModules = [
             </div>
           ))}
         </div>
+
+        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', borderLeft: '4px solid #eab308' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#eab308' }}>RULE OF THUMB</h3>
+           <p style={{ fontSize: '0.9rem', color: '#e2e8f0', lineHeight: 1.6 }}>
+             **BUY** the currency with High GDP, High Interest Rates, and High Employment.
+             <br />
+             **SELL** the currency with Negative GDP, Low Inflation, and Rising Unemployment.
+           </p>
+        </div>
       </div>
     )
   },
@@ -61,23 +73,21 @@ const TrainingModules = [
     subtitle: 'Institutional Positioning Analysis',
     content: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#6366f1' }}>Smart Money vs Commercials</h3>
-           <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>
-             The **Commitment of Traders (COT)** report is a weekly heartbeat of the biggest players. 
-             We look at the net positioning of "Non-Commercials" (Hedge Funds).
+        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#fff' }}>The COT "Overflow" Numbers</h3>
+           <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+             Look at the **Net Long/Short ratio** for Non-Commercials (Banks).
            </p>
+           <ul style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+              <li>✅ **{'>'} 60% Net Long:** Institutional ACCUMULATION (Prepare to Buy)</li>
+              <li>❌ **{'>'} 60% Net Short:** Institutional DISTRIBUTION (Prepare to Sell)</li>
+              <li>⚠️ **Extremes (> 80%):** Market Overextension (Possible Reversal Soon)</li>
+           </ul>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-           <div className="settings-card" style={{ gap: '0.5rem' }}>
-              <h4 style={{ fontSize: '0.75rem', color: '#3b82f6', margin: 0 }}>ACCUMULATION</h4>
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Institutions are building long positions while price is at a low. (Bullish)</p>
-           </div>
-           <div className="settings-card" style={{ gap: '0.5rem' }}>
-              <h4 style={{ fontSize: '0.75rem', color: '#ef4444', margin: 0 }}>DISTRIBUTION</h4>
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Institutions are offloading long positions or building shorts at a high. (Bearish)</p>
-           </div>
+        <div style={{ padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px', borderLeft: '4px solid #6366f1' }}>
+           <strong style={{ display: 'block', marginBottom: '0.5rem' }}>BULLISH EXAMPLE:</strong>
+           <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>Non-Commercials are 70% Net Long (Buying) + Retail is 80% Short (Selling) = **Extreme Bullish Confluence.** You enter **Long (Buy).**</p>
         </div>
       </div>
     )
@@ -120,14 +130,14 @@ const Masterclass: React.FC = () => {
           
           <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
              <h4 style={{ fontSize: '0.8rem', color: '#6366f1', marginBottom: '0.5rem' }}>🚨 REAPER PROTOCOL</h4>
-             <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6 }}>Always verify the <strong>Full Matrix</strong> (Sentiment + Macro + COT) before entering a trade. Conviction comes from confluence.</p>
+             <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6 }}>Never trade on one indicator alone. Confluence of all 3 modules is the key to consistency.</p>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="settings-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)' }}>
+        <div className="settings-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 41, 0.8)', minHeight: '600px' }}>
            <div>
-              <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Institutional Training • v13.2</div>
+              <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Reaper Academy • v13.3</div>
               <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem', color: '#fff' }}>{TrainingModules[activeModule].title}</h2>
               <p style={{ fontSize: '1.1rem', color: '#94a3b8', fontWeight: 600 }}>{TrainingModules[activeModule].subtitle}</p>
            </div>

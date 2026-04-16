@@ -289,12 +289,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updated = prev.map(pa => {
         const baseline = TERMINAL_ASSETS.find(ma => ma.id === pa.id);
         if (baseline) {
-          // Nuclear State Reset (v20.0): Purge legacy garbage data from browser cache
-          const TERMINAL_VERSION = '20.0';
-          const lastVersion = localStorage.getItem('REAPER_VERSION');
-          
-          if (lastVersion !== TERMINAL_VERSION && (pa.category === 'Indices' || pa.category === 'Commodities')) {
-             localStorage.setItem('REAPER_VERSION', TERMINAL_VERSION);
+          // THE SENTINEL (v21.0): Nuclear Reality Protection
+          // Hard-coded baseline bounds to kill ghost data hallucinations
+          const SENTINEL_BOUNDS: Record<string, [number, number]> = {
+            'GOLD': [1800, 3000],
+            'SILVER': [15, 60],
+            'USOIL': [60, 120],
+            'UKOIL': [60, 120],
+            'DAX': [14000, 20000],
+            'SP500': [4000, 6500],
+            'NASDAQ': [14000, 20000],
+            'US30': [34000, 42000],
+            'NIKKEI': [33000, 42000]
+          };
+
+          const bounds = SENTINEL_BOUNDS[pa.id];
+          if (bounds && (pa.price < bounds[0] || pa.price > bounds[1])) {
+             console.warn(`[Sentinel] HALTING FOR GHOST DATA: ${pa.id} price ${pa.price} is a hallucination. Purging card.`);
              return { ...baseline, history: generateNeuralSparkline(baseline.trend, baseline.score, baseline.basePrice) };
           }
 

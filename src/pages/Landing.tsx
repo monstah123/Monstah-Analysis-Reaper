@@ -102,24 +102,67 @@ const Landing: React.FC = () => {
           Absolute market intelligence for the retail elite. Unified Sentiment, COT Deep-Dives, and the Neural AI Reasoner in one terminal.
         </p>
 
-        {!audioEnabled && (
-          <button 
-            onClick={handleActivate}
-            className="btn btn-primary"
-            style={{ 
-              padding: '1rem 2.5rem', 
-              fontSize: '0.9rem', 
-              letterSpacing: '0.1em', 
-              fontWeight: 800, 
-              borderRadius: '50px',
-              boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)',
-              border: 'none',
-              animation: 'pulseGlow 2s infinite alternate'
-            }}
-          >
-            🔊 ACTIVATE NEURAL LINK (ENABLE SOUND)
-          </button>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
+          {!audioEnabled ? (
+            <button 
+              onClick={handleActivate}
+              className="btn btn-primary"
+              style={{ 
+                padding: '1rem 2.5rem', 
+                fontSize: '0.9rem', 
+                letterSpacing: '0.1em', 
+                fontWeight: 800, 
+                borderRadius: '50px',
+                boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)',
+                border: 'none',
+                animation: 'pulseGlow 2s infinite alternate'
+              }}
+            >
+              🔊 ACTIVATE NEURAL LINK (ENABLE SOUND)
+            </button>
+          ) : (
+            <div style={{ padding: '0.5rem 1.5rem', borderRadius: '50px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', color: '#22c55e', fontSize: '0.8rem', fontWeight: 800 }}>
+              ✅ NEURAL AUDIO LINK SECURED
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+             <button 
+                onClick={() => setActiveView('masterclass')}
+                className="btn btn-secondary"
+                style={{ 
+                  padding: '1rem 2.5rem', 
+                  fontSize: '0.9rem', 
+                  fontWeight: 800, 
+                  borderRadius: '50px',
+                  border: '1px solid #6366f1',
+                  color: '#6366f1',
+                  background: 'rgba(99, 102, 241, 0.05)',
+                  cursor: 'pointer'
+                }}
+              >
+                🎓 LEARN THE SYSTEM (MASTERCLASS)
+              </button>
+              <button 
+                onClick={() => setActiveView('dashboard')}
+                className="btn btn-primary"
+                style={{ 
+                  padding: '1rem 2.5rem', 
+                  fontSize: '0.9rem', 
+                  fontWeight: 800, 
+                  borderRadius: '50px',
+                  background: audioEnabled ? '#22c55e' : 'rgba(255,255,255,0.05)',
+                  color: audioEnabled ? '#fff' : '#64748b',
+                  border: audioEnabled ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  cursor: audioEnabled ? 'pointer' : 'not-allowed',
+                  opacity: audioEnabled ? 1 : 0.6
+                }}
+                disabled={!audioEnabled}
+              >
+                ⚡ ENTER TERMINAL
+              </button>
+          </div>
+        </div>
       </header>
 
       <div className="landing-grid" style={{ 

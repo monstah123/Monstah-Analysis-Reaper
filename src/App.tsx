@@ -23,6 +23,7 @@ import Landing from './pages/Landing';
 import Researcher from './pages/Researcher';
 import AITerminal from './pages/AITerminal';
 import Calculator from './pages/Calculator';
+import Masterclass from './pages/Masterclass';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -42,6 +43,7 @@ function AppContent() {
       case 'research':       return <Researcher />;
       case 'ai-terminal':    return <AITerminal />;
       case 'calculator':     return <Calculator />;
+      case 'masterclass':    return <Masterclass />;
       case 'settings':       return <Settings />;
       default:               return <Dashboard />;
     }

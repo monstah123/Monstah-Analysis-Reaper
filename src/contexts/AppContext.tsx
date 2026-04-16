@@ -109,11 +109,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updates: Record<string, AssetMarketData> = {};
 
       // 1. Fetch market prices (Snapshot current assets to avoid dependency loop)
-      const cryptoAssets = assets.filter((a) => a.coingeckoId && a.category === 'Crypto');
-      if (cryptoAssets.length) {
+      // 1. Fetch market prices (CoinGecko Multi-Stream)
+      const coingeckoAssets = assets.filter((a) => a.coingeckoId);
+      if (coingeckoAssets.length) {
         try {
-          const prices = await fetchCryptoPrices(cryptoAssets.map(a => a.coingeckoId!));
-          for (const a of cryptoAssets) {
+          const prices = await fetchCryptoPrices(coingeckoAssets.map(a => a.coingeckoId!));
+          for (const a of coingeckoAssets) {
             const p = prices[a.coingeckoId!];
             if (p) {
               const history = await fetchCryptoPriceHistory(a.coingeckoId!, 30).catch(() => generateNeuralSparkline(a.trend, a.score, a.basePrice));
@@ -141,12 +142,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) {}
       }
 
-      // 3. Stock/Index logic (Live Tickers)
+      // 3. Stock/Index logic (Sequential Institutional Dispatch - stays under 5req/min)
       const stockAssets = assets.filter(a => a.ticker);
       for (const a of stockAssets) {
         try {
           const quote = await fetchStockQuote(a.ticker!, apiKeys.alphaVantage);
           updates[a.id] = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
+          // Wait 12 seconds to respect AlphaVantage Free Tier (5/min)
+          await new Promise(res => setTimeout(res, 12500));
         } catch (e) {}
       }
 
@@ -266,12 +269,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
-  // Self-heal local storage to push new baseline assets (like UKOIL) to users who already cached older arrays
+  // Self-heal local storage to push new baseline assets and update existing configs (Parity Lockdown)
   useEffect(() => {
     setAssets((prev) => {
-      const missing = TERMINAL_ASSETS.filter(ma => !prev.find(pa => pa.id === ma.id));
-      if (missing.length > 0) return [...prev, ...missing];
-      return prev;
+      const updated = prev.map(pa => {
+        const baseline = TERMINAL_ASSETS.find(ma => ma.id === pa.id);
+        if (baseline) {
+          // Sync critical data-routing properties from the new baseline
+          return { 
+            ...pa, 
+            ticker: baseline.ticker, 
+            coingeckoId: baseline.coingeckoId,
+            avFrom: baseline.avFrom,
+            avTo: baseline.avTo,
+            category: baseline.category // Ensure commodities aren't miscategorized
+          };
+        }
+        return pa;
+      });
+      
+      const missing = TERMINAL_ASSETS.filter(ma => !updated.find(pa => pa.id === ma.id));
+      if (missing.length > 0) return [...updated, ...missing];
+      return updated;
     });
   }, [setAssets]);
 

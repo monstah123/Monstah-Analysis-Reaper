@@ -94,6 +94,32 @@ const TrainingModules = [
         </div>
       </div>
     )
+  },
+  {
+    id: 'correlation',
+    title: '🌡️ Module 4: Linear Correlation Strategy',
+    subtitle: 'Exploiting Asset Relationships',
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+           <div style={{ padding: '1.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+              <h4 style={{ fontSize: '0.85rem', color: '#3b82f6', marginBottom: '0.5rem' }}>POSITIVE (+1.0)</h4>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>Assets move in lockstep. (e.g., AUD/USD and Gold). If Gold flies, AUD/USD usually follows.</p>
+           </div>
+           <div style={{ padding: '1.5rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <h4 style={{ fontSize: '0.85rem', color: '#ef4444', marginBottom: '0.5rem' }}>NEGATIVE (-1.0)</h4>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>Assets move in opposition. (e.g., USD/JPY and Gold). They act as hedges for each other.</p>
+           </div>
+        </div>
+
+        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#10b981' }}>THE RISK PROTOCOL</h3>
+           <p style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.6 }}>
+             Avoid taking two "Long" positions on assets with {'>'} 0.85 correlation. You are essentially doubling your risk on the same move. Instead, use divergences to spot strength.
+           </p>
+        </div>
+      </div>
+    )
   }
 ];
 

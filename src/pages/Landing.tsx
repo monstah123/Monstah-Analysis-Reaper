@@ -65,6 +65,20 @@ const Landing: React.FC = () => {
       desc: 'Live Bond market differentials tracking global liquidity flows.',
       icon: '⚖️',
       color: '#f43f5e'
+    },
+    {
+      id: 'correlation',
+      title: 'Linear Correlation Matrix',
+      desc: 'Institutional-grade Pearson coefficients across all global asset classes.',
+      icon: '🌡️',
+      color: '#06b6d4'
+    },
+    {
+      id: 'dashboard',
+      title: 'Global Liquidity Engine',
+      desc: 'Predictive session volume and institutional money flow forecasting.',
+      icon: '🌊',
+      color: '#8b5cf6'
     }
   ];
 
@@ -164,6 +178,91 @@ const Landing: React.FC = () => {
           </div>
         </div>
       </header>
+      
+      {/* Global Liquidity Clock Preview Overlay */}
+      <div 
+        style={{ 
+          width: '100%', 
+          maxWidth: '1200px', 
+          background: 'rgba(15, 23, 42, 0.4)', 
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.05)',
+          borderRadius: '32px',
+          padding: '2.5rem',
+          marginBottom: '4rem',
+          position: 'relative',
+          overflow: 'hidden',
+          zIndex: 10,
+          opacity: audioEnabled ? 1 : 0.3,
+          transition: 'all 0.8s ease'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div>
+             <h4 style={{ fontSize: '0.9rem', color: '#6366f1', letterSpacing: '0.2em', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                Operational Status: LIVE
+             </h4>
+             <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff' }}>GLOBAL LIQUIDITY CLOCK</h2>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+             <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>Golden Time Window:</p>
+             <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#eab308' }}>LONDON / NEW YORK OVERLAP</span>
+          </div>
+        </div>
+
+        <div style={{ height: '180px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
+           {[
+             { name: 'SYDNEY', color: '#3b82f6', start: 0, width: 30 },
+             { name: 'TOKYO', color: '#ec4899', start: 10, width: 35 },
+             { name: 'LONDON', color: '#0ea5e9', start: 35, width: 40 },
+             { name: 'NEW YORK', color: '#22c55e', start: 50, width: 40 }
+           ].map(s => (
+             <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <span style={{ width: '80px', fontSize: '0.7rem', fontWeight: 800, color: '#475569' }}>{s.name}</span>
+                <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.02)', borderRadius: '4px', position: 'relative' }}>
+                   <div style={{ 
+                      position: 'absolute', 
+                      left: `${s.start}%`, 
+                      width: `${s.width}%`, 
+                      height: '100%', 
+                      background: `linear-gradient(90deg, ${s.color}00, ${s.color}, ${s.color}00)`, 
+                      borderRadius: '4px',
+                      boxShadow: `0 0 20px ${s.color}40`
+                   }} />
+                </div>
+             </div>
+           ))}
+
+           {/* Scanning Laser */}
+           <div style={{ 
+              position: 'absolute', 
+              top: 0, 
+              bottom: 0, 
+              left: '45%', 
+              width: '2px', 
+              background: 'linear-gradient(to bottom, transparent, #6366f1, transparent)', 
+              boxShadow: '0 0 15px #6366f1',
+              zIndex: 5
+           }}>
+             <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: '#6366f1', color: '#fff', fontSize: '0.6rem', fontWeight: 900, padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                LIVE PULSE
+             </div>
+           </div>
+        </div>
+
+        <div style={{ marginTop: '2.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem' }}>
+           <div style={{ padding: '1.5rem', background: 'rgba(234, 179, 8, 0.05)', borderRadius: '16px', border: '1px solid rgba(234, 179, 8, 0.1)' }}>
+              <div style={{ color: '#eab308', fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚡</div>
+              <h5 style={{ fontSize: '0.9rem', color: '#f8fafc', marginBottom: '0.25rem' }}>Tight Spreads</h5>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>High volume session overlaps ensure maximum liquidity and minimum slippage.</p>
+           </div>
+           <div style={{ padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '16px', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
+              <div style={{ color: '#6366f1', fontSize: '1.5rem', marginBottom: '0.5rem' }}>📊</div>
+              <h5 style={{ fontSize: '0.9rem', color: '#f8fafc', marginBottom: '0.25rem' }}>Predictive Flow</h5>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>Neural forecasting predicts the next volatility spike before the major market opens.</p>
+           </div>
+        </div>
+      </div>
 
       <div className="landing-grid" style={{ 
         display: 'grid', 

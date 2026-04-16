@@ -28,20 +28,33 @@ const getTvSymbol = (id: string): string | null => {
     'NZDUSD': 'FX:NZDUSD',
     'USDCAD': 'FX:USDCAD',
     'BITCOIN': 'BINANCE:BTCUSDT',
+    'BTC': 'BINANCE:BTCUSDT',
     'ETHEREUM': 'BINANCE:ETHUSDT',
+    'ETH': 'BINANCE:ETHUSDT',
     'SOLANA': 'BINANCE:SOLUSDT',
+    'SOL': 'BINANCE:SOLUSDT',
     'GOLD': 'TVC:GOLD',
+    'XAUUSD': 'TVC:GOLD',
     'SILVER': 'TVC:SILVER',
+    'XAGUSD': 'TVC:SILVER',
     'USOIL': 'TVC:USOIL',
     'UKOIL': 'TVC:UKOIL',
     'COPPER': 'TVC:COPPER',
     'US30': 'TVC:DJI',
+    'DOW': 'TVC:DJI',
+    'DJI': 'TVC:DJI',
     'DAX': 'TVC:DEU40',
+    'GER40': 'TVC:DEU40',
     'NIKKEI': 'TVC:NI225',
+    'JPN225': 'TVC:NI225',
     'SP500': 'TVC:SPX',
+    'SPX': 'TVC:SPX',
+    'US500': 'TVC:SPX',
     'NASDAQ': 'TVC:NDX',
+    'NDX': 'TVC:NDX',
+    'US100': 'TVC:NDX',
   };
-  return map[id] || null;
+  return map[id.toUpperCase()] || null;
 };
 const AssetDrawer: React.FC = () => {
   const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing, removeAsset } = useApp();

@@ -94,9 +94,9 @@ const Sentiment: React.FC = () => {
         <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
         <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
         {cotChartData.length > 0 ? (
-          <div style={{ height: `${cotChartData.length * 45 + 50}px`, minHeight: '100px', marginTop: '20px', marginLeft: '-20px' }}>
+          <div style={{ height: `${cotChartData.length * 45 + 50}px`, minHeight: '100px', minWidth: '200px', marginTop: '20px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }} barSize={28}>
+              <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }} barSize={28}>
                 <XAxis type="number" hide domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
                 <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />

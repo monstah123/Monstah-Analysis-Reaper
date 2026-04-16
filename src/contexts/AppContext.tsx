@@ -233,35 +233,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           let cI = a.cot || 0;
 
           if (data) {
-            // Institutional Positioning (Raw counts from CFTC or ratios from Neural)
-            cL = data.iLong ?? a.cotLong ?? 50;
-            // If iShort is provided (like from CFTC), use it. Otherwise assume percentages.
-            cS = data.iShort ?? (cL > 100 ? a.cotShort ?? 50 : 100 - cL);
+            // Institutional Positioning (Raw counts from CFTC)
+            cL = data.iLong ?? null;
+            cS = data.iShort ?? null;
             
-            // Retail only uses Backend (Neural) if ReaperSnatcher didn't grab it client-side
+            // Retail Positioning (Official Sync)
             if (!a.snatcherActive) {
-              rL = data.long ?? a.retailLong ?? 50;
-              rS = 100 - rL;
+              rL = data.long ?? null;
+              rS = data.short ?? null;
             }
           }
 
-          // Proportion-aware Bias Scoring
-          const rPct = (rL / (rL + rS)) * 100;
-          const cPct = (cL / (cL + cS)) * 100;
+          // Strict Bias Scoring (Only if Live Data exists)
+          let cPct: number | null = null;
+          let rPct: number | null = null;
+          
+          if (cL !== null && cS !== null) cPct = (cL / (cL + cS)) * 100;
+          if (rL !== null && rS !== null) rPct = (rL / (rL + rS)) * 100;
 
-          rP = rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0;
-          // 5-tier COT scoring: strong signals at extremes, mild signals for moderate positioning
-          cI = cPct >= 70 ? 2 : cPct >= 57 ? 1 : cPct <= 30 ? -2 : cPct <= 43 ? -1 : 0;
+          rP = (rPct !== null) ? (rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0) : 0;
+          cI = (cPct !== null) ? (cPct >= 70 ? 2 : cPct >= 57 ? 1 : cPct <= 30 ? -2 : cPct <= 43 ? -1 : 0) : 0;
 
-          const newTotals = cI + rP + scores.gdp + scores.inflation + scores.interestRates + scores.employmentChange;
+          // Require a minimum amount of Live Data before generating a Bias
+          const liveSignalsCount = [cPct, rPct, scores.gdp, scores.inflation].filter(s => s !== null && s !== 0).length;
+          
+          const newTotals = cI + rP + (scores.gdp || 0) + (scores.inflation || 0) + (scores.interestRates || 0) + (scores.employmentChange || 0);
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
-          // Neutral = exactly 0. Any positive score is Bullish, any negative is Bearish.
-          if (newTotals >= 5) dynamicBias = 'Very Bullish';
-          else if (newTotals >= 1) dynamicBias = 'Bullish';
-          else if (newTotals === 0) dynamicBias = 'Neutral';
-          else if (newTotals >= -4) dynamicBias = 'Bearish';
-          else dynamicBias = 'Very Bearish';
+          if (liveSignalsCount > 0) {
+            if (newTotals >= 5) dynamicBias = 'Very Bullish';
+            else if (newTotals >= 1) dynamicBias = 'Bullish';
+            else if (newTotals === 0) dynamicBias = 'Neutral';
+            else if (newTotals >= -4) dynamicBias = 'Bearish';
+            else dynamicBias = 'Very Bearish';
+          }
 
           return {
             ...a, ...scores,

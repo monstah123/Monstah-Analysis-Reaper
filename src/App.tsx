@@ -24,6 +24,7 @@ import Researcher from './pages/Researcher';
 import AITerminal from './pages/AITerminal';
 import Calculator from './pages/Calculator';
 import Masterclass from './pages/Masterclass';
+import ReaperRulebook from './components/ReaperRulebook';
 
 function AppContent() {
   const { activeView, setActiveView } = useApp();
@@ -88,6 +89,7 @@ function AuthGate() {
     <AppProvider>
       <WatchlistProvider>
         <ReaperSnatcher />
+        <ReaperRulebook />
         <AppContent />
       </WatchlistProvider>
     </AppProvider>

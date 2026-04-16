@@ -17,6 +17,7 @@ const analysisItems = [
   { id: 'cot-deep-dive',  label: 'COT Deep-Dive',  icon: '🗳️' },
   { id: 'calculator',     label: 'Calculator',     icon: '🧮' },
   { id: 'research',       label: 'Global Intel',   icon: '🌍' },
+  { id: 'masterclass',    label: 'Masterclass',    icon: '🎓' },
 ];
 
 const marketItems = [
@@ -142,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
           <span className="status-dot live" />
           <span>Live Data</span>
         </div>
-        <p className="version-label">v1.0.0-beta</p>
+        <p className="version-label">v13.7.1-ULTRA</p>
       </div>
     </aside>
   );

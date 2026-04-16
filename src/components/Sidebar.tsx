@@ -51,6 +51,42 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
         </span>
       </div>
 
+      <button 
+        className="nav-item"
+        onClick={() => onNavChange('landing')}
+        style={{ 
+          margin: '0 1rem 1.5rem', 
+          padding: '0.6rem 1rem',
+          fontSize: '0.7rem',
+          fontWeight: 800,
+          letterSpacing: '0.15em',
+          background: 'rgba(99, 102, 241, 0.05)',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+          color: '#6366f1',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          width: 'calc(100% - 2rem)',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          textTransform: 'uppercase'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
+          e.currentTarget.style.borderColor = '#6366f1';
+          e.currentTarget.style.color = '#fff';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(99, 102, 241, 0.05)';
+          e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.2)';
+          e.currentTarget.style.color = '#6366f1';
+        }}
+      >
+        <span style={{ fontSize: '1rem' }}>🛰️</span>
+        EXIT TO LOBBY
+      </button>
+
       {/* ── User profile strip ─────────────────────────────────── */}
       {user && (
         <div className="sidebar-user" onClick={() => setShowUserMenu((p) => !p)}>

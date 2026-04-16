@@ -4,19 +4,18 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const Sentiment: React.FC = () => {
-  const { assets, isRefreshing } = useApp();
+  const { assets } = useApp();
   
   const sortedAssets = useMemo(() => {
-    if (!assets || !Array.isArray(assets)) return [];
+    if (!Array.isArray(assets)) return [];
     return [...assets].sort((a, b) => (b.cot || 0) - (a.cot || 0));
   }, [assets]);
 
   // Reaper 8.3 - Dual Dynamic Squad Sorting (Institutional Side)
   const cotChartData = useMemo(() => {
-    if (!sortedAssets || sortedAssets.length === 0) return [];
-    
+    if (!sortedAssets.length) return [];
     return sortedAssets
-      .filter(a => a && a.name) // Defensive: Ensure asset exists
+      .filter(a => a.name) // Defensive: Ensure asset exists
       .map(a => {
         const total = (a.cotLong || 0) + (a.cotShort || 0);
         let longPct = 50;
@@ -25,7 +24,7 @@ const Sentiment: React.FC = () => {
         }
         const rankScore = Math.abs(longPct - 50);
         return {
-          name: a.name || 'Unknown',
+          name: a.name,
           cotScore: a.cot || 0,
           long: longPct, 
           short: 100 - longPct,
@@ -39,12 +38,12 @@ const Sentiment: React.FC = () => {
 
   // --- Reaper Leaderboard Logic (Correct Extremes) ---
   const mostBullish = useMemo(() => {
-    if (!cotChartData || cotChartData.length === 0) return null;
+    if (!cotChartData.length) return null;
     return [...cotChartData].sort((a, b) => b.long - a.long)[0];
   }, [cotChartData]);
 
   const mostBearish = useMemo(() => {
-    if (!cotChartData || cotChartData.length === 0) return null;
+    if (!cotChartData.length) return null;
     return [...cotChartData].sort((a, b) => a.long - b.long)[0];
   }, [cotChartData]);
 
@@ -62,18 +61,6 @@ const Sentiment: React.FC = () => {
     return null;
   };
 
-  if (!assets || (assets.length === 0 && isRefreshing)) {
-    return (
-      <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="loading-spinner" style={{ margin: '0 auto 1.5rem' }} />
-          <h2 style={{ color: '#94a3b8' }}>Synchronizing Institutional Feeds...</h2>
-          <p style={{ color: '#4a5775' }}>Retrieving live CFTC positioning data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page-container">
       <header className="header" style={{ padding: 0 }}>
@@ -88,20 +75,16 @@ const Sentiment: React.FC = () => {
           <div className="stat-icon">🏦</div>
           <div className="stat-body">
             <span className="stat-label">Most Bullish (Inst.)</span>
-            <span className="stat-value" style={{ color: '#22c55e' }}>{mostBullish?.name || '---'}</span>
-            <span className="stat-sub">
-              {mostBullish ? `COT Score: ${mostBullish.cotScore > 0 ? `+${mostBullish.cotScore}` : mostBullish.cotScore}` : 'Syncing...'}
-            </span>
+            <span className="stat-value" style={{ color: '#22c55e' }}>{mostBullish?.name}</span>
+            <span className="stat-sub">COT Score: {mostBullish?.cotScore > 0 ? `+${mostBullish.cotScore}` : mostBullish?.cotScore}</span>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">⚠️</div>
           <div className="stat-body">
             <span className="stat-label">Most Bearish (Inst.)</span>
-            <span className="stat-value" style={{ color: '#ef4444' }}>{mostBearish?.name || '---'}</span>
-            <span className="stat-sub">
-              {mostBearish ? `COT Score: ${mostBearish.cotScore}` : 'Syncing...'}
-            </span>
+            <span className="stat-value" style={{ color: '#ef4444' }}>{mostBearish?.name}</span>
+            <span className="stat-sub">COT Score: {mostBearish?.cotScore}</span>
           </div>
         </div>
       </div>
@@ -110,9 +93,8 @@ const Sentiment: React.FC = () => {
       <div className="settings-card">
         <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
         <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
-        
         {cotChartData.length > 0 ? (
-          <div style={{ height: `${cotChartData.length * 45 + 50}px`, marginTop: '20px', marginLeft: '-20px' }}>
+          <div style={{ height: `${cotChartData.length * 45 + 50}px`, minHeight: '100px', marginTop: '20px', marginLeft: '-20px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cotChartData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }} barSize={28}>
                 <XAxis type="number" hide domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
@@ -136,11 +118,13 @@ const Sentiment: React.FC = () => {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#4a5775' }}>
-            Awaiting CFTC Data Sync...
+          <div style={{ padding: '2rem 0', textAlign: 'center', color: '#4a5775', fontSize: '0.85rem' }}>
+            Syncing CFTC institutional data…
           </div>
         )}
       </div>
+
+
 
       {/* Official Myfxbook Outlook Widget Section */}
       <div className="settings-card" style={{ marginTop: '2rem', minHeight: '400px', background: '#0f1623' }}>

@@ -9,7 +9,7 @@ const TrainingModules = [
     description: `The Matrix is your primary weapon. It tracks the net positioning of retail traders (the Herd) against the banks. 
 
 Key Principle: High-probability trades happen when the Herd is trapped in one direction while Institutional Bias (COT) is pushing the other way. Look for "Bullish Overflow" where retail is net-short, or "Bearish Extreme" where retail is net-long.`,
-    image: '/Users/petersoncharles/.gemini/antigravity/brain/657559f7-b92b-4749-b1a8-9db20d3cba6d/sentiment_masterclass_illustration_1776334754314.png'
+    image: '/masterclass/sentiment_masterclass_illustration_1776334754314.png'
   },
   {
     id: 'macro',
@@ -18,7 +18,7 @@ Key Principle: High-probability trades happen when the Herd is trapped in one di
     description: `Macro data tells you *why* a pair is moving. We track the "Big Five": GDP, CPI (Inflation), Jobs (NFP), Interest Rates, and PMI Pulse.
 
 Execution: A strong currency requires an expanding GDP, low unemployment, and rising (but controlled) interest rates. When Macro and Sentiment align, the edge is massive.`,
-    image: '/Users/petersoncharles/.gemini/antigravity/brain/657559f7-b92b-4749-b1a8-9db20d3cba6d/macro_masterclass_illustration_1776334776226.png'
+    image: '/masterclass/macro_masterclass_illustration_1776334776226.png'
   },
   {
     id: 'cot',
@@ -27,7 +27,7 @@ Execution: A strong currency requires an expanding GDP, low unemployment, and ri
     description: `The Commitment of Traders (COT) report shows us exactly where the Commercial Hedgers and Large Speculators are positioned.
 
 Alpha Zone: We hunt for "Institutional Divergence"—where price is dropping but the banks are buying (Accumulation), or price is rising while Banks are selling (Distribution).`,
-    image: '/Users/petersoncharles/.gemini/antigravity/brain/657559f7-b92b-4749-b1a8-9db20d3cba6d/cot_masterclass_illustration_1776334815357.png'
+    image: '/masterclass/cot_masterclass_illustration_1776334815357.png'
   }
 ];
 

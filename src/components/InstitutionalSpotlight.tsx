@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const InstitutionalSpotlight: React.FC = () => {

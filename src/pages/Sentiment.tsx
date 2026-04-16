@@ -76,7 +76,7 @@ const Sentiment: React.FC = () => {
           <div className="stat-body">
             <span className="stat-label">Most Bullish (Inst.)</span>
             <span className="stat-value" style={{ color: '#22c55e' }}>{mostBullish?.name}</span>
-            <span className="stat-sub">COT Score: {mostBullish?.cotScore > 0 ? `+${mostBullish.cotScore}` : mostBullish?.cotScore}</span>
+            <span className="stat-sub">COT Score: {(mostBullish?.cotScore ?? 0) > 0 ? `+${mostBullish?.cotScore}` : mostBullish?.cotScore}</span>
           </div>
         </div>
         <div className="stat-card">

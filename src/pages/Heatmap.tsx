@@ -6,27 +6,27 @@ const Heatmap: React.FC = () => {
 
   // Sort assets by magnitude of change to highlight the biggest movers
   const sortedAssets = useMemo(() => {
-     return [...assets].sort((a, b) => {
-        const cA = marketData[a.id]?.change24h || 0;
-        const cB = marketData[b.id]?.change24h || 0;
-        return Math.abs(cB) - Math.abs(cA);
-     });
+    return [...assets].sort((a, b) => {
+      const cA = marketData[a.id]?.change24h || 0;
+      const cB = marketData[b.id]?.change24h || 0;
+      return Math.abs(cB) - Math.abs(cA);
+    });
   }, [assets, marketData]);
 
   const getHeatmapColor = (change: number) => {
-     const abs = Math.abs(change);
-     const opacity = Math.min(abs / 3.0, 1); // Scale intensity up to 3% movement
-     
-     if (change > 0.01) {
-       // Green Spectrum (Positive)
-       return `rgba(34, 197, 94, ${0.1 + (opacity * 0.9)})`;
-     } else if (change < -0.01) {
-       // Red Spectrum (Negative)
-       return `rgba(239, 68, 68, ${0.1 + (opacity * 0.9)})`;
-     }
-     
-     // Neutral / Flat
-     return 'rgba(30, 41, 59, 0.4)';
+    const abs = Math.abs(change);
+    const opacity = Math.min(abs / 3.0, 1); // Scale intensity up to 3% movement
+
+    if (change > 0.01) {
+      // Green Spectrum (Positive)
+      return `rgba(34, 197, 94, ${0.1 + (opacity * 0.9)})`;
+    } else if (change < -0.01) {
+      // Red Spectrum (Negative)
+      return `rgba(239, 68, 68, ${0.1 + (opacity * 0.9)})`;
+    }
+
+    // Neutral / Flat
+    return 'rgba(30, 41, 59, 0.4)';
   };
 
   return (
@@ -43,82 +43,82 @@ const Heatmap: React.FC = () => {
       </header>
 
       <div style={{
-         display: 'grid',
-         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-         gap: '0.75rem',
-         background: 'rgba(15, 23, 42, 0.2)',
-         padding: '1.5rem',
-         borderRadius: '24px',
-         border: '1px solid rgba(255, 255, 255, 0.05)',
-         minHeight: '600px'
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+        gap: '0.75rem',
+        background: 'rgba(15, 23, 42, 0.2)',
+        padding: '1.5rem',
+        borderRadius: '24px',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        minHeight: '600px'
       }}>
         {sortedAssets.map(asset => {
-           const data = marketData[asset.id];
-           const change = data?.change24h || 0;
-           const price = data?.price || 0;
-           const color = getHeatmapColor(change);
+          const data = marketData[asset.id];
+          const change = data?.change24h || 0;
+          const price = data?.price || 0;
+          const color = getHeatmapColor(change);
 
-           return (
-             <div 
-               key={asset.id}
-               className="heatmap-tile"
-               style={{
-                 height: '150px',
-                 background: color,
-                 padding: '1.25rem',
-                 borderRadius: '16px',
-                 display: 'flex',
-                 flexDirection: 'column',
-                 justifyContent: 'space-between',
-                 position: 'relative',
-                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                 cursor: 'pointer',
-                 border: '1px solid rgba(255,255,255,0.08)',
-                 backdropFilter: 'blur(4px)',
-                 boxShadow: Math.abs(change) > 1.5 ? `0 0 30px ${color}30` : 'none'
-               }}
-             >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                  <div>
-                    <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>{asset.category}</div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#fff' }}>{asset.name}</div>
-                  </div>
-                  <div style={{ 
-                    fontSize: '0.6rem', 
-                    padding: '2px 6px', 
-                    background: 'rgba(255,255,255,0.1)', 
-                    borderRadius: '4px', 
-                    fontWeight: 900,
-                    color: asset.score > 0 ? '#4ade80' : asset.score < 0 ? '#f87171' : '#94a3b8'
-                  }}>
-                    BIAS: {asset.score > 0 ? '+' : ''}{asset.score}
-                  </div>
+          return (
+            <div
+              key={asset.id}
+              className="heatmap-tile"
+              style={{
+                height: '150px',
+                background: color,
+                padding: '1.25rem',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                position: 'relative',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(4px)',
+                boxShadow: Math.abs(change) > 1.5 ? `0 0 30px ${color}30` : 'none'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                <div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>{asset.category}</div>
+                  <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#fff' }}>{asset.name}</div>
                 </div>
-
-                <div style={{ width: '100%' }}>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', marginBottom: '0.2rem' }}>
-                    {change > 0 ? '+' : ''}{change.toFixed(2)}%
-                  </div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
-                    {price > 0 ? price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 5 }) : 'AWAITING FEED...'}
-                  </div>
-                </div>
-
-                {/* Mini Activity Glow */}
                 <div style={{
-                   position: 'absolute',
-                   bottom: '12px',
-                   right: '12px',
-                   width: '4px',
-                   height: '4px',
-                   borderRadius: '50%',
-                   background: '#fff',
-                   boxShadow: '0 0 10px #fff',
-                   opacity: 0.6,
-                   animation: 'pulse-dot 2s infinite'
-                }} />
-             </div>
-           );
+                  fontSize: '0.6rem',
+                  padding: '2px 6px',
+                  background: 'rgba(255,255,255,0.1)',
+                  borderRadius: '4px',
+                  fontWeight: 900,
+                  color: asset.score > 0 ? '#4ade80' : asset.score < 0 ? '#f87171' : '#94a3b8'
+                }}>
+                  BIAS: {asset.score > 0 ? '+' : ''}{asset.score}
+                </div>
+              </div>
+
+              <div style={{ width: '100%' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', marginBottom: '0.2rem' }}>
+                  {change > 0 ? '+' : ''}{change.toFixed(2)}%
+                </div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
+                  {price > 0 ? price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 5 }) : 'AWAITING FEED...'}
+                </div>
+              </div>
+
+              {/* Mini Activity Glow */}
+              <div style={{
+                position: 'absolute',
+                bottom: '12px',
+                right: '12px',
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                background: '#fff',
+                boxShadow: '0 0 10px #fff',
+                opacity: 0.6,
+                animation: 'pulse-dot 2s infinite'
+              }} />
+            </div>
+          );
         })}
       </div>
 
@@ -139,8 +139,9 @@ const Heatmap: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      <style dangerouslySetInnerHTML={{ __html: `
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
          .heatmap-tile:hover {
             transform: translateY(-5px) scale(1.02);
             filter: brightness(1.2);

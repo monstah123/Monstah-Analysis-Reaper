@@ -14,8 +14,8 @@ const TICKERS = {
   'NIKKEI': '%5EN225',
   'USOIL': 'CL=F',
   'UKOIL': 'BZ=F',
-  'GOLD': 'GC=F',
-  'SILVER': 'SI=F',
+  'GOLD': 'XAUUSD=X',   // Switched to Spot for 100% price parity
+  'SILVER': 'XAGUSD=X', // Switched to Spot for 100% price parity
   'COPPER': 'HG=F'
 };
 

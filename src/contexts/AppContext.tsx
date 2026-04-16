@@ -289,20 +289,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updated = prev.map(pa => {
         const baseline = TERMINAL_ASSETS.find(ma => ma.id === pa.id);
         if (baseline) {
-          // Sync critical data-routing properties from the new baseline
+          // Nuclear State Reset (v20.0): Purge legacy garbage data from browser cache
+          const TERMINAL_VERSION = '20.0';
+          const lastVersion = localStorage.getItem('REAPER_VERSION');
+          
+          if (lastVersion !== TERMINAL_VERSION && (pa.category === 'Indices' || pa.category === 'Commodities')) {
+             localStorage.setItem('REAPER_VERSION', TERMINAL_VERSION);
+             return { ...baseline, history: generateNeuralSparkline(baseline.trend, baseline.score, baseline.basePrice) };
+          }
+
           return { 
             ...pa, 
             ticker: baseline.ticker, 
             coingeckoId: baseline.coingeckoId,
             avFrom: baseline.avFrom,
             avTo: baseline.avTo,
-            category: baseline.category // Ensure commodities aren't miscategorized
+            category: baseline.category 
           };
-        }
-        // Nuclear Force Sync (v17.5): Strip legacy coingeckoIds from Commodities to fix Safari/Cache loops
-        if (pa.category === 'Commodities' && pa.coingeckoId) {
-          const { coingeckoId, ...rest } = pa;
-          return rest;
         }
         return pa;
       });

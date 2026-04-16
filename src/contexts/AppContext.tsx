@@ -118,7 +118,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const p = prices[a.coingeckoId!];
             if (p) {
               const history = await fetchCryptoPriceHistory(a.coingeckoId!, 30).catch(() => generateNeuralSparkline(a.trend, a.score, a.basePrice));
-              updates[a.id] = { price: p.usd, change24h: p.usd_24h_change, history, currency: 'USD', lastUpdated: Date.now() };
+              const updatedAsset = { price: p.usd, change24h: p.usd_24h_change, history, currency: 'USD', lastUpdated: Date.now() };
+              updates[a.id] = updatedAsset;
+              setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
             }
           }
         } catch (e) {}
@@ -138,19 +140,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             change24h = ((last - prev) / prev) * 100;
           }
           
-          updates[a.id] = { price: rate.rate, change24h, history, currency: a.avTo, lastUpdated: Date.now() };
+          const updatedAsset = { price: rate.rate, change24h, history, currency: a.avTo, lastUpdated: Date.now() };
+          updates[a.id] = updatedAsset;
+          setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
         } catch (e) {}
       }
 
       // 3. Stock/Index logic (Sequential Institutional Dispatch - stays under 5req/min)
       const stockAssets = assets.filter(a => a.ticker);
-      for (const a of stockAssets) {
+      for (let i = 0; i < stockAssets.length; i++) {
+        const a = stockAssets[i];
         try {
           const quote = await fetchStockQuote(a.ticker!, apiKeys.alphaVantage);
-          updates[a.id] = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
-          // Wait 12 seconds to respect AlphaVantage Free Tier (5/min)
-          await new Promise(res => setTimeout(res, 12500));
-        } catch (e) {}
+          const updatedAsset = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
+          updates[a.id] = updatedAsset;
+          setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
+          // Stagger to respect free tier (5req/min)
+          if (i < stockAssets.length - 1) await new Promise(res => setTimeout(res, 12500));
+        } catch (e) {
+          console.warn(`[Refresher] Failed to fetch ${a.id}, retaining previous state. Error:`, e.message);
+        }
       }
 
       // 4. US Macro Scores...

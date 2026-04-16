@@ -14,7 +14,7 @@ const TARGETS = {
   'DAX': 'https://www.google.com/finance/quote/DAX:INDEXDB',
   'NIKKEI': 'https://www.google.com/finance/quote/NI225:INDEXNIKKEI',
   'USOIL': 'https://www.google.com/finance/quote/CLW00:NYMEX',
-  'UKOIL': 'https://www.google.com/finance/quote/BBW00:ICEUS',
+  'UKOIL': 'https://www.google.com/finance/quote/BZW00:NYMEX', // Corrected Brent
   'GOLD': 'https://www.google.com/finance/quote/GCW00:COMEX',
   'SILVER': 'https://www.google.com/finance/quote/SIW00:COMEX',
   'COPPER': 'https://www.google.com/finance/quote/HGW00:COMEX'
@@ -31,26 +31,35 @@ export default async function handler(req, res) {
     const url = TARGETS[symbol];
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
       },
-      timeout: 5000
+      timeout: 8000
     });
 
     const $ = cheerio.load(response.data);
     
-    // Google Finance price class usually contains "fxKbKc" for the main price
-    // But we'll use a more robust selector targeting multiple potential price locations
-    let priceText = $('.YMlSbe.fxKbKc').first().text();
+    // Deep Institutional Selection: We prioritze the large hero price element
+    let priceText = $('.fxKbKc').first().text();
     if (!priceText) {
       priceText = $('[data-last-price]').first().attr('data-last-price');
     }
+    if (!priceText) {
+       // Secondary Selector for Commodities
+       priceText = $('.q7vM6c .fxKbKc').text() || $('.YMlSbe.fxKbKc').text();
+    }
     
-    // Percentage change
-    let changeText = $('.Jw797b').first().text() || $('.EnC39d').first().text();
+    // Percentage change extraction
+    let changeText = $('.Jw797b').first().text() || $('.EnC39d').first().text() || $('.VfPpkd-vQzf8d').text();
     let change24h = 0;
     if (changeText) {
       const match = changeText.match(/([+-]?\d+\.?\d*)%/);
       if (match) change24h = parseFloat(match[1]);
+    }
+
+    if (!priceText) {
+      // LAST RESORT: Try to find any price-like string in a known price container
+      priceText = $('.IBr93f').find('.YMlSbe').first().text();
     }
 
     if (!priceText) {

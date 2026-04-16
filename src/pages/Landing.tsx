@@ -210,7 +210,7 @@ const Landing: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ height: '180px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
+        <div style={{ height: '220px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
            {[
              { name: 'SYDNEY', color: '#3b82f6', start: 0, width: 30 },
              { name: 'TOKYO', color: '#ec4899', start: 10, width: 35 },
@@ -232,6 +232,48 @@ const Landing: React.FC = () => {
                 </div>
              </div>
            ))}
+
+           {/* Money Flow Volume Bars */}
+           <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'flex-end', height: '40px', gap: '2px', paddingLeft: '95px' }}>
+              {Array.from({ length: 48 }).map((_, i) => {
+                const h = (i / 2 + 22) % 24;
+                const vol = (Math.exp(-Math.pow(h - 10, 2) / 6) * 1.8) + (Math.exp(-Math.pow(h - 14.5, 2) / 4) * 2.6) + (Math.exp(-Math.pow(h - 18, 2) / 8) * 1.4) + (Math.exp(-Math.pow(h - 2, 2) / 6) * 0.6) + 0.2;
+                const isPulse = Math.abs((i / 2) - 13.5) < 0.25; // Simulated active spot
+                const barColor = vol > 1.4 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(71, 85, 105, 0.2)';
+                
+                return (
+                  <div key={i} style={{ 
+                    flex: 1, 
+                    height: `${(vol / 3.2) * 100}%`, 
+                    background: isPulse ? '#6366f1' : barColor, 
+                    borderRadius: '1px',
+                    transition: 'all 0.3s ease',
+                    boxShadow: isPulse ? '0 0 15px #6366f1' : 'none',
+                    position: 'relative'
+                  }}>
+                    {isPulse && (
+                        <div style={{ 
+                          position: 'absolute', 
+                          top: '-30px', 
+                          left: '50%', 
+                          transform: 'translateX(-50%)', 
+                          background: '#1e293b', 
+                          border: '1px solid #6366f1', 
+                          color: '#fff', 
+                          fontSize: '0.65rem', 
+                          fontWeight: 900, 
+                          padding: '2px 6px', 
+                          borderRadius: '4px', 
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 5px 15px rgba(0,0,0,0.5)'
+                        }}>
+                          ${(vol * 1.6).toFixed(2)} TRILLION
+                        </div>
+                    )}
+                  </div>
+                );
+              })}
+           </div>
 
            {/* Scanning Laser */}
            <div style={{ 

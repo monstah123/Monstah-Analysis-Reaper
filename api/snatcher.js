@@ -13,11 +13,11 @@ const TARGETS = {
   'NASDAQ': 'https://www.google.com/finance/quote/.IXIC:INDEXNASDAQ',
   'DAX': 'https://www.google.com/finance/quote/DAX:INDEXDB',
   'NIKKEI': 'https://www.google.com/finance/quote/NI225:INDEXNIKKEI',
-  'USOIL': 'https://www.google.com/finance/quote/CLW00:NYMEX',
-  'UKOIL': 'https://www.google.com/finance/quote/BZW00:NYMEX', // Corrected Brent
-  'GOLD': 'https://www.google.com/finance/quote/GCW00:COMEX',
-  'SILVER': ['https://www.google.com/finance/quote/SIW00:COMEX', 'https://finance.yahoo.com/quote/SI=F'],
-  'COPPER': 'https://www.google.com/finance/quote/HGW00:COMEX'
+  'USOIL': 'https://finance.yahoo.com/quote/CL=F',
+  'UKOIL': 'https://finance.yahoo.com/quote/BZ=F',
+  'GOLD': 'https://finance.yahoo.com/quote/GC=F',
+  'SILVER': ['https://finance.yahoo.com/quote/SI=F', 'https://finance.yahoo.com/quote/XAG=F', 'https://www.google.com/finance/quote/SILVER:CUR'],
+  'COPPER': 'https://finance.yahoo.com/quote/HG=F'
 };
 
 export default async function handler(req, res) {
@@ -32,44 +32,42 @@ export default async function handler(req, res) {
     let response = null;
     let urlUsed = '';
     
-    // Try each URL until one hits
+    // Multi-Host Institutional Dispatch
     for (const url of urls) {
       try {
         urlUsed = url;
         response = await axios.get(url, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9'
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
           },
-          timeout: 10000
+          timeout: 7000
         });
-        if (response.data) break;
+        if (response.data && response.data.length > 5000) break;
       } catch (e) {
         continue;
       }
     }
 
-    if (!response || !response.data) throw new Error('All institutional nodes failed for ' + symbol);
+    if (!response || !response.data) throw new Error('Global Liquidity Node Timeout for ' + symbol);
 
     const $ = cheerio.load(response.data);
     let priceText = '';
     let change24h = 0;
 
-    if (urlUsed.includes('google.com')) {
-      // Google Finance Extraction logic
-      priceText = $('.fxKbKc').first().text();
-      if (!priceText) priceText = $('[data-last-price]').first().attr('data-last-price');
-      if (!priceText) priceText = $('.q7vM6c .fxKbKc').text() || $('.YMlSbe.fxKbKc').text();
+    if (urlUsed.includes('yahoo.com')) {
+      // Institutional Yahoo Extraction Pattern
+      priceText = $('fin-streamer[data-field="regularMarketPrice"]').first().attr('value') 
+               || $('fin-streamer[data-field="regularMarketPrice"]').first().text()
+               || $('.livePrice').first().text();
       
-      let changeText = $('.Jw797b').first().text() || $('.EnC39d').first().text() || $('.VfPpkd-vQzf8d').text();
-      if (changeText) {
-        const match = changeText.match(/([+-]?\d+\.?\d*)%/);
-        if (match) change24h = parseFloat(match[1]);
+      let changeVal = $('fin-streamer[data-field="regularMarketChangePercent"]').first().attr('value')
+                   || $('fin-streamer[data-field="regularMarketChangePercent"]').first().text();
+      if (changeVal) {
+          change24h = parseFloat(changeVal.toString().replace(/[()%]/g, ''));
       }
-    } else if (urlUsed.includes('yahoo.com')) {
-      // Yahoo Finance Extraction logic (High-fidelity fallback)
-      priceText = $('[data-test="qsp-price"]').text() || $('fin-streamer[data-field="regularMarketPrice"]').first().text();
-      let changeText = $('fin-streamer[data-field="regularMarketChangePercent"]').first().text();
+    } else if (urlUsed.includes('google.com')) {
+      priceText = $('.fxKbKc').first().text() || $('.YMlSbe.fxKbKc').first().text();
+      let changeText = $('.Jw797b').first().text() || $('.EnC39d').first().text();
       if (changeText) {
         const match = changeText.match(/([+-]?\d+\.?\d*)%/);
         if (match) change24h = parseFloat(match[1]);

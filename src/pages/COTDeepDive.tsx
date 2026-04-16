@@ -153,7 +153,6 @@ const COTDeepDive: React.FC = () => {
                 <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: '1.5' }}>Our 0-100% dial calculates the extremity of COT positioning. Anything above 75% indicates a trade that institutional traders are currently betting heavily on. We follow the size.</p>
               </div>
           </div>
-         </div>
       </div>
     </div>
   );

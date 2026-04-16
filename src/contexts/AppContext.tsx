@@ -145,39 +145,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) {}
       }
 
-      // 2. Forex logic...
-      const forexAssets = assets.filter((a) => a.avFrom && a.avTo);
-      for (const a of forexAssets) {
-        try {
-          const rate = await fetchForexRate(a.avFrom!, a.avTo!, apiKeys.alphaVantage);
-          const history = await fetchForexHistory(a.avFrom!, a.avTo!).catch(() => generateNeuralSparkline(a.trend, a.score, a.basePrice));
-          
-          let change24h = 0;
-          if (history.length >= 2) {
-            const last = history[history.length - 1].value;
-            const prev = history[history.length - 2].value;
-            change24h = ((last - prev) / prev) * 100;
-          }
-          
-          const updatedAsset = { price: rate.rate, change24h, history, currency: a.avTo, lastUpdated: Date.now() };
-          updates[a.id] = updatedAsset;
-          setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
-        } catch (e) {}
-      }
-
-      // 3. Stock/Index/Commodity logic (ReaperSnatcher Proxy - No Rate Limits)
-      const snatchAssets = assets.filter(a => (a.category === 'Indices' || a.category === 'Commodities') && !a.coingeckoId);
+      // 2 & 3. Institutional Priority Data (ReaperSnatcher Proxy - Fast & Reliable)
+      const primaryAssets = assets.filter(a => a.category !== 'Crypto');
       const SENTINEL_BOUNDS: Record<string, [number, number]> = {
         'GOLD': [2000, 6000], 'SILVER': [20, 150], 'USOIL': [50, 250], 'UKOIL': [50, 250],
         'DAX': [15000, 35000], 'SP500': [4000, 10000], 'NASDAQ': [15000, 35000], 
-        'US30': [30000, 60000], 'NIKKEI': [35000, 75000]
+        'US30': [30000, 60000], 'NIKKEI': [35000, 75000], 'EURUSD': [0.8, 1.5],
+        'GBPUSD': [0.9, 1.8], 'AUDUSD': [0.4, 1.0], 'USDJPY': [70, 200], 'USDCAD': [1.1, 1.6]
       };
 
-      for (const a of snatchAssets) {
+      for (const a of primaryAssets) {
         try {
+          // Attempt Snatcher first (Direct JSON Node)
           const quote = await fetchSnatcherQuote(a.id);
           
-          // THE SENTINEL: Direct Data Verification
           const bounds = SENTINEL_BOUNDS[a.id];
           if (bounds && (quote.price! < bounds[0] || quote.price! > bounds[1])) {
             throw new Error(`[Sentinel] Purged Ghost Tick: ${a.id} @ ${quote.price}`);
@@ -187,13 +168,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updates[a.id] = updatedAsset;
           setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
         } catch (e: any) {
-          // Fallback logic preserved...
-          if (a.ticker) {
+          // Stage 2: Secondary Node Fallback (AlphaVantage)
+          const ticker = a.ticker || (a.avFrom && a.avTo ? `${a.avFrom}${a.avTo}` : null);
+          if (ticker) {
             try {
-              const quote = await fetchStockQuote(a.ticker, apiKeys.alphaVantage);
-              const updatedResult = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
+              let result;
+              if (a.avFrom && a.avTo) {
+                 const rate = await fetchForexRate(a.avFrom, a.avTo, apiKeys.alphaVantage);
+                 result = { price: rate.rate, change24h: 0, lastUpdated: Date.now() };
+              } else {
+                 result = await fetchStockQuote(ticker, apiKeys.alphaVantage);
+              }
+              const updatedResult = { ...result, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
               setMarketData(prev => ({ ...prev, [a.id]: updatedResult }));
-              await new Promise(res => setTimeout(res, 12500)); // Stagger to respect free tier
+              await new Promise(res => setTimeout(res, 12500)); // Stagger fallback
             } catch (avError) {}
           }
         }

@@ -16,7 +16,12 @@ const TICKERS = {
   'UKOIL': 'BZ=F',
   'GOLD': 'GC=F',
   'SILVER': 'SI=F',
-  'COPPER': 'HG=F'
+  'COPPER': 'HG=F',
+  'EURUSD': 'EURUSD=X',
+  'GBPUSD': 'GBPUSD=X',
+  'AUDUSD': 'AUDUSD=X',
+  'USDJPY': 'USDJPY=X',
+  'USDCAD': 'USDCAD=X'
 };
 
 // 2026 Institutional Sentiment Baselines
@@ -30,7 +35,12 @@ const BASELINES = {
   'SP500': [4000, 12000],
   'NASDAQ': [15000, 40000],
   'DAX': [15000, 40000],
-  'NIKKEI': [35000, 85000]
+  'NIKKEI': [35000, 85000],
+  'EURUSD': [0.8, 1.5],
+  'GBPUSD': [0.9, 1.8],
+  'AUDUSD': [0.4, 1.0],
+  'USDJPY': [70, 200],
+  'USDCAD': [1.1, 1.6]
 };
 
 export default async function handler(req, res) {

@@ -21,7 +21,7 @@ const MobileNav: React.FC = () => {
         >
           <span className="hamburger-icon">☰</span>
         </button>
-        <div className="mobile-logo" style={{ position: 'relative', overflow: 'hidden' }}>
+        <div className="mobile-logo" style={{ position: 'relative', overflow: 'visible' }}>
           <span className="logo-icon">☠️</span>
           <span style={{
             background: 'linear-gradient(90deg, #fff 0%, #fff 45%, #6366f1 50%, #fff 55%, #fff 100%)',

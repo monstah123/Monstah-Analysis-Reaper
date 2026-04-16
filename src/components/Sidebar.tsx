@@ -44,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo" style={{ position: 'relative', overflow: 'hidden' }}>
+      <div className="sidebar-logo" style={{ position: 'relative', overflow: 'visible', paddingBottom: '0.5rem' }}>
         <span className="logo-icon">☠️</span>
         <span style={{
           background: 'linear-gradient(90deg, #fff 0%, #fff 45%, #6366f1 50%, #fff 55%, #fff 100%)',

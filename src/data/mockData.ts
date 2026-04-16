@@ -21,6 +21,7 @@ export interface AssetData {
   employmentChange: number;
   unemploymentRate: number;
   interestRates: number;
+  ticker?: string;
   basePrice?: number;
   cotLong?: number; // spec long (k)
   cotShort?: number; // spec short (k)
@@ -30,7 +31,7 @@ export interface AssetData {
 }
 
 export const mockAssets: AssetData[] = [
-  { id: 'US30', name: 'US30', category: 'Indices', bias: 'Neutral', score: 0, basePrice: 39500, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
+  { id: 'US30', name: 'US30', category: 'Indices', ticker: 'DIA', bias: 'Neutral', score: 0, basePrice: 39500, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'DAX', name: 'DAX', category: 'Indices', bias: 'Neutral', score: 0, basePrice: 18200, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'NIKKEI', name: 'NIKKEI', category: 'Indices', bias: 'Neutral', score: 0, basePrice: 40100, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'GOLD', name: 'GOLD', category: 'Commodities', bias: 'Neutral', score: 0, basePrice: 2350, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
@@ -49,9 +50,9 @@ export const mockAssets: AssetData[] = [
   { id: 'EURUSD', name: 'EUR/USD', category: 'Forex', avFrom: 'EUR', avTo: 'USD', bias: 'Neutral', score: 0, basePrice: 1.1586, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'AUDUSD', name: 'AUD/USD', category: 'Forex', avFrom: 'AUD', avTo: 'USD', bias: 'Neutral', score: 0, basePrice: 0.6550, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'USDJPY', name: 'USD/JPY', category: 'Forex', avFrom: 'USD', avTo: 'JPY', bias: 'Neutral', score: 0, basePrice: 153.20, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
-  { id: 'SP500', name: 'S&P 500', category: 'Indices', bias: 'Neutral', score: 0, basePrice: 5200, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
+  { id: 'SP500', name: 'S&P 500', category: 'Indices', ticker: 'SPY', bias: 'Neutral', score: 0, basePrice: 5200, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
   { id: 'NZDUSD', name: 'NZD/USD', category: 'Forex', avFrom: 'NZD', avTo: 'USD', bias: 'Neutral', score: 0, basePrice: 0.5950, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0, cotLong: 0, cotShort: 0, retailLong: 50, retailShort: 50 },
-  { id: 'NASDAQ', name: 'NASDAQ', category: 'Indices', bias: 'Neutral', score: 0, basePrice: 17900, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0 },
+  { id: 'NASDAQ', name: 'NASDAQ', category: 'Indices', ticker: 'QQQ', bias: 'Neutral', score: 0, basePrice: 17900, cot: 0, retailPos: 0, seasonality: 0, trend: 0, gdp: 0, mPMI: 0, sPMI: 0, retailSales: 0, inflation: 0, employmentChange: 0, unemploymentRate: 0, interestRates: 0 },
 ];
 
 

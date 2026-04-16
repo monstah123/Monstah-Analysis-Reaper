@@ -104,3 +104,19 @@ export async function fetchNewsSentiment(apiKey: string, limit = 20): Promise<Ne
     };
   });
 }
+
+/** Fetch live stock/index quote via Alpha Vantage */
+export async function fetchStockQuote(symbol: string, apiKey: string): Promise<AssetMarketData> {
+  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Stock Quote error ${res.status}`);
+  const json = await res.json();
+  const quote = json['Global Quote'];
+  if (!quote) throw new Error('No data found for symbol ' + symbol);
+
+  return {
+    price: parseFloat(quote['05. price']),
+    change24h: parseFloat(quote['10. change percent'].replace('%', '')),
+    lastUpdated: Date.now()
+  };
+}

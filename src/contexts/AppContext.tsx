@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import type { AssetData } from '../data/mockData';
 import { mockAssets, generateMockSparkline } from '../data/mockData';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
-import { fetchForexRate, fetchForexHistory } from '../services/alphaVantage';
+import { fetchForexRate, fetchForexHistory, fetchStockQuote } from '../services/alphaVantage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface ApiKeys {
@@ -141,7 +141,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) {}
       }
 
-      // 3. US Macro Scores...
+      // 3. Stock/Index logic (Live Tickers)
+      const stockAssets = assets.filter(a => a.ticker);
+      for (const a of stockAssets) {
+        try {
+          const quote = await fetchStockQuote(a.ticker!, apiKeys.alphaVantage);
+          updates[a.id] = { ...quote, history: generateMockSparkline(a.trend, a.score, a.basePrice) };
+        } catch (e) {}
+      }
+
+      // 4. US Macro Scores...
       let scores = { gdp: 0, inflation: 0, interestRates: 0, employmentChange: 0, unemploymentRate: 0 };
       
       // --- 4. Official Institutional, Retail & Macro Neural Sync (Total Parity) ---

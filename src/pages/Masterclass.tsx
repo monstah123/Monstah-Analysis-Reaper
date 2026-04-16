@@ -1,33 +1,83 @@
-import React, { useState } from 'react';
-import { useApp } from '../contexts/AppContext';
-
 const TrainingModules = [
   {
     id: 'sentiment',
     title: '🧠 Module 1: Institutional Sentiment Matrix',
     subtitle: 'Hunting the Herd vs the Smart Money',
-    description: `The Matrix is your primary weapon. It tracks the net positioning of retail traders (the Herd) against the banks. 
-
-Key Principle: High-probability trades happen when the Herd is trapped in one direction while Institutional Bias (COT) is pushing the other way. Look for "Bullish Overflow" where retail is net-short, or "Bearish Extreme" where retail is net-long.`,
-    image: '/masterclass/sentiment_masterclass_illustration_1776334754314.png'
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+          <div className="settings-card" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <h4 style={{ color: '#f87171', fontSize: '0.8rem', marginBottom: '0.5rem' }}>THE RETAIL HERD</h4>
+            <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Driven by FOMO and emotion. They consistently enter late and exit early. We identify where they are "trapped."</p>
+          </div>
+          <div className="settings-card" style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+            <h4 style={{ color: '#4ade80', fontSize: '0.8rem', marginBottom: '0.5rem' }}>THE INSTITUTIONS</h4>
+            <p style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Banks and Hedge Funds. They move the market with massive volume. We track their footprints via the Score Matrix.</p>
+          </div>
+        </div>
+        
+        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#6366f1' }}>The "Golden Cross" Rule</h3>
+           <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+             The highest probability setups occur when <strong>Retail Sentiment is at an extreme (>75%)</strong> while the <strong>Institutional Score is pushing in the opposite direction</strong>.
+             <br /><br />
+             Example: EUR/USD retail is 80% Long (Herding) + Institutional score is -5 (Banks Selling) = <strong>REAPER SHORT MISSION.</strong>
+           </p>
+        </div>
+      </div>
+    )
   },
   {
     id: 'macro',
     title: '🏦 Module 2: The Macro-Economic Pulse',
-    subtitle: 'Understanding the Global Engine',
-    description: `Macro data tells you *why* a pair is moving. We track the "Big Five": GDP, CPI (Inflation), Jobs (NFP), Interest Rates, and PMI Pulse.
-
-Execution: A strong currency requires an expanding GDP, low unemployment, and rising (but controlled) interest rates. When Macro and Sentiment align, the edge is massive.`,
-    image: '/masterclass/macro_masterclass_illustration_1776334776226.png'
+    subtitle: 'Decoding Global Money Flow',
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+          {[
+            { label: 'GDP (Growth)', desc: 'Is the economy expanding or contracting?', icon: '📉' },
+            { label: 'CPI (Inflation)', desc: 'Is purchasing power decreasing? (High CPI = Rate Hikes)', icon: '💸' },
+            { label: 'Fed Rates', desc: 'The price of money. Higher rates = Stronger currency.', icon: '🏦' },
+            { label: 'NFP (Jobs)', desc: 'The health of the consumer. High jobs = Bullish pressure.', icon: '👷' }
+          ].map(m => (
+            <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+              <span style={{ fontSize: '1.5rem' }}>{m.icon}</span>
+              <div>
+                 <strong style={{ fontSize: '0.9rem', color: '#fff' }}>{m.label}</strong>
+                 <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>{m.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   },
   {
     id: 'cot',
     title: '🏛️ Module 3: COT Deep-Dive Mechanics',
-    subtitle: 'Tracking Large Institutional Footprints',
-    description: `The Commitment of Traders (COT) report shows us exactly where the Commercial Hedgers and Large Speculators are positioned.
+    subtitle: 'Institutional Positioning Analysis',
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#6366f1' }}>Smart Money vs Commercials</h3>
+           <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>
+             The **Commitment of Traders (COT)** report is a weekly heartbeat of the biggest players. 
+             We look at the net positioning of "Non-Commercials" (Hedge Funds).
+           </p>
+        </div>
 
-Alpha Zone: We hunt for "Institutional Divergence"—where price is dropping but the banks are buying (Accumulation), or price is rising while Banks are selling (Distribution).`,
-    image: '/masterclass/cot_masterclass_illustration_1776334815357.png'
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+           <div className="settings-card" style={{ gap: '0.5rem' }}>
+              <h4 style={{ fontSize: '0.75rem', color: '#3b82f6', margin: 0 }}>ACCUMULATION</h4>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Institutions are building long positions while price is at a low. (Bullish)</p>
+           </div>
+           <div className="settings-card" style={{ gap: '0.5rem' }}>
+              <h4 style={{ fontSize: '0.75rem', color: '#ef4444', margin: 0 }}>DISTRIBUTION</h4>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Institutions are offloading long positions or building shorts at a high. (Bearish)</p>
+           </div>
+        </div>
+      </div>
+    )
   }
 ];
 
@@ -66,33 +116,24 @@ const Masterclass: React.FC = () => {
           ))}
           
           <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-             <h4 style={{ fontSize: '0.8rem', color: '#6366f1', marginBottom: '0.5rem' }}>🚨 PRO TIP</h4>
-             <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6 }}>Always start your analysis with the <strong>Sentiment Matrix</strong>. If the Herd is net-long on a pair, your Reaper mission is usually to find a Short entry.</p>
+             <h4 style={{ fontSize: '0.8rem', color: '#6366f1', marginBottom: '0.5rem' }}>🚨 REAPER PROTOCOL</h4>
+             <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6 }}>Always verify the <strong>Full Matrix</strong> (Sentiment + Macro + COT) before entering a trade. Conviction comes from confluence.</p>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="settings-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="settings-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)' }}>
            <div>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem' }}>{TrainingModules[activeModule].title}</h2>
-              <p style={{ fontSize: '1.1rem', color: '#6366f1', fontWeight: 700 }}>{TrainingModules[activeModule].subtitle}</p>
+              <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Institutional Training • v13.2</div>
+              <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem', color: '#fff' }}>{TrainingModules[activeModule].title}</h2>
+              <p style={{ fontSize: '1.1rem', color: '#94a3b8', fontWeight: 600 }}>{TrainingModules[activeModule].subtitle}</p>
            </div>
 
-           <div style={{ width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-              <img 
-                src={TrainingModules[activeModule].image} 
-                alt={TrainingModules[activeModule].title}
-                style={{ width: '100%', height: 'auto', display: 'block' }}
-              />
+           <div style={{ flex: 1 }}>
+              {TrainingModules[activeModule].content}
            </div>
 
-           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #6366f1' }}>
-              <p style={{ fontSize: '1rem', lineHeight: 1.8, color: '#e2e8f0', whiteSpace: 'pre-wrap' }}>
-                {TrainingModules[activeModule].description}
-              </p>
-           </div>
-
-           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <button 
                 className="btn btn-secondary" 
                 disabled={activeModule === 0}
@@ -104,13 +145,14 @@ const Masterclass: React.FC = () => {
                 <button 
                   className="btn btn-primary" 
                   onClick={() => setActiveModule(prev => prev + 1)}
+                  style={{ minWidth: '150px' }}
                 >
-                  Next Module →
+                  Continue →
                 </button>
               ) : (
                 <button 
                   className="btn btn-primary" 
-                  style={{ background: '#22c55e' }}
+                  style={{ background: '#22c55e', minWidth: '150px' }}
                   onClick={() => setActiveView('dashboard')}
                 >
                   GO HUNTING 🔪

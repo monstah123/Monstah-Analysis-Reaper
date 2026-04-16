@@ -41,15 +41,19 @@ const ReaperRulebook: React.FC = () => {
             bottom: '7rem',
             right: '2rem',
             width: '380px',
+            maxWidth: 'calc(100vw - 4rem)',
             background: 'rgba(15, 23, 42, 0.95)',
-            backdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(20px)',
             border: '1px solid rgba(99, 102, 241, 0.3)',
-            borderRadius: '20px',
+            borderRadius: '24px',
             padding: '2rem',
             zIndex: 1001,
-            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-            animation: 'slideUp 0.3s ease-out'
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            maxHeight: '70vh',
+            overflowY: 'auto'
           }}
+          className="rulebook-modal"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
              <div>
@@ -103,6 +107,15 @@ const ReaperRulebook: React.FC = () => {
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(20px) scale(0.95); }
           to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (max-width: 600px) {
+          .rulebook-modal {
+            right: 1rem !important;
+            bottom: 6rem !important;
+            width: calc(100vw - 2rem) !important;
+            max-width: none !important;
+            padding: 1.5rem !important;
+          }
         }
       `}</style>
     </>

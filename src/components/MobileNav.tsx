@@ -21,9 +21,27 @@ const MobileNav: React.FC = () => {
         >
           <span className="hamburger-icon">☰</span>
         </button>
-        <div className="mobile-logo">
+        <div className="mobile-logo" style={{ position: 'relative', overflow: 'hidden' }}>
           <span className="logo-icon">☠️</span>
-          <span>Monstah <span>Reaper</span></span>
+          <span style={{
+            background: 'linear-gradient(90deg, #fff 0%, #fff 45%, #6366f1 50%, #fff 55%, #fff 100%)',
+            backgroundSize: '250% 100%',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            animation: 'logoSweep 4s ease-in-out infinite',
+            fontWeight: 900,
+            display: 'flex',
+            gap: '0.3rem'
+          }}>
+            Monstah <span style={{ color: 'inherit' }}>Reaper</span>
+          </span>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes logoSweep {
+              0% { background-position: 100% 0; }
+              50% { background-position: 0% 0; }
+              100% { background-position: 100% 0; }
+            }
+          `}} />
         </div>
         <div style={{ width: '40px' }} /> {/* Spacer to balance the header */}
       </div>

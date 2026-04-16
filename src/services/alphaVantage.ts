@@ -106,7 +106,7 @@ export async function fetchNewsSentiment(apiKey: string, limit = 20): Promise<Ne
 }
 
 /** Fetch live stock/index quote via Alpha Vantage */
-export async function fetchStockQuote(symbol: string, apiKey: string): Promise<AssetMarketData> {
+export async function fetchStockQuote(symbol: string, apiKey: string): Promise<{ price: number; change24h: number; lastUpdated: number }> {
   const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Stock Quote error ${res.status}`);

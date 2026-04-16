@@ -120,3 +120,13 @@ export async function fetchStockQuote(symbol: string, apiKey: string): Promise<{
     lastUpdated: Date.now()
   };
 }
+
+/** Institutional ReaperSnatcher: Snatches live ticks directly from financial nodes (No Rate Limits) */
+export async function fetchSnatcherQuote(symbol: string): Promise<{ price: number; change24h: number; lastUpdated: number }> {
+  const res = await fetch(`/api/snatcher?symbol=${symbol}`);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Snatcher Failed');
+  }
+  return res.json();
+}

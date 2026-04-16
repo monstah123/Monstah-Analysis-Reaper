@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import type { AssetData } from '../data/mockData';
 import { TERMINAL_ASSETS, generateNeuralSparkline } from '../data/mockData';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
-import { fetchForexRate, fetchForexHistory, fetchStockQuote } from '../services/alphaVantage';
+import { fetchForexRate, fetchForexHistory, fetchStockQuote, fetchSnatcherQuote } from '../services/alphaVantage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface ApiKeys {
@@ -146,19 +146,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) {}
       }
 
-      // 3. Stock/Index logic (Sequential Institutional Dispatch - stays under 5req/min)
-      const stockAssets = assets.filter(a => a.ticker);
-      for (let i = 0; i < stockAssets.length; i++) {
-        const a = stockAssets[i];
+      // 3. Stock/Index/Commodity logic (ReaperSnatcher Proxy - No Rate Limits)
+      const snatchAssets = assets.filter(a => (a.category === 'Indices' || a.category === 'Commodities') && !a.coingeckoId);
+      for (const a of snatchAssets) {
         try {
-          const quote = await fetchStockQuote(a.ticker!, apiKeys.alphaVantage);
+          const quote = await fetchSnatcherQuote(a.id);
           const updatedAsset = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
           updates[a.id] = updatedAsset;
           setMarketData(prev => ({ ...prev, [a.id]: updatedAsset }));
-          // Stagger to respect free tier (5req/min)
-          if (i < stockAssets.length - 1) await new Promise(res => setTimeout(res, 12500));
         } catch (e: any) {
-          console.warn(`[Refresher] Failed to fetch ${a.id}, retaining previous state. Error:`, e.message);
+          // If Snatcher fails, try AlphaVantage Ticker (if available)
+          if (a.ticker) {
+            try {
+              const quote = await fetchStockQuote(a.ticker, apiKeys.alphaVantage);
+              const updatedResult = { ...quote, history: generateNeuralSparkline(a.trend, a.score, a.basePrice) };
+              setMarketData(prev => ({ ...prev, [a.id]: updatedResult }));
+              await new Promise(res => setTimeout(res, 12500)); // Stagger to respect free tier
+            } catch (avError) {}
+          }
         }
       }
 

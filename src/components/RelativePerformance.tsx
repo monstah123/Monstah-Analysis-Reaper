@@ -33,36 +33,38 @@ const RelativePerformance: React.FC = () => {
       border: '1px solid #1e2d48',
       padding: '1.5rem',
       borderRadius: '8px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
     }}>
       <h3 style={{ 
-        fontSize: '1rem', 
+        fontSize: '0.85rem', 
         fontWeight: 800, 
-        marginBottom: '2rem', 
-        color: '#f8fafc', 
+        marginBottom: '1rem', 
+        color: '#94a3b8', 
         textAlign: 'center', 
-        letterSpacing: '0.1em',
+        letterSpacing: '0.15em',
         textTransform: 'uppercase'
       }}>
-        1 DAY RELATIVE PERFORMANCE [USD]
+        1-Day Relative Performance [USD]
       </h3>
 
       <div style={{ 
+        height: '220px', 
         display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'flex-end', 
-        height: '160px', 
-        padding: '0 1rem', 
-        paddingBottom: '2.5rem', 
+        alignItems: 'center', // Center labels vertically
+        justifyContent: 'space-between',
+        padding: '0 10px',
         position: 'relative',
         gap: '4px'
       }}>
+        {/* Zero-Line baseline */}
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.1)', zIndex: 1 }} />
+
         {performance.map((p) => {
           const isPositive = p.change >= 0;
           const isZero = p.symbol === 'USD';
           
-          // Scale height: let's say 1% = 80px
-          const barHeight = Math.min(Math.abs(p.change) * 80, 120);
+          // Max bar height is 100px (half of container)
+          const barHeight = Math.min(Math.abs(p.change) * 200, 95);
           
           return (
             <div key={p.symbol} style={{ 
@@ -71,52 +73,82 @@ const RelativePerformance: React.FC = () => {
               alignItems: 'center', 
               flex: 1, 
               position: 'relative',
-              animation: `fadeInUp 0.6s ease-out forwards`
+              height: '100%',
+              animation: `fadeInUp 0.6s ease-out forwards`,
+              zIndex: 2
             }}>
+              {/* Positive Bar (Grows UP) */}
               <div style={{ 
-                fontSize: '11px', 
-                fontWeight: 800, 
-                marginBottom: '8px', 
-                color: isZero ? '#94a3b8' : (isPositive ? '#22c55e' : '#ef4444') 
+                flex: 1, 
+                width: '100%', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'flex-end',
+                paddingBottom: '2px'
               }}>
-                {isZero ? '—' : `${p.change > 0 ? '' : ''}${p.change.toFixed(2)}%`}
+                {isPositive && !isZero && (
+                  <>
+                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#22c55e', textAlign: 'center', marginBottom: '4px' }}>
+                      {p.change.toFixed(2)}%
+                    </div>
+                    <div style={{ 
+                      width: '100%', 
+                      height: `${Math.max(2, barHeight)}px`, 
+                      background: 'rgba(34, 197, 94, 0.4)',
+                      borderTop: '3px solid #22c55e',
+                      borderRadius: '2px 2px 0 0'
+                    }} />
+                  </>
+                )}
               </div>
 
+              {/* Symbol Label (Centered) */}
               <div style={{ 
-                width: '100%', 
-                height: `${isZero ? 4 : Math.max(2, barHeight)}px`, 
-                background: isZero ? '#3b82f6' : (isPositive ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'),
-                borderTop: isPositive && !isZero ? '3px solid #22c55e' : 'none',
-                borderBottom: !isPositive && !isZero ? '3px solid #ef4444' : 'none',
-                boxShadow: isZero ? '0 0 10px rgba(59, 130, 246, 0.3)' : 'none',
-                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-              }} />
-
-              <div style={{ 
-                position: 'absolute', 
-                bottom: '-30px', 
-                width: '100%', 
-                padding: '6px 0',
-                background: isZero ? '#334155' : (isPositive ? '#22c55e' : '#ef4444'),
+                padding: '4px 0',
+                width: '100%',
+                background: isZero ? '#3b82f6' : (isPositive ? '#22c55e' : '#ef4444'),
                 color: 'white',
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 900,
                 textAlign: 'center',
-                borderRadius: '4px',
-                boxShadow: isZero ? 'none' : `0 4px 10px ${isPositive ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
+                borderRadius: '3px',
+                margin: '2px 0',
+                zIndex: 3,
+                boxShadow: isZero ? '0 0 10px rgba(59,130,246,0.3)' : 'none'
               }}>
                 {p.symbol}
+              </div>
+
+              {/* Negative Bar (Grows DOWN) */}
+              <div style={{ 
+                flex: 1, 
+                width: '100%', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'flex-start',
+                paddingTop: '2px'
+              }}>
+                {!isPositive && !isZero && (
+                  <>
+                     <div style={{ 
+                        width: '100%', 
+                        height: `${Math.max(2, barHeight)}px`, 
+                        background: 'rgba(239, 68, 68, 0.4)',
+                        borderBottom: '3px solid #ef4444',
+                        borderRadius: '0 0 2px 2px'
+                      }} />
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#ef4444', textAlign: 'center', marginTop: '4px' }}>
+                        {p.change.toFixed(2)}%
+                      </div>
+                  </>
+                )}
+                {isZero && (
+                   <div style={{ width: '100%', height: '4px', background: '#3b82f6', opacity: 0.5, marginTop: '2px' }} />
+                )}
               </div>
             </div>
           );
         })}
-
-        {/* Horizontal grid lines */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', opacity: 0.05 }}>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={{ borderTop: i % 2 === 0 ? '1px solid white' : '1px dashed white', width: '100%' }} />
-          ))}
-        </div>
       </div>
     </div>
   );

@@ -84,11 +84,7 @@ const Sentiment: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1>📡 Sentiment Analysis</h1>
             {dataSyncStatus.institutional && (
-               <div style={{ 
-                 padding: '4px 8px', borderRadius: '4px', background: 'rgba(34, 197, 94, 0.1)', 
-                 border: '1px solid rgba(34, 197, 94, 0.3)', color: '#4ade80', fontSize: '10px', fontWeight: 900,
-                 textTransform: 'uppercase', letterSpacing: '0.05em'
-               }}>
+               <div className="verified-badge">
                  ✓ Verified Live Institutional Feed
                </div>
              )}

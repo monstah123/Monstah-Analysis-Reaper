@@ -49,11 +49,7 @@ const YieldSpreads: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1>🏛️ Recession Monitor: Yield Curve</h1>
             {dataSyncStatus.yields && (
-               <div style={{ 
-                 padding: '4px 8px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', 
-                 border: '1px solid rgba(59, 130, 246, 0.3)', color: '#60a5fa', fontSize: '10px', fontWeight: 900,
-                 textTransform: 'uppercase', letterSpacing: '0.05em'
-               }}>
+               <div className="verified-badge" style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#60a5fa' }}>
                  ✓ Verified Live Treasury Feed
                </div>
              )}

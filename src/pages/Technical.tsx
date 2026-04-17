@@ -17,11 +17,7 @@ const Technical: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1>📈 Technical & Institutional Flow</h1>
             {dataSyncStatus.institutional && (
-               <div style={{ 
-                 padding: '4px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.1)', 
-                 border: '1px solid rgba(99, 102, 241, 0.3)', color: '#818cf8', fontSize: '10px', fontWeight: 900,
-                 textTransform: 'uppercase', letterSpacing: '0.05em'
-               }}>
+               <div className="verified-badge" style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#818cf8' }}>
                  ✓ Verified Live Institutional Sync
                </div>
              )}
@@ -111,7 +107,7 @@ const Technical: React.FC = () => {
         <p className="settings-hint">Live detection of high-probability confluence zones across the active matrix.</p>
         
         <div className="table-container" style={{ marginTop: '1.25rem' }}>
-          <div className="table-scroll">
+          <div className="table-container">
             <table style={{ minWidth: '100%' }}>
               <thead>
                 <tr>

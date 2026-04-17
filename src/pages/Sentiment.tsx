@@ -112,7 +112,7 @@ const Sentiment: React.FC = () => {
         {cotChartData.length > 0 ? (
           <div style={{ width: '100%', marginTop: '20px', overflowX: 'auto', minHeight: '300px' }}>
                 <BarChart 
-                  width={chartWidth} 
+                  width={800} 
                   height={Math.max(100, cotChartData.length * 45 + 50)}
                   data={cotChartData} 
                   layout="vertical" 
@@ -191,7 +191,10 @@ const Sentiment: React.FC = () => {
           maxHeight: '600px',
           overflowY: 'auto'
         }}>
-          <MyfxbookWidget />
+          {/* <MyfxbookWidget /> */}
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#4a5775', border: '1px dashed #1e2d48', borderRadius: '8px' }}>
+            Myfxbook Live Feed temporarily offline for isolation testing...
+          </div>
         </div>
         <div style={{ marginTop: '10px', fontSize: '10px', opacity: 0.6 }}>
           <a href="https://www.myfxbook.com" className="myfxbookLink" target="_blank" rel="noopener noreferrer">

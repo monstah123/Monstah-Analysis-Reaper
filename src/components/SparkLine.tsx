@@ -7,6 +7,9 @@ interface SparkLineProps {
   height?: number;
 }
 
+const sparkTooltipFormatter = (v: any) => [v.toFixed(4), 'Price'];
+const sparkLabelFormatter = (l: any) => l;
+
 const SparkLine: React.FC<SparkLineProps> = ({ data, positive = true, height = 60 }) => {
   const color = positive ? '#3b82f6' : '#ef4444';
 
@@ -22,8 +25,8 @@ const SparkLine: React.FC<SparkLineProps> = ({ data, positive = true, height = 6
         <YAxis domain={['auto', 'auto']} hide />
         <Tooltip
           contentStyle={{ background: '#0f1623', border: '1px solid #1e2d48', borderRadius: 6, fontSize: 11 }}
-          formatter={(v: any) => [v.toFixed(4), 'Price']}
-          labelFormatter={(l) => l}
+          formatter={sparkTooltipFormatter}
+          labelFormatter={sparkLabelFormatter}
           isAnimationActive={false}
         />
         <Area

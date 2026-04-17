@@ -63,7 +63,7 @@ const Fundamental: React.FC = () => {
             <div key={p.label} className="stat-card" style={{ border: '1px solid #1e2d48', background: 'rgba(15,22,35,0.4)', transition: 'all 0.3s ease' }}>
               <div className="stat-icon">{p.icon}</div>
               <div className="stat-body">
-                <span className="stat-label" style={{ opacity: 0.6 }}>{p.label}</span>
+                <span className="stat-label">{p.label}</span>
                 <span className="stat-value" style={{ color: p.val === null ? '#3f3f46' : status.color }}>
                   {p.val === null ? 'SYNC...' : `${p.val}${p.unit}`}
                 </span>

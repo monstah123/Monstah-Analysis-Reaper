@@ -98,7 +98,7 @@ button { cursor: pointer; font-family: inherit; }
 .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card), var(--shadow-glow); border-color: var(--border-light); }
 .stat-icon { font-size: 1.5rem; line-height: 1; margin-top: 0.1rem; }
 .stat-body { display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; }
-.stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); opacity: 0.9; }
 .stat-value { font-size: 1.375rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-heading); line-height: 1.2; }
 .stat-sub { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 

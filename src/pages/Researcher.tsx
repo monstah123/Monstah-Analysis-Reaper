@@ -33,6 +33,7 @@ export default function Researcher() {
   const [report, setReport] = useState<{ answer: string; sources: Source[] } | null>(null);
   const [activeChannel, setActiveChannel] = useState('bloomberg');
   const hlsRef = useRef<any>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const channels = {
     bloomberg: "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8",

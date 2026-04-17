@@ -32,13 +32,15 @@ export default function Researcher() {
   const [status, setStatus] = useState('');
   const [report, setReport] = useState<{ answer: string; sources: Source[] } | null>(null);
   const [activeChannel, setActiveChannel] = useState('bloomberg');
+  const [customInput, setCustomInput] = useState('');
   const hlsRef = useRef<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const channels = {
     bloomberg: "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8",
+    finance: "https://yahoofinance-1-us.samsung.wurl.com/playlist.m3u8",
     fox: "https://fox-foxbusiness-1-us.rokuchannel.wurl.com/playlist.m3u8",
-    custom: "https://example-cdn/hls/foxbusiness/index.m3u8"
+    custom: customInput
   };
 
   useEffect(() => {
@@ -198,7 +200,7 @@ export default function Researcher() {
                 <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• ACTIVE</span></h3>
               </div>
               <div className="channel-selector" style={{ display: 'flex', gap: '0.5rem' }}>
-                {Object.keys(channels).map((ch) => (
+                {['bloomberg', 'finance', 'fox', 'custom'].map((ch) => (
                   <button 
                     key={ch}
                     onClick={() => setActiveChannel(ch)}
@@ -206,20 +208,42 @@ export default function Researcher() {
                       background: activeChannel === ch ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                       border: `1px solid ${activeChannel === ch ? '#3b82f6' : 'rgba(255, 255, 255, 0.1)'}`,
                       color: activeChannel === ch ? '#3b82f6' : '#94a3b8',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      fontSize: '0.7rem',
+                      padding: '4px 12px',
+                      borderRadius: '8px',
+                      fontSize: '0.75rem',
                       fontWeight: 900,
                       textTransform: 'uppercase',
                       cursor: 'pointer',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.2s',
+                      letterSpacing: '0.05em'
                     }}
                   >
-                    {ch}
+                    {ch === 'finance' ? 'YAHOO' : ch}
                   </button>
                 ))}
               </div>
             </div>
+
+            {activeChannel === 'custom' && (
+              <div className="custom-stream-input" style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+                <input 
+                  type="text" 
+                  placeholder="Paste institutional HLS link (.m3u8)..."
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    color: 'white',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.8rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+            )}
             <div className="video-wrapper" style={{ 
               position: 'relative', 
               paddingBottom: '56.25%', 

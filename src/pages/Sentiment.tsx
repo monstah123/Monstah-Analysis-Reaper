@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
-import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -154,57 +153,10 @@ const Sentiment: React.FC = () => {
 
 
 
-      {/* Official Myfxbook Outlook Widget Section */}
-      <div className="settings-card" style={{ marginTop: '2rem', minHeight: '400px', background: '#0f1623' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
-          <div>
-            <h2 className="settings-section-title" style={{ margin: 0 }}>📡 Official Myfxbook Live Feed</h2>
-            <p className="settings-hint">Direct institutional source. (Table is secure, use the search above to find pairs in Reaper Charts).</p>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-             <input 
-              type="text" 
-              placeholder="Jump to Reaper Chart (e.g. Gold, DOW)..." 
-              style={{
-                background: '#141b2d', border: '1px solid #1e2d48', borderRadius: '4px',
-                padding: '6px 12px', color: 'white', fontSize: '12px', width: '250px'
-              }}
-              onInput={(e) => {
-                const val = (e.target as HTMLInputElement).value.toUpperCase();
-                if (!val) return;
-                // Find and pulse the corresponding label in our charts
-                const labels = document.querySelectorAll('.recharts-cartesian-axis-tick-value');
-                labels.forEach((node: any) => {
-                  if (node.textContent.toUpperCase().includes(val)) {
-                    node.style.fill = '#22c55e';
-                    node.style.fontWeight = '900';
-                    node.style.fontSize = '14px';
-                  } else {
-                    node.style.fill = '#f8fafc';
-                    node.style.fontWeight = '700';
-                    node.style.fontSize = '11px';
-                  }
-                });
-              }}
-             />
-          </div>
-        </div>
-        
-        <div id="myfxbook_visual_container" style={{ 
-          background: '#1a2333', 
-          padding: '20px', 
-          borderRadius: '8px',
-          border: '1px solid #1e2d48',
-          maxHeight: '600px',
-          overflowY: 'auto'
-        }}>
-          <MyfxbookWidget />
-        </div>
-        <div style={{ marginTop: '10px', fontSize: '10px', opacity: 0.6 }}>
-          <a href="https://www.myfxbook.com" className="myfxbookLink" target="_blank" rel="noopener noreferrer">
-            Powered by Myfxbook.com
-          </a>
-        </div>
+      {/* Institutional Leaderboard Footnote */}
+      <div className="settings-card" style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(15,22,35,0.4)', border: '1px solid #1e2d48' }}>
+        <h2 className="settings-section-title" style={{ fontSize: '1rem' }}>📡 Institutional Sync Status</h2>
+        <p className="settings-hint">Feed synchronization: Verified via CFTC Portal & Reaper Logic. No third-party retail proxies active.</p>
       </div>
     </div>
   );

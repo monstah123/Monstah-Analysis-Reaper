@@ -117,8 +117,9 @@ const Technical: React.FC = () => {
                   
                   let signalType = 'SIDEWAYS CHOP';
                   let zone = 'Equilibrium';
-                  let accuracy = 62 + (Math.abs(cotScore) * 2);
+                  let accuracy = 63 + (Math.abs(cotScore) * 5);
 
+                  // Institutional Sensitivity Tier (v29.1)
                   if (cotScore >= 10 && trend >= 1) {
                     signalType = 'BULLISH OVERFLOW';
                     zone = 'Institutional Imbalance';
@@ -127,6 +128,10 @@ const Technical: React.FC = () => {
                     signalType = 'ACCUMULATION ZONE';
                     zone = 'Smart Money Absorbing';
                     accuracy = 88;
+                  } else if (cotScore >= 2) {
+                    signalType = 'BULLISH CONGESTION';
+                    zone = 'Low Volume Accumulation';
+                    accuracy = 82;
                   } else if (cotScore <= -10 && trend <= -1) {
                     signalType = 'BEARISH EXTREME';
                     zone = 'Institutional Sell-Off';
@@ -135,6 +140,10 @@ const Technical: React.FC = () => {
                     signalType = 'DISTRIBUTION ZONE';
                     zone = 'Smart Money Offloading';
                     accuracy = 85;
+                  } else if (cotScore <= -2) {
+                    signalType = 'BEARISH PRESSURE';
+                    zone = 'Low Volume Distribution';
+                    accuracy = 81;
                   } else if (Math.abs(trend) >= 2) {
                     signalType = 'TREND CONTINUATION';
                     zone = 'Momentum Validation';
@@ -143,13 +152,13 @@ const Technical: React.FC = () => {
 
                   // Synergy Bonus
                   const hasSynergy = (cotScore > 0 && trend > 0) || (cotScore < 0 && trend < 0);
-                  if (hasSynergy && Math.abs(cotScore) >= 2) {
-                     signalType = 'CONFLUENCE BREAKOUT';
+                  if (hasSynergy && Math.abs(cotScore) >= 1) {
+                     signalType = (cotScore > 0) ? 'BULLISH CONFLUENCE' : 'BEARISH CONFLUENCE';
                      accuracy += 5;
                   }
 
-                  const isBull = signalType.includes('BULLISH') || signalType.includes('ACCUMULATION') || (signalType === 'CONFLUENCE BREAKOUT' && cotScore > 0);
-                  const isBear = signalType.includes('BEARISH') || signalType.includes('DISTRIBUTION') || (signalType === 'CONFLUENCE BREAKOUT' && cotScore < 0);
+                  const isBull = signalType.includes('BULLISH') || signalType.includes('ACCUMULATION') || signalType.includes('CONFLUENCE') && cotScore > 0;
+                  const isBear = signalType.includes('BEARISH') || signalType.includes('DISTRIBUTION') || signalType.includes('CONFLUENCE') && cotScore < 0;
                   const isNeutral = signalType === 'SIDEWAYS CHOP';
 
                   return (
@@ -163,7 +172,7 @@ const Technical: React.FC = () => {
                           color: isNeutral ? '#8b9ab8' : (isBull ? '#4ade80' : '#f87171'),
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          letterSpacing: '0.025em'
+                          letterSpacing: '0.04em'
                         }}>
                           {signalType}
                         </span>

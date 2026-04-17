@@ -26,7 +26,7 @@ const getTvSymbol = (id: string): string | null => {
     'AUDUSD': 'FX:AUDUSD',
     'USDJPY': 'FX:USDJPY',
     'NZDUSD': 'FX:NZDUSD',
-    'USDCAD': 'FX:USDCAD',
+    'USDCHF': 'FX:USDCHF',
     'BITCOIN': 'BINANCE:BTCUSDT',
     'ETHEREUM': 'BINANCE:ETHUSDT',
     'SOLANA': 'BINANCE:SOLUSDT',
@@ -41,7 +41,16 @@ const getTvSymbol = (id: string): string | null => {
     'SP500': 'TVC:SPX',
     'NASDAQ': 'TVC:NDX',
   };
-  return map[id] || null;
+
+  const manual = map[id];
+  if (manual) return manual;
+
+  // Fallback for Forex pairs (e.g. AUDNZD -> FX:AUDNZD)
+  if (id.length === 6 && !id.includes(' ')) {
+    return `FX:${id.toUpperCase()}`;
+  }
+
+  return null;
 };
 const AssetDrawer: React.FC = () => {
   const { selectedAsset, setSelectedAsset, marketData, setActiveView, setAiInsightAsset, isRefreshing, removeAsset } = useApp();

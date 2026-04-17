@@ -176,6 +176,11 @@
       flex: 1 1 calc(50% - 8px);
     }
 
+    .button-icon {
+      height: 18px;
+      width: 18px;
+    }
+
     a {
       width: 100%;
       justify-content: center;

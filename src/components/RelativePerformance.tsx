@@ -71,9 +71,7 @@ const RelativePerformance: React.FC = () => {
               alignItems: 'center', 
               flex: 1, 
               position: 'relative',
-              animation: `fadeInUp 0.5s ease forwards`,
-              animationDelay: `${i * 50}ms`,
-              opacity: 0
+              animation: `fadeInUp 0.6s ease-out forwards`
             }}>
               <div style={{ 
                 fontSize: '11px', 

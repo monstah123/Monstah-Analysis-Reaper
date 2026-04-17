@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -153,10 +154,13 @@ const Sentiment: React.FC = () => {
 
 
 
-      {/* Institutional Leaderboard Footnote */}
-      <div className="settings-card" style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(15,22,35,0.4)', border: '1px solid #1e2d48' }}>
-        <h2 className="settings-section-title" style={{ fontSize: '1rem' }}>📡 Institutional Sync Status</h2>
-        <p className="settings-hint">Feed synchronization: Verified via CFTC Portal & Reaper Logic. No third-party retail proxies active.</p>
+      {/* Official Myfxbook Outlook Widget Section */}
+      <div className="settings-card" style={{ marginTop: '2rem', minHeight: '600px', background: '#0f1623' }}>
+        <h2 className="settings-section-title">📡 Official Myfxbook Live Feed</h2>
+        <p className="settings-hint">Direct sentiment source. Institutional sync continues via Reaper logic above.</p>
+        <div style={{ marginTop: '1.5rem', background: '#141b2d', padding: '10px', borderRadius: '8px', border: '1px solid #1e2d48' }}>
+          <MyfxbookWidget />
+        </div>
       </div>
     </div>
   );

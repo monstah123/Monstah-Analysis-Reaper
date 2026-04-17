@@ -86,10 +86,11 @@ const RelativePerformance: React.FC = () => {
 
               <div style={{ 
                 width: '100%', 
-                height: `${isZero ? 2 : barHeight}px`, 
-                background: isZero ? '#334155' : (isPositive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'),
+                height: `${isZero ? 4 : Math.max(2, barHeight)}px`, 
+                background: isZero ? '#3b82f6' : (isPositive ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'),
                 borderTop: isPositive && !isZero ? '3px solid #22c55e' : 'none',
                 borderBottom: !isPositive && !isZero ? '3px solid #ef4444' : 'none',
+                boxShadow: isZero ? '0 0 10px rgba(59, 130, 246, 0.3)' : 'none',
                 transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
               }} />
 

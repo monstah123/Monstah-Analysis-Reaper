@@ -31,34 +31,54 @@ export default function Researcher() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [report, setReport] = useState<{ answer: string; sources: Source[] } | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [activeChannel, setActiveChannel] = useState('bloomberg');
+  const hlsRef = useRef<any>(null);
+
+  const channels = {
+    bloomberg: "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8",
+    fox: "https://fox-foxbusiness-1-us.rokuchannel.wurl.com/playlist.m3u8",
+    custom: "https://example-cdn/hls/foxbusiness/index.m3u8"
+  };
 
   useEffect(() => {
     if (!report && !loading && videoRef.current) {
       const video = videoRef.current;
-      const streamUrl = "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8";
+      const streamUrl = channels[activeChannel as keyof typeof channels];
       
+      // Destroy old HLS instance before creating new one
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS support (Safari/iOS)
         video.src = streamUrl;
       } else {
-        // Inject HLS.js for Chrome/Firefox
-        const script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
-        script.onload = () => {
+        const loadHls = () => {
           // @ts-ignore
           if (window.Hls && window.Hls.isSupported()) {
             // @ts-ignore
-            const hls = new window.Hls();
+            const hls = new window.Hls({
+              enableWorker: true,
+              capLevelToPlayerSize: true
+            });
             hls.loadSource(streamUrl);
             hls.attachMedia(video);
+            hlsRef.current = hls;
           }
         };
-        document.body.appendChild(script);
-        return () => { document.body.removeChild(script); };
+
+        if (!(window as any).Hls) {
+          const script = document.createElement('script');
+          script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
+          script.onload = loadHls;
+          document.body.appendChild(script);
+        } else {
+          loadHls();
+        }
       }
     }
-  }, [report, loading]);
+  }, [report, loading, activeChannel]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,9 +191,33 @@ export default function Researcher() {
 
         {!report && !loading && (
           <div className="live-tv-container fade-in" style={{ marginTop: '2rem' }}>
-            <div className="section-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse-dot 2s infinite' }}></div>
-              <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.9rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• BLOOMBERG TV</span></h3>
+            <div className="section-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse-dot 2s infinite' }}></div>
+                <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• ACTIVE</span></h3>
+              </div>
+              <div className="channel-selector" style={{ display: 'flex', gap: '0.5rem' }}>
+                {Object.keys(channels).map((ch) => (
+                  <button 
+                    key={ch}
+                    onClick={() => setActiveChannel(ch)}
+                    style={{
+                      background: activeChannel === ch ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${activeChannel === ch ? '#3b82f6' : 'rgba(255, 255, 255, 0.1)'}`,
+                      color: activeChannel === ch ? '#3b82f6' : '#94a3b8',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.7rem',
+                      fontWeight: 900,
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {ch}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="video-wrapper" style={{ 
               position: 'relative', 

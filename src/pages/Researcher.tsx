@@ -37,22 +37,26 @@ export default function Researcher() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const channels = {
-    bloomberg: "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8",
-    finance: "https://yahoofinance-1-us.samsung.wurl.com/playlist.m3u8",
-    fox: "https://fox-foxbusiness-1-us.rokuchannel.wurl.com/playlist.m3u8",
-    custom: customInput
+    bloomberg: { type: 'iframe', url: "https://www.youtube.com/embed/live_stream?channel=UCIALMKvObZN2af7O9-jE89g&autoplay=1&mute=1" },
+    finance: { type: 'iframe', url: "https://www.youtube.com/embed/live_stream?channel=UCEAZeUIe266Vcb3vgAnu_MA&autoplay=1&mute=1" },
+    fox: { type: 'iframe', url: "https://vaughn.live/embed/video/foxbusiness?popout=true&autoplay=true" },
+    custom: { type: 'hls', url: customInput }
   };
 
   useEffect(() => {
-    if (!report && !loading && videoRef.current) {
+    const active = channels[activeChannel as keyof typeof channels];
+    
+    // Cleanup HLS if switching away or to iframe
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    if (active.type === 'hls' && !report && !loading && videoRef.current) {
       const video = videoRef.current;
-      const streamUrl = channels[activeChannel as keyof typeof channels];
+      const streamUrl = active.url;
       
-      // Destroy old HLS instance before creating new one
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
+      if (!streamUrl) return;
 
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = streamUrl;
@@ -61,10 +65,7 @@ export default function Researcher() {
           // @ts-ignore
           if (window.Hls && window.Hls.isSupported()) {
             // @ts-ignore
-            const hls = new window.Hls({
-              enableWorker: true,
-              capLevelToPlayerSize: true
-            });
+            const hls = new window.Hls({ enableWorker: true });
             hls.loadSource(streamUrl);
             hls.attachMedia(video);
             hlsRef.current = hls;
@@ -81,7 +82,7 @@ export default function Researcher() {
         }
       }
     }
-  }, [report, loading, activeChannel]);
+  }, [report, loading, activeChannel, customInput]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,16 +252,26 @@ export default function Researcher() {
               overflow: 'hidden', 
               borderRadius: '20px',
               border: '1px solid rgba(255, 255, 255, 0.05)',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+              background: '#0f172a'
             }}>
-              <video 
-                ref={videoRef}
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#0f172a', objectFit: 'cover' }}
-                autoPlay 
-                muted 
-                controls 
-                playsInline>
-              </video>
+              {channels[activeChannel as keyof typeof channels].type === 'iframe' ? (
+                <iframe
+                  src={channels[activeChannel as keyof typeof channels].url}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <video 
+                  ref={videoRef}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#0f172a', objectFit: 'cover' }}
+                  autoPlay 
+                  muted 
+                  controls 
+                  playsInline>
+                </video>
+              )}
             </div>
           </div>
         )}

@@ -36,27 +36,23 @@ export default function Researcher() {
   const hlsRef = useRef<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const channels = {
-    bloomberg: { type: 'iframe', url: "https://www.youtube.com/embed/live_stream?channel=UCIALMKvObZN2af7O9-jE89g&autoplay=1&mute=1" },
-    finance: { type: 'iframe', url: "https://www.youtube.com/embed/live_stream?channel=UCEAZeUIe266Vcb3vgAnu_MA&autoplay=1&mute=1" },
-    fox: { type: 'iframe', url: "https://vaughn.live/embed/video/foxbusiness?popout=true&autoplay=true" },
-    custom: { type: 'hls', url: customInput }
+  const channels: Record<string, string> = {
+    bloomberg: "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8",
+    macrobox: "https://d1ewctnvcwvvvu.cloudfront.net/playlist.m3u8",
+    fox: "https://fox-foxbusiness-us.amazon.wurl.com/playlist.m3u8",
+    custom: customInput
   };
 
   useEffect(() => {
-    const active = channels[activeChannel as keyof typeof channels];
-    
-    // Cleanup HLS if switching away or to iframe
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
-
-    if (active.type === 'hls' && !report && !loading && videoRef.current) {
+    if (!report && !loading && videoRef.current) {
       const video = videoRef.current;
-      const streamUrl = active.url;
+      const streamUrl = channels[activeChannel] || channels.bloomberg;
       
-      if (!streamUrl) return;
+      // Destroy old HLS instance before creating new one
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
 
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = streamUrl;
@@ -65,7 +61,11 @@ export default function Researcher() {
           // @ts-ignore
           if (window.Hls && window.Hls.isSupported()) {
             // @ts-ignore
-            const hls = new window.Hls({ enableWorker: true });
+            const hls = new window.Hls({
+              enableWorker: true,
+              lowLatencyMode: true,
+              capLevelToPlayerSize: true
+            });
             hls.loadSource(streamUrl);
             hls.attachMedia(video);
             hlsRef.current = hls;
@@ -201,7 +201,7 @@ export default function Researcher() {
                 <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• ACTIVE</span></h3>
               </div>
               <div className="channel-selector" style={{ display: 'flex', gap: '0.5rem' }}>
-                {['bloomberg', 'finance', 'fox', 'custom'].map((ch) => (
+                {['bloomberg', 'macrobox', 'fox', 'custom'].map((ch) => (
                   <button 
                     key={ch}
                     onClick={() => setActiveChannel(ch)}
@@ -219,7 +219,7 @@ export default function Researcher() {
                       letterSpacing: '0.05em'
                     }}
                   >
-                    {ch === 'finance' ? 'YAHOO' : ch}
+                    {ch === 'macrobox' ? 'STREET' : ch}
                   </button>
                 ))}
               </div>
@@ -255,14 +255,6 @@ export default function Researcher() {
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
               background: '#0f172a'
             }}>
-              {channels[activeChannel as keyof typeof channels].type === 'iframe' ? (
-                <iframe
-                  src={channels[activeChannel as keyof typeof channels].url}
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              ) : (
                 <video 
                   ref={videoRef}
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#0f172a', objectFit: 'cover' }}
@@ -271,7 +263,6 @@ export default function Researcher() {
                   controls 
                   playsInline>
                 </video>
-              )}
             </div>
           </div>
         )}

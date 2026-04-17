@@ -31,7 +31,8 @@ const Sentiment: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const { assets, dataSyncStatus } = useApp();
+  const app = useApp();
+  const { assets, dataSyncStatus } = app;
   
   const sortedAssets = useMemo(() => {
     if (!Array.isArray(assets)) return [];

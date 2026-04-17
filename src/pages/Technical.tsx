@@ -179,8 +179,8 @@ const Technical: React.FC = () => {
                         <span style={{ 
                           padding: '0.25rem 0.6rem', 
                           borderRadius: '4px', 
-                          background: isNeutral ? 'rgba(255,255,255,0.05)' : (isBull ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
-                          color: isNeutral ? '#8b9ab8' : (isBull ? '#4ade80' : '#f87171'),
+                          background: isNeutral ? 'rgba(255,255,255,0.05)' : (isBull ? 'rgba(34, 197, 94, 0.1)' : (isBear ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)')),
+                          color: isNeutral ? '#8b9ab8' : (isBull ? '#4ade80' : (isBear ? '#f87171' : '#8b9ab8')),
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           letterSpacing: '0.04em'

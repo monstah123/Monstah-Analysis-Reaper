@@ -3,6 +3,20 @@ import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip" style={{ background: '#0f1623', border: '1px solid #1e2d48', padding: '10px', borderRadius: '6px' }}>
+        <p className="label" style={{ margin: 0, fontWeight: 700 }}>{label}</p>
+        <p style={{ margin: 0, color: '#3b82f6' }}>Longs: {payload[0].value}%</p>
+        <p style={{ margin: 0, color: '#ef4444' }}>Shorts: {payload[1].value}%</p>
+        {payload[0].payload.source && <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8b9ab8' }}>Src: {payload[0].payload.source}</p>}
+      </div>
+    );
+  }
+  return null;
+};
+
 const Sentiment: React.FC = () => {
   const [chartWidth, setChartWidth] = useState(
     typeof window !== 'undefined' ? Math.max(300, window.innerWidth - 300) : 800
@@ -61,19 +75,7 @@ const Sentiment: React.FC = () => {
     return [...cotChartData].sort((a, b) => a.long - b.long)[0];
   }, [cotChartData]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-tooltip" style={{ background: '#0f1623', border: '1px solid #1e2d48', padding: '10px', borderRadius: '6px' }}>
-          <p className="label" style={{ margin: 0, fontWeight: 700 }}>{label}</p>
-          <p style={{ margin: 0, color: '#3b82f6' }}>Longs: {payload[0].value}%</p>
-          <p style={{ margin: 0, color: '#ef4444' }}>Shorts: {payload[1].value}%</p>
-          {payload[0].payload.source && <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8b9ab8' }}>Src: {payload[0].payload.source}</p>}
-        </div>
-      );
-    }
-    return null;
-  };
+
 
   return (
     <div className="page-container">

@@ -2,6 +2,21 @@ import React, { useMemo } from 'react';
 import { XAxis, YAxis, Tooltip, ReferenceLine, BarChart, Bar } from 'recharts';
 import { useApp } from '../contexts/AppContext';
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{ background: '#0f1623', border: '1px solid #1e2d48', padding: '10px', borderRadius: '6px' }}>
+        <p style={{ margin: 0, fontWeight: 700, color: '#f0f4ff' }}>{payload[0].payload.name}</p>
+        <p style={{ margin: 0, color: payload[0].value >= 0 ? '#3b82f6' : '#ef4444' }}>
+          {payload[0].value}%
+        </p>
+        <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8b9ab8' }}>{payload[0].payload.desc}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const YieldSpreads: React.FC = () => {
   const { yields, isRefreshing } = useApp();
 
@@ -25,20 +40,7 @@ const YieldSpreads: React.FC = () => {
     ];
   }, [yields]);
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={{ background: '#0f1623', border: '1px solid #1e2d48', padding: '10px', borderRadius: '6px' }}>
-          <p style={{ margin: 0, fontWeight: 700, color: '#f0f4ff' }}>{payload[0].payload.name}</p>
-          <p style={{ margin: 0, color: payload[0].value >= 0 ? '#3b82f6' : '#ef4444' }}>
-            {payload[0].value}%
-          </p>
-          <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8b9ab8' }}>{payload[0].payload.desc}</p>
-        </div>
-      );
-    }
-    return null;
-  };
+
 
   return (
     <div className="page-container">

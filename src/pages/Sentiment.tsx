@@ -1,7 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
-import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -18,20 +17,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const Sentiment: React.FC = () => {
-  const [chartWidth, setChartWidth] = useState(
-    typeof window !== 'undefined' ? Math.max(300, window.innerWidth - 300) : 800
-  );
-
-  useEffect(() => {
-    // Only listen to window resize, completely avoiding container-driven ResizeObserver loops (React Error 185)
-    const handleResize = () => {
-      setChartWidth(Math.max(300, window.innerWidth > 1024 ? window.innerWidth - 300 : window.innerWidth - 50));
-    };
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Init safely
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const { assets } = useApp();
   
   const sortedAssets = useMemo(() => {

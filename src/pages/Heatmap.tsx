@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const Heatmap: React.FC = () => {
-  const { assets, marketData } = useApp();
+  const { assets, marketData, setSelectedAsset, setActiveView } = useApp();
 
   // Sort assets by magnitude of change to highlight the biggest movers
   const sortedAssets = useMemo(() => {
@@ -62,6 +62,10 @@ const Heatmap: React.FC = () => {
              <div 
                key={asset.id}
                className="heatmap-tile"
+               onClick={() => {
+                 setSelectedAsset(asset);
+                 setActiveView('dashboard');
+               }}
                style={{
                  height: '150px',
                  background: color,

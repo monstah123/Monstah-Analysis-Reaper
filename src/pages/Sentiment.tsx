@@ -108,7 +108,7 @@ const Sentiment: React.FC = () => {
         <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
         <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
         {cotChartData.length > 0 ? (
-          <div ref={chartContainerRef} style={{ width: '100%', marginTop: '20px', overflowX: 'hidden' }}>
+          <div style={{ width: '100%', marginTop: '20px', overflowX: 'hidden' }}>
               <BarChart 
                 width={chartWidth} 
                 height={Math.max(100, cotChartData.length * 45 + 50)}

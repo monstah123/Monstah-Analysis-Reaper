@@ -39,7 +39,6 @@ export default function Researcher() {
   const channels: Record<string, string> = {
     bloomberg: "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8",
     macrobox: "https://d1ewctnvcwvvvu.cloudfront.net/playlist.m3u8",
-    fox: "https://h3.ustvgo.la/FoxBusiness/myStream/chunks.m3u8?",
     custom: customInput
   };
 
@@ -201,7 +200,7 @@ export default function Researcher() {
                 <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• ACTIVE</span></h3>
               </div>
               <div className="channel-selector" style={{ display: 'flex', gap: '0.5rem' }}>
-                {['bloomberg', 'macrobox', 'fox', 'custom'].map((ch) => (
+                {['bloomberg', 'macrobox', 'custom'].map((ch) => (
                   <button 
                     key={ch}
                     onClick={() => setActiveChannel(ch)}

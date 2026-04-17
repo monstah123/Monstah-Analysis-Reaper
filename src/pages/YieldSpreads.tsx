@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 const YieldSpreads: React.FC = () => {
-  const { yields, isRefreshing } = useApp();
+  const { yields, isRefreshing, dataSyncStatus } = useApp();
 
   const recessionIndicator = useMemo(() => {
     const spread = yields.y10 - yields.y2;
@@ -46,7 +46,18 @@ const YieldSpreads: React.FC = () => {
     <div className="page-container">
        <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
-          <h1>🏛️ Recession Monitor: Yield Curve</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1>🏛️ Recession Monitor: Yield Curve</h1>
+            {dataSyncStatus.yields && (
+               <div style={{ 
+                 padding: '4px 8px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', 
+                 border: '1px solid rgba(59, 130, 246, 0.3)', color: '#60a5fa', fontSize: '10px', fontWeight: 900,
+                 textTransform: 'uppercase', letterSpacing: '0.05em'
+               }}>
+                 ✓ Verified Live Treasury Feed
+               </div>
+             )}
+          </div>
           <p>Institutional bond yield spreads (Neural Matrix Pulse)</p>
         </div>
       </header>

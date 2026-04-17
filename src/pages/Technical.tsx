@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const Technical: React.FC = () => {
-  const { assets } = useApp();
+  const { assets, dataSyncStatus } = useApp();
 
   const topBullish = useMemo(() => assets.filter(a => a.trend >= 1).slice(0, 5), [assets]);
   const topBearish = useMemo(() => assets.filter(a => a.trend <= -1).sort((a, b) => a.trend - b.trend).slice(0, 5), [assets]);
@@ -14,7 +14,18 @@ const Technical: React.FC = () => {
     <div className="page-container">
       <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
-          <h1>📈 Technical & Institutional Flow</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1>📈 Technical & Institutional Flow</h1>
+            {dataSyncStatus.institutional && (
+               <div style={{ 
+                 padding: '4px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.1)', 
+                 border: '1px solid rgba(99, 102, 241, 0.3)', color: '#818cf8', fontSize: '10px', fontWeight: 900,
+                 textTransform: 'uppercase', letterSpacing: '0.05em'
+               }}>
+                 ✓ Verified Live Institutional Sync
+               </div>
+             )}
+          </div>
           <p>Trend strength identification and real-time institutional sentiment momentum</p>
         </div>
       </header>

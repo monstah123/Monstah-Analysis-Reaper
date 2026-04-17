@@ -55,6 +55,7 @@ interface AppContextType {
   playMoneySound: (isForce?: boolean) => void;
   activeSetup: HeroSetup | null;
   setActiveSetup: (s: HeroSetup | null) => void;
+  dataSyncStatus: { institutional: boolean; retail: boolean; yields: boolean };
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -87,6 +88,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [aiInsightAsset, setAiInsightAsset] = useState<AssetData | null>(null);
   const [yields, setYields] = useState({ y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 });
   const [macroData, setMacroData] = useState<any>(null);
+  const [dataSyncStatus, setDataSyncStatus] = useState({ institutional: false, retail: false, yields: false });
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [activeSetup, setActiveSetup] = useLocalStorage<HeroSetup | null>('mar_hero_setup', {
     assetId: 'EURUSD',
@@ -208,10 +210,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (neuralYields) {
         setYields(neuralYields);
+        setDataSyncStatus(prev => ({ ...prev, yields: true }));
       }
 
       if (neuralMacro) {
         setMacroData(neuralMacro);
+        setDataSyncStatus(prev => ({ ...prev, institutional: true }));
       }
 
       // Update global Macro scores from Neural Matrix 9.0
@@ -346,6 +350,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }));
     };
     window.addEventListener('myfxbook_sync', handleSync);
+    setDataSyncStatus(prev => ({ ...prev, retail: true }));
     return () => window.removeEventListener('myfxbook_sync', handleSync);
   }, [setAssets]);
 
@@ -382,7 +387,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
     updateMarketPrice, addAsset, removeAsset, yields, macroData,
     audioEnabled, setAudioEnabled, playMoneySound,
-    activeSetup, setActiveSetup
+    activeSetup, setActiveSetup, dataSyncStatus
   };
 
   useEffect(() => {

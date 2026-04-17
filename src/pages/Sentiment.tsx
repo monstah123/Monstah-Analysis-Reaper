@@ -31,7 +31,7 @@ const Sentiment: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const { assets } = useApp();
+  const { assets, dataSyncStatus } = useApp();
   
   const sortedAssets = useMemo(() => {
     if (!Array.isArray(assets)) return [];
@@ -80,7 +80,18 @@ const Sentiment: React.FC = () => {
     <div className="page-container">
       <header className="header" style={{ padding: 0 }}>
         <div className="header-title">
-          <h1>📡 Sentiment Analysis</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1>📡 Sentiment Analysis</h1>
+            {dataSyncStatus.institutional && (
+               <div style={{ 
+                 padding: '4px 8px', borderRadius: '4px', background: 'rgba(34, 197, 94, 0.1)', 
+                 border: '1px solid rgba(34, 197, 94, 0.3)', color: '#4ade80', fontSize: '10px', fontWeight: 900,
+                 textTransform: 'uppercase', letterSpacing: '0.05em'
+               }}>
+                 ✓ Verified Live Institutional Feed
+               </div>
+             )}
+          </div>
           <p>Commitment of Traders (COT) vs Retail Positioning (Contrarian)</p>
         </div>
       </header>

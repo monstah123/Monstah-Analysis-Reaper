@@ -65,7 +65,7 @@ function AppContent() {
       <div className="app-body">
         {!isLanding && <MobileNav />}
         <main className={isLanding ? 'landing-content' : 'main-content'}>
-          {!isLanding && <InstitutionalSpotlight />}
+          {/* {!isLanding && <InstitutionalSpotlight />} */}
           {renderPage()}
         </main>
       </div>

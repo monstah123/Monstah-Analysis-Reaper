@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -17,6 +18,19 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const Sentiment: React.FC = () => {
+  const [chartWidth, setChartWidth] = useState(
+    typeof window !== 'undefined' ? Math.max(300, window.innerWidth - 300) : 800
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setChartWidth(Math.max(300, window.innerWidth > 1024 ? window.innerWidth - 300 : window.innerWidth - 50));
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); 
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const { assets } = useApp();
   
   const sortedAssets = useMemo(() => {
@@ -97,7 +111,7 @@ const Sentiment: React.FC = () => {
         {cotChartData.length > 0 ? (
           <div style={{ width: '100%', marginTop: '20px', overflowX: 'auto', minHeight: '300px' }}>
                 <BarChart 
-                  width={800} 
+                  width={chartWidth} 
                   height={Math.max(100, cotChartData.length * 45 + 50)}
                   data={cotChartData} 
                   layout="vertical" 
@@ -176,10 +190,7 @@ const Sentiment: React.FC = () => {
           maxHeight: '600px',
           overflowY: 'auto'
         }}>
-          {/* <MyfxbookWidget /> */}
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#4a5775', border: '1px dashed #1e2d48', borderRadius: '8px' }}>
-            Myfxbook Live Feed temporarily offline for isolation testing...
-          </div>
+          <MyfxbookWidget />
         </div>
         <div style={{ marginTop: '10px', fontSize: '10px', opacity: 0.6 }}>
           <a href="https://www.myfxbook.com" className="myfxbookLink" target="_blank" rel="noopener noreferrer">

@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
 
       <MarketHours />
 
-      {filterCat === 'Forex' && <RelativePerformance />}
+      {(filterCat === 'All' || filterCat === 'Forex') && <RelativePerformance />}
 
       {/* Filters */}
       <div className="filter-bar">

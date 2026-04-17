@@ -246,13 +246,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               rL = data.long ?? null;
               rS = data.short ?? null;
             }
+          } else {
+            // Stage 3: Fuzzy Normalization for Institutional Feeds (DAX, Oil, Spreads)
+            const fuzzyKey = a.id.toUpperCase();
+            let matchedData = null;
+            
+            if (fuzzyKey.includes('DAX')) matchedData = neuralData['DE30'] || neuralData['GER30'];
+            if (fuzzyKey.includes('USOIL')) matchedData = neuralData['WTI'];
+            if (fuzzyKey.includes('UKOIL')) matchedData = neuralData['BRENT'];
+            if (fuzzyKey.includes('US30')) matchedData = neuralData['DIA'] || neuralData['DOW'];
+            if (fuzzyKey.includes('NASDAQ')) matchedData = neuralData['NDX'] || neuralData['QQQ'];
+            if (fuzzyKey.includes('SP500')) matchedData = neuralData['SPX'] || neuralData['SPY'];
+            if (fuzzyKey.includes('COPPER')) matchedData = neuralData['HG'];
+
+            if (matchedData) {
+              cL = matchedData.iLong ?? null;
+              cS = matchedData.iShort ?? null;
+            }
           }
 
           // Strict Bias Scoring (Only if Live Data exists)
           let cPct: number | null = null;
           let rPct: number | null = null;
           
-          if (cL !== null && cS !== null) cPct = (cL / (cL + cS)) * 100;
+          if (cL !== null && cS !== null && (cL !== 0 || cS !== 0)) cPct = (cL / (cL + cS)) * 100;
           if (rL !== null && rS !== null) rPct = (rL / (rL + rS)) * 100;
 
           rP = (rPct !== null) ? (rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0) : 0;

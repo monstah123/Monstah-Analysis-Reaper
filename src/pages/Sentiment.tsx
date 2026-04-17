@@ -1,24 +1,23 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
 
 const Sentiment: React.FC = () => {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [chartWidth, setChartWidth] = useState(800);
+  const [chartWidth, setChartWidth] = useState(
+    typeof window !== 'undefined' ? Math.max(300, window.innerWidth - 300) : 800
+  );
 
   useEffect(() => {
-    if (!chartContainerRef.current) return;
-    const resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        if (entry.contentRect.width > 0) {
-          setChartWidth(Math.max(300, entry.contentRect.width - 20));
-        }
-      }
-    });
-    resizeObserver.observe(chartContainerRef.current);
-    return () => resizeObserver.disconnect();
+    // Only listen to window resize, completely avoiding container-driven ResizeObserver loops (React Error 185)
+    const handleResize = () => {
+      setChartWidth(Math.max(300, window.innerWidth > 1024 ? window.innerWidth - 300 : window.innerWidth - 50));
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Init safely
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
   const { assets } = useApp();
   
   const sortedAssets = useMemo(() => {

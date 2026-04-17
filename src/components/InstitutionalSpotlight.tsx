@@ -4,14 +4,6 @@ import { useApp } from '../contexts/AppContext';
 const InstitutionalSpotlight: React.FC = () => {
   const { marketData, activeView, activeSetup, setActiveSetup } = useApp();
   
-  if (activeView === 'landing' || !activeSetup) return null;
-
-  const idClean = activeSetup.assetId.replace(/\//g, '');
-  const asset = marketData[idClean] || marketData[activeSetup.assetId];
-  const currentPrice = asset?.price || activeSetup.entry;
-  const { entry, target, type, status, name } = activeSetup;
-  const lastUpdated = asset?.lastUpdated;
-  
   // Dedicate a "Sprint Loop" for the radar (v28.6)
   useEffect(() => {
     const timer = setInterval(() => {
@@ -19,6 +11,14 @@ const InstitutionalSpotlight: React.FC = () => {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  if (activeView === 'landing' || !activeSetup) return null;
+
+  const idClean = activeSetup.assetId.replace(/\//g, '');
+  const asset = marketData[idClean] || marketData[activeSetup.assetId];
+  const currentPrice = asset?.price || activeSetup.entry;
+  const { entry, target, type, status, name } = activeSetup;
+  const lastUpdated = asset?.lastUpdated;
 
   const getRelativeTime = (time?: number) => {
     if (!time) return 'Awaiting signal...';

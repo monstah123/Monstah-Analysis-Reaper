@@ -39,7 +39,7 @@ export default function Researcher() {
   const channels: Record<string, string> = {
     bloomberg: "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8",
     macrobox: "https://d1ewctnvcwvvvu.cloudfront.net/playlist.m3u8",
-    fox: "https://fox-foxbusiness-us.amazon.wurl.com/playlist.m3u8",
+    fox: "https://h3.ustvgo.la/FoxBusiness/myStream/chunks.m3u8?",
     custom: customInput
   };
 

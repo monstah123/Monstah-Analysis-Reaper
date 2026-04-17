@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar } from 'recharts';
+import { XAxis, YAxis, Tooltip, ReferenceLine, BarChart, Bar } from 'recharts';
 import { useApp } from '../contexts/AppContext';
 
 const YieldSpreads: React.FC = () => {
@@ -81,20 +81,18 @@ const YieldSpreads: React.FC = () => {
          <div className="settings-card" style={{ height: '400px' }}>
            <h2 className="settings-section-title" style={{ fontSize: '1.1rem', margin: 0 }}>📊 Institutional Yield Stack</h2>
            <span style={{ fontSize: '0.7rem', color: '#8b9ab8' }}>Neural Sync: {isRefreshing ? 'Pulsing...' : 'Stable'}</span>
-            <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
+            <div style={{ flex: 1, marginTop: '20px', marginLeft: '-20px', overflowX: 'auto' }}>
+                <BarChart data={chartData} width={600} height={300} isAnimationActive={false}>
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8b9ab8', fontSize: 12 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8b9ab8', fontSize: 12 }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} isAnimationActive={false} />
                   <ReferenceLine y={0} stroke="#4a5775" />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                     {chartData.map((entry, index) => (
                       <rect key={`cell-${index}`} fill={entry.value < 0 ? '#ef4444' : '#3b82f6'} />
                     ))}
                   </Bar>
                 </BarChart>
-              </ResponsiveContainer>
             </div>
          </div>
 

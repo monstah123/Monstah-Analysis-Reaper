@@ -1,5 +1,5 @@
 import React from 'react';
-import { AreaChart, Area, ResponsiveContainer, Tooltip, YAxis } from 'recharts';
+import { AreaChart, Area, Tooltip, YAxis } from 'recharts';
 
 interface SparkLineProps {
   data: { date: string; value: number }[];
@@ -11,8 +11,8 @@ const SparkLine: React.FC<SparkLineProps> = ({ data, positive = true, height = 6
   const color = positive ? '#3b82f6' : '#ef4444';
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 4 }}>
+    <div style={{ width: '100%', minWidth: '100px', height, position: 'relative', overflow: 'hidden' }}>
+      <AreaChart width={120} height={height} data={data} margin={{ top: 4, right: 0, left: 0, bottom: 4 }}>
         <defs>
           <linearGradient id={`spark-${positive ? 'bull' : 'bear'}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.25} />
@@ -24,6 +24,7 @@ const SparkLine: React.FC<SparkLineProps> = ({ data, positive = true, height = 6
           contentStyle={{ background: '#0f1623', border: '1px solid #1e2d48', borderRadius: 6, fontSize: 11 }}
           formatter={(v: any) => [v.toFixed(4), 'Price']}
           labelFormatter={(l) => l}
+          isAnimationActive={false}
         />
         <Area
           type="monotone"
@@ -33,9 +34,10 @@ const SparkLine: React.FC<SparkLineProps> = ({ data, positive = true, height = 6
           fill={`url(#spark-${positive ? 'bull' : 'bear'})`}
           dot={false}
           activeDot={{ r: 3, fill: color }}
+          isAnimationActive={false}
         />
       </AreaChart>
-    </ResponsiveContainer>
+    </div>
   );
 };
 

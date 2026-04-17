@@ -108,7 +108,7 @@ const Sentiment: React.FC = () => {
         <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
         <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
         {cotChartData.length > 0 ? (
-          <div style={{ width: '100%', marginTop: '20px', overflowX: 'hidden' }}>
+          <div style={{ width: '100%', marginTop: '20px', overflowX: 'auto', minHeight: '300px' }}>
               <BarChart 
                 width={chartWidth} 
                 height={Math.max(100, cotChartData.length * 45 + 50)}
@@ -116,10 +116,11 @@ const Sentiment: React.FC = () => {
                 layout="vertical" 
                 margin={{ top: 5, right: 30, left: 10, bottom: 5 }} 
                 barSize={28}
+                isAnimationActive={false}
               >
-                <XAxis type="number" hide domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
+                <XAxis type="number" hide domain={[0, 100]} />
                 <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} isAnimationActive={false} />
                 <Bar 
                   dataKey="long" 
                   stackId="a" 

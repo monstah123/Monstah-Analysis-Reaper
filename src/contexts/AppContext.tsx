@@ -275,10 +275,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           rP = (rPct !== null) ? (rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0) : 0;
           cI = (cPct !== null) ? (cPct >= 70 ? 2 : cPct >= 57 ? 1 : cPct <= 30 ? -2 : cPct <= 43 ? -1 : 0) : 0;
 
-          // Require a minimum amount of Live Data before generating a Bias
-          const liveSignalsCount = [cPct, rPct, scores.gdp, scores.inflation].filter(s => s !== null && s !== 0).length;
+          const liveSignalsCount = [cPct, rPct, scores.gdp, scores.inflation].filter(s => s !== null).length;
           
-          const newTotals = cI + rP + (scores.gdp || 0) + (scores.inflation || 0) + (scores.interestRates || 0) + (scores.employmentChange || 0);
+          // Total Matrix Score (v29.5 - Execution Grade)
+          const newTotals = (cPct !== null ? cI : 0) + (rPct !== null ? rP : 0) + 
+                            (scores.gdp || 0) + (scores.inflation || 0) + 
+                            (scores.interestRates || 0) + (scores.employmentChange || 0);
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
           if (liveSignalsCount > 0) {

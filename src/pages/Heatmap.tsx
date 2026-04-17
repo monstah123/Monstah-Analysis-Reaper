@@ -63,8 +63,10 @@ const Heatmap: React.FC = () => {
                key={asset.id}
                className="heatmap-tile"
                onClick={() => {
+                 console.log('Reaper: Selecting Market ->', asset.id);
                  setSelectedAsset(asset);
                  setActiveView('dashboard');
+                 window.scrollTo({ top: 0, behavior: 'smooth' });
                }}
                style={{
                  height: '150px',

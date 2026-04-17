@@ -19,7 +19,6 @@ import Correlation from './pages/Correlation';
 import COTDeepDive from './pages/COTDeepDive';
 import YieldSpreads from './pages/YieldSpreads';
 import NewsTerminal from './pages/NewsTerminal';
-import ReaperSnatcher from './components/ReaperSnatcher';
 import Landing from './pages/Landing';
 import Researcher from './pages/Researcher';
 import AITerminal from './pages/AITerminal';
@@ -93,7 +92,6 @@ function AuthGate() {
   return (
     <AppProvider>
       <WatchlistProvider>
-        <ReaperSnatcher />
         <ReaperRulebook />
         <AppContent />
       </WatchlistProvider>

@@ -355,23 +355,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, [setAssets]);
 
-  // Keep the 'Live Snatcher' for Currency/Gold pulse, but AI takes the lead
+  // --- Institutional Data Sync Pulses ---
   useEffect(() => {
-    const handleSync = (e: any) => {
-      const batch = e.detail;
-      if (!batch) return;
-      setAssets((prev) => prev.map(a => {
-        const official = batch[a.id] || batch[a.id.replace('/', '')];
-        if (official) {
-          return { ...a, retailLong: official.long, retailShort: official.short, snatcherActive: true };
-        }
-        return a;
-      }));
-    };
-    window.addEventListener('myfxbook_sync', handleSync);
-    setDataSyncStatus(prev => ({ ...prev, retail: true }));
-    return () => window.removeEventListener('myfxbook_sync', handleSync);
-  }, [setAssets]);
+    setDataSyncStatus(prev => ({ ...prev, retail: false }));
+  }, []);
 
   // --- Neural Sound Scraper - Squeeze Alerts ---
   useEffect(() => {

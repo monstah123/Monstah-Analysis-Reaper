@@ -57,7 +57,7 @@ const RelativePerformance: React.FC = () => {
         position: 'relative',
         gap: '4px'
       }}>
-        {performance.map((p, i) => {
+        {performance.map((p) => {
           const isPositive = p.change >= 0;
           const isZero = p.symbol === 'USD';
           

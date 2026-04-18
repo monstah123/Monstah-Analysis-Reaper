@@ -107,6 +107,44 @@ const SqueezeRadar: React.FC<SqueezeRadarProps> = ({ assets }) => {
           100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
+
+      {/* Alert History Log (User Request: Asset, Time, Counter) */}
+      <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+           <h4 style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0, fontWeight: 700, letterSpacing: '0.05em' }}>📟 RECENT SQUEEZE LOG</h4>
+           {(app.squeezeAlerts?.length ?? 0) > 0 && (
+             <button onClick={app.clearSqueezeAlerts} style={{ background: 'transparent', border: 'none', color: '#6366f1', fontSize: '10px', cursor: 'pointer', fontWeight: 700 }}>CLEAR LOG</button>
+           )}
+        </div>
+
+        {(!app.squeezeAlerts || app.squeezeAlerts.length === 0) ? (
+          <div style={{ padding: '1rem', textAlign: 'center', color: '#4b5563', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+            No recent alerts. The log will populate as institutional flows diverge.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {app.squeezeAlerts.map((alert, i) => {
+              const secondsAgo = Math.floor((Date.now() - alert.timestamp) / 1000);
+              const timeStr = secondsAgo < 60 ? `${secondsAgo}s ago` : `${Math.floor(secondsAgo / 60)}m ago`;
+              
+              return (
+                <div key={`${alert.assetId}-${alert.timestamp}`} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px', alignItems: 'center', padding: '8px 12px', background: i === 0 ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.02)', borderRadius: '6px', border: i === 0 ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: '#f8fafc', fontWeight: 600, fontSize: '0.8rem' }}>{alert.name}</span>
+                    <span style={{ fontSize: '9px', fontWeight: 900, color: alert.type === 'LONG SQUEEZE' ? '#22c55e' : '#ef4444', opacity: 0.8 }}>{alert.type}</span>
+                  </div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.75rem', textAlign: 'center' }}>
+                    {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </div>
+                  <div style={{ color: i === 0 ? '#6366f1' : '#4ade80', fontSize: '0.75rem', fontWeight: 900, textAlign: 'right' }}>
+                    {timeStr}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

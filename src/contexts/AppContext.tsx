@@ -56,6 +56,8 @@ interface AppContextType {
   activeSetup: HeroSetup | null;
   setActiveSetup: (s: HeroSetup | null) => void;
   dataSyncStatus: { institutional: boolean; retail: boolean; yields: boolean };
+  squeezeAlerts: { assetId: string; name: string; type: string; timestamp: number }[];
+  clearSqueezeAlerts: () => void;
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -98,6 +100,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     type: 'SHORT',
     status: 'IRON HOLD'
   });
+  const [squeezeAlerts, setSqueezeAlerts] = useLocalStorage<{ assetId: string, name: string, type: string, timestamp: number }[]>('mar_squeeze_alerts', []);
   const lastSqueezeRef = useRef<Set<string>>(new Set());
   const refreshRef = useRef(false);
 
@@ -108,6 +111,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     audio.volume = 0.45;
     audio.play().catch(e => console.log('Audio blocked by browser:', e));
   }, [audioEnabled]);
+
+  const clearSqueezeAlerts = useCallback(() => {
+    setSqueezeAlerts([]);
+  }, [setSqueezeAlerts]);
 
   const apiKeys: ApiKeys = {
     alphaVantage: apiKeysRaw.alphaVantage || DEFAULT_KEYS.alphaVantage,
@@ -377,7 +384,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       if (isSqueeze) {
         currentSqueezes.add(a.id);
-        if (!lastSqueezeRef.current.has(a.id)) triggered = true;
+        if (!lastSqueezeRef.current.has(a.id)) {
+           triggered = true;
+           const type = iLP > rLP ? 'LONG SQUEEZE' : 'SHORT SQUEEZE';
+           setSqueezeAlerts(prev => [{ assetId: a.id, name: a.name, type, timestamp: Date.now() }, ...prev].slice(0, 10));
+        }
       }
     });
 
@@ -386,7 +397,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       playMoneySound(true);
     }
     lastSqueezeRef.current = currentSqueezes;
-  }, [assets, audioEnabled, playMoneySound]);
+  }, [assets, audioEnabled, playMoneySound, setSqueezeAlerts]);
 
   const contextValue = {
     apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
@@ -394,7 +405,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
     updateMarketPrice, addAsset, removeAsset, yields, macroData,
     audioEnabled, setAudioEnabled, playMoneySound,
-    activeSetup, setActiveSetup, dataSyncStatus
+    activeSetup, setActiveSetup, dataSyncStatus, squeezeAlerts, clearSqueezeAlerts
   };
 
   useEffect(() => {

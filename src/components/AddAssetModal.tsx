@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
-import type { AssetData, AssetCategory } from '../data/mockData';
+import type { AssetData, AssetCategory } from '../data/assetRegistry';
 
 interface AddAssetModalProps {
   onClose: () => void;

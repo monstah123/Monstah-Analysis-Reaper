@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AssetData } from '../data/mockData';
+import type { AssetData } from '../data/assetRegistry';
 
 const METRICS: { key: keyof AssetData; label: string }[] = [
   { key: 'cot', label: 'COT' },

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { AssetData } from '../data/mockData';
+import type { AssetData } from '../data/assetRegistry';
 import { useApp } from '../contexts/AppContext';
 import SqueezeHistoryLog from './SqueezeHistoryLog';
 

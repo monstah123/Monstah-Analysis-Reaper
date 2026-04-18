@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import type { AssetData } from '../data/mockData';
-import { TERMINAL_ASSETS, generateNeuralSparkline } from '../data/mockData';
+import type { AssetData } from '../data/assetRegistry';
+import { TERMINAL_ASSETS, generateNeuralSparkline } from '../data/assetRegistry';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
 import { fetchSnatcherQuote } from '../services/alphaVantage';
 import { useLocalStorage } from '../hooks/useLocalStorage';

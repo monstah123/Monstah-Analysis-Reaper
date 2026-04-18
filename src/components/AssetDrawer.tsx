@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { AssetData } from '../data/mockData';
+import type { AssetData } from '../data/assetRegistry';
 import { useApp } from '../contexts/AppContext';
 import { useWatchlist } from '../contexts/WatchlistContext';
 import InteractiveChart from './InteractiveChart';

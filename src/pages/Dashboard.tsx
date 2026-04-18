@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import StatsBar from '../components/StatsBar';
 import AnalysisTable from '../components/AnalysisTable';
 import { useApp } from '../contexts/AppContext';
-import type { AssetData } from '../data/mockData';
+import type { AssetData } from '../data/assetRegistry';
 
 type SortKey = keyof AssetData;
 type FilterBias = 'All' | AssetData['bias'];

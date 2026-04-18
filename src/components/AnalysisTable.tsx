@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import type { AssetData } from '../data/mockData';
+import type { AssetData } from '../data/assetRegistry';
 
 const getValueClass = (value: number): string => {
   if (value >= 2) return 'val-pos-high';

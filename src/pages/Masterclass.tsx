@@ -120,6 +120,40 @@ const TrainingModules = [
         </div>
       </div>
     )
+  },
+  {
+    id: 'squeeze',
+    title: '🛰️ Module 5: The Monstah Squeeze Radar',
+    subtitle: 'Exploiting Big Money vs. Retail Divergence',
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ padding: '1.5rem', background: 'rgba(67, 56, 202, 0.05)', borderRadius: '12px', border: '1px solid rgba(67, 56, 202, 0.2)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#818cf8' }}>⚡ UNDERSTANDING THE DIVERGENCE</h3>
+           <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+             The "Squeeze" is the most powerful signal in the Reaper arsenal. It occurs when **Institutional (COT)** and **Retail (Myfxbook)** positioning are polar opposites.
+           </p>
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ background: '#3b82f61a', padding: '1rem', borderRadius: '8px', border: '1px solid #3b82f644' }}>
+                 <strong style={{ color: '#3b82f6', fontSize: '0.85rem' }}>BLUE BAR (INSTITUTIONS)</strong>
+                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '4px 0' }}>Represents the "Smart Money" who drive the market trends.</p>
+              </div>
+              <div style={{ background: '#ef44441a', padding: '1rem', borderRadius: '8px', border: '1px solid #ef444444' }}>
+                 <strong style={{ color: '#ef4444', fontSize: '0.85rem' }}>RED BAR (RETAIL)</strong>
+                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '4px 0' }}>Represents the "Hobbyist" herd often trapped in the wrong direction.</p>
+              </div>
+           </div>
+        </div>
+
+        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', borderLeft: '4px solid #4ade80' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#4ade80' }}>TRADING THE RADAR</h3>
+           <ol style={{ fontSize: '0.9rem', color: '#e2e8f0', lineHeight: 1.6, paddingLeft: '1.2rem' }}>
+              <li><strong>Scan the Radar:</strong> Look for pairs flagged as "LONG SQUEEZE" or "SHORT SQUEEZE".</li>
+              <li><strong>Confirm Divergence:</strong> Ensure Institutions are {'>'} 65% in one direction and Retail is {'>'} 65% in the OTHER.</li>
+              <li><strong>The Edge:</strong> Bet WITH the Institutions and AGAINST the Retail herd. The market moves toward where the retail pain is highest.</li>
+           </ol>
+        </div>
+      </div>
+    )
   }
 ];
 

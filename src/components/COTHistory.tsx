@@ -22,14 +22,25 @@ interface COTHistoryProps {
 }
 
 const symbols = [
-  { id: 'NASDAQ', name: 'NASDAQ (1)' },
+  { id: 'NASDAQ', name: 'NASDAQ' },
   { id: 'SP500', name: 'S&P 500' },
+  { id: 'US30', name: 'US30 (DOW)' },
+  { id: 'DAX', name: 'DAX (GER40)' },
+  { id: 'NIKKEI', name: 'NIKKEI 225' },
   { id: 'GOLD', name: 'GOLD' },
-  { id: 'USDJPY', name: 'USD/JPY' },
+  { id: 'SILVER', name: 'SILVER' },
+  { id: 'COPPER', name: 'COPPER' },
+  { id: 'USOIL', name: 'WTI CRUDE' },
+  { id: 'UKOIL', name: 'BRENT OIL' },
   { id: 'EURUSD', name: 'EUR/USD' },
   { id: 'GBPUSD', name: 'GBP/USD' },
-  { id: 'USOIL', name: 'WTI CRUDE' },
-  { id: 'BITCOIN', name: 'BITCOIN' }
+  { id: 'USDJPY', name: 'USD/JPY' },
+  { id: 'USDCAD', name: 'USD/CAD' },
+  { id: 'AUDUSD', name: 'AUD/USD' },
+  { id: 'NZDUSD', name: 'NZD/USD' },
+  { id: 'USDCHF', name: 'USD/CHF' },
+  { id: 'BITCOIN', name: 'BITCOIN' },
+  { id: 'ETHEREUM', name: 'ETHEREUM' }
 ];
 
 const lookbacks = [

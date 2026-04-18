@@ -20,10 +20,12 @@ export default async function handler(req, res) {
     'NASDAQ': ['NASDAQ-100 Consolidated', 'NASDAQ 100 STOCK INDEX', 'E-MINI NASDAQ 100'],
     'US30': ['DJIA Consolidated', 'DOW JONES INDUSTRIAL AVG', 'DOW JONES INDUSTRIAL AVERAGE', 'E-MINI DOW JONES INDUSTRIAL AVERAGE'],
     'NIKKEI': ['NIKKEI STOCK AVERAGE YEN DENOM', 'NIKKEI 225 STOCK AVERAGE'],
+    'DAX': ['DAX-40 STOCK INDEX', 'DAX-30 STOCK INDEX'],
     'GOLD': ['GOLD'],
     'SILVER': ['SILVER'],
     'COPPER': ['COPPER-Grade #1'],
     'USOIL': ['CRUDE OIL, LIGHT SWEET'],
+    'UKOIL': ['CRUDE OIL, LIGHT SWEET'], // Brent usually tracks WTI closely in COT reporting
     'BITCOIN': ['BITCOIN'],
     'ETHEREUM': ['ETHER']
   };

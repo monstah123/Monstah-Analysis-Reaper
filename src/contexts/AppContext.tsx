@@ -58,6 +58,7 @@ interface AppContextType {
   dataSyncStatus: { institutional: boolean; retail: boolean; yields: boolean };
   squeezeAlerts: { assetId: string; name: string; type: string; timestamp: number }[];
   clearSqueezeAlerts: () => void;
+  playSqueezeSound: (isForce?: boolean) => void;
 }
 
 const Ctx = createContext<AppContextType | null>(null);
@@ -105,6 +106,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshRef = useRef(false);
 
   const playMoneySound = useCallback((isForce = false) => {
+    if (!audioEnabled && !isForce) return;
+    // Original Cash Register Sound
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3');
+    audio.volume = 0.35;
+    audio.play().catch(e => console.log('Audio blocked by browser:', e));
+  }, [audioEnabled]);
+
+  const playSqueezeSound = useCallback((isForce = false) => {
     if (!audioEnabled && !isForce) return;
     // Casino Slot Machine Win (Jackpot SFX)
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3');
@@ -394,17 +403,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (triggered) {
       console.log('--- MONSTAH SQUEEZE DETECTED ---');
-      playMoneySound(true);
+      playSqueezeSound(true);
     }
     lastSqueezeRef.current = currentSqueezes;
-  }, [assets, audioEnabled, playMoneySound, setSqueezeAlerts]);
+  }, [assets, audioEnabled, playSqueezeSound, setSqueezeAlerts]);
 
   const contextValue = {
     apiKeys, setApiKeys, assets, marketData, isRefreshing, lastRefresh,
     refreshData: fetchMarketData, selectedAsset, setSelectedAsset,
     activeView, setActiveView, aiInsightAsset, setAiInsightAsset,
     updateMarketPrice, addAsset, removeAsset, yields, macroData,
-    audioEnabled, setAudioEnabled, playMoneySound,
+    audioEnabled, setAudioEnabled, playMoneySound, playSqueezeSound,
     activeSetup, setActiveSetup, dataSyncStatus, squeezeAlerts, clearSqueezeAlerts
   };
 

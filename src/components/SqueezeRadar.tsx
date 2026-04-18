@@ -1,11 +1,14 @@
 import React, { useMemo } from 'react';
 import type { AssetData } from '../data/mockData';
+import { useApp } from '../contexts/AppContext';
 
 interface SqueezeRadarProps {
   assets: AssetData[];
 }
 
 const SqueezeRadar: React.FC<SqueezeRadarProps> = ({ assets }) => {
+  const { audioEnabled, setAudioEnabled } = useApp();
+
   const squeezeAssets = useMemo(() => {
     return assets.filter(a => {
       const iLong = a.cotLong || 0;
@@ -33,9 +36,17 @@ const SqueezeRadar: React.FC<SqueezeRadarProps> = ({ assets }) => {
 
   if (squeezeAssets.length === 0) {
     return (
-      <div className="settings-card" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', border: '1px solid #312e81', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-        <h3 style={{ color: '#818cf8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>🛰️ Monstah Squeeze Radar</h3>
-        <p style={{ color: '#4b5563', fontSize: '0.8rem', margin: 0 }}>Scanning global flows for institutional divergence... No high-conviction squeezes detected.</p>
+      <div className="settings-card" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', border: '1px solid #312e81', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem', textAlign: 'center', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+           <h3 style={{ color: '#818cf8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.2rem' }}>🛰️ Monstah Squeeze Radar</h3>
+           <p style={{ color: '#4b5563', fontSize: '0.8rem', margin: 0 }}>Scanning global flows... No high-conviction squeezes detected.</p>
+        </div>
+        <button 
+          onClick={() => setAudioEnabled(!audioEnabled)}
+          style={{ background: audioEnabled ? '#4338ca' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '10px', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.3s' }}
+        >
+          {audioEnabled ? '🔔 ALERTS ON' : '🔕 ALERTS OFF'}
+        </button>
       </div>
     );
   }
@@ -49,8 +60,16 @@ const SqueezeRadar: React.FC<SqueezeRadarProps> = ({ assets }) => {
           </h3>
           <p style={{ color: '#818cf8', fontSize: '0.75rem', margin: 0, opacity: 0.8 }}>Extreme Institutional vs Retail Divergence Identified</p>
         </div>
-        <div style={{ background: '#4338ca', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 900, letterSpacing: '0.05em' }}>
-          HIGH CONVICTION
+        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          <button 
+            onClick={() => setAudioEnabled(!audioEnabled)}
+            style={{ background: audioEnabled ? '#4338ca' : 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: '10px', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.3s', fontWeight: 700 }}
+          >
+            {audioEnabled ? '🔔 JACKPOT ALERTS ON' : '🔕 JACKPOT ALERTS OFF'}
+          </button>
+          <div style={{ background: '#4338ca', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 900, letterSpacing: '0.05em' }}>
+            HIGH CONVICTION
+          </div>
         </div>
       </div>
 

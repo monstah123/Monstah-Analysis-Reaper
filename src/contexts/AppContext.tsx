@@ -103,8 +103,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const playMoneySound = useCallback((isForce = false) => {
     if (!audioEnabled && !isForce) return;
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3');
-    audio.volume = 0.35;
+    // Casino Slot Machine Win (Jackpot SFX)
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3');
+    audio.volume = 0.45;
     audio.play().catch(e => console.log('Audio blocked by browser:', e));
   }, [audioEnabled]);
 

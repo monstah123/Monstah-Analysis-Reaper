@@ -14,6 +14,7 @@ const CAT_FILTERS: FilterCat[] = ['All', 'Forex', 'Indices', 'Commodities', 'Cry
 import AddAssetModal from '../components/AddAssetModal';
 import RelativePerformance from '../components/RelativePerformance';
 import MarketHours from '../components/MarketHours';
+import SqueezeHistoryLog from '../components/SqueezeHistoryLog';
 
 const Dashboard: React.FC = () => {
   const { assets, isRefreshing, lastRefresh, refreshData, setSelectedAsset, activeView, setActiveView } = useApp();
@@ -80,7 +81,16 @@ const Dashboard: React.FC = () => {
 
       <MarketHours />
 
-      {(filterCat === 'All' || filterCat === 'Forex') && <RelativePerformance />}
+      {(filterCat === 'All' || filterCat === 'Forex') && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+           <div style={{ minWidth: 0 }}>
+              <RelativePerformance />
+           </div>
+           <div style={{ minWidth: 0 }}>
+              <SqueezeHistoryLog />
+           </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="filter-bar">

@@ -32,26 +32,22 @@ export default async function handler(req, res) {
   if (!cftcNames) return res.status(404).json({ success: false, error: 'Symbol not mapped for COT history' });
 
   try {
-    // Fetch a large batch of recent records from both datasets
     const [res1, res2] = await Promise.allSettled([
-      axios.get('https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 }),
-      axios.get('https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 })
+      axios.get('https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=1000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 }),
+      axios.get('https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=1000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 })
     ]);
 
     let rawData = [];
     if (res1.status === 'fulfilled' && res1.value?.data) rawData.push(...res1.value.data);
     if (res2.status === 'fulfilled' && res2.value?.data) rawData.push(...res2.value.data);
 
-    // Filter for the requested symbol's market names in JS (more robust than SoQL)
     const filtered = rawData.filter(row => 
       row.market_and_exchange_names && 
       cftcNames.some(name => row.market_and_exchange_names.includes(name))
     );
 
-    // Sort by date descending
     filtered.sort((a, b) => new Date(b.report_date_as_yyyy_mm_dd).getTime() - new Date(a.report_date_as_yyyy_mm_dd).getTime());
 
-    // Deduplicate dates
     const seenDates = new Set();
     const history = filtered.filter(row => {
       const date = row.report_date_as_yyyy_mm_dd.split('T')[0];
@@ -59,42 +55,42 @@ export default async function handler(req, res) {
       seenDates.add(date);
       return true;
     }).map((row, index, arr) => {
-      // Legacy fields (Used for most FX and older reports)
       const ncLong = parseFloat(row.noncomm_positions_long_all || row.asset_mgr_positions_long_all || row.lev_money_positions_long_all) || 0;
       const ncShort = parseFloat(row.noncomm_positions_short_all || row.asset_mgr_positions_short_all || row.lev_money_positions_short_all) || 0;
-      
       const cLong = parseFloat(row.comm_positions_long_all || row.dealer_positions_long_all) || 0;
       const cShort = parseFloat(row.comm_positions_short_all || row.dealer_positions_short_all) || 0;
       
-      const long = ncLong; // We prioritize Non-Commercial for the main chart
-      const short = ncShort;
-      const total = long + short;
-      const longPct = total > 0 ? (long / total) * 100 : 50;
+      const total = ncLong + ncShort;
+      const longPct = total > 0 ? (ncLong / total) * 100 : 50;
       
       const nextRow = arr[index + 1];
       let deltaLong = 0;
       let deltaShort = 0;
+      let prevLongPct = 50;
+      
       if (nextRow) {
-        const nextNC = parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0;
-        const nextNCS = parseFloat(nextRow.noncomm_positions_short_all || nextRow.asset_mgr_positions_short_all || nextRow.lev_money_positions_short_all) || 0;
-        deltaLong = long - nextNC;
-        deltaShort = short - nextNCS;
+        const nL = parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0;
+        const nS = parseFloat(nextRow.noncomm_positions_short_all || nextRow.asset_mgr_positions_short_all || nextRow.lev_money_positions_short_all) || 0;
+        deltaLong = ncLong - nL;
+        deltaShort = ncShort - nS;
+        const nTotal = nL + nS;
+        if (nTotal > 0) prevLongPct = (nL / nTotal) * 100;
       }
 
       return {
         date: row.report_date_as_yyyy_mm_dd.split('T')[0],
-        long,
-        short,
+        long: ncLong,
+        short: ncShort,
         nonCommLong: ncLong,
         nonCommShort: ncShort,
         commLong: cLong,
         commShort: cShort,
         longPct,
         shortPct: 100 - longPct,
-        netPosition: long - short,
+        netPosition: ncLong - ncShort,
         deltaLong,
         deltaShort,
-        netChangePct: nextRow ? longPct - ( (parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0) / ( (parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0) + (parseFloat(nextRow.noncomm_positions_short_all || nextRow.asset_mgr_positions_short_all || nextRow.lev_money_positions_short_all) || 0) ) * 100 ) : 0
+        netChangePct: longPct - prevLongPct
       };
     });
 

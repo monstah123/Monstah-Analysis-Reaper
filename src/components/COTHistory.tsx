@@ -5,6 +5,10 @@ interface COTHistoryPoint {
   date: string;
   long: number;
   short: number;
+  nonCommLong: number;
+  nonCommShort: number;
+  commLong: number;
+  commShort: number;
   longPct: number;
   shortPct: number;
   netPosition: number;
@@ -120,8 +124,51 @@ const COTHistory: React.FC<COTHistoryProps> = ({ initialSymbol = 'NASDAQ' }) => 
                 tickFormatter={(val) => `${val}%`}
               />
               <Tooltip 
-                contentStyle={{ background: '#1c1c1e', border: '1px solid #3a3a3c', borderRadius: '8px', fontSize: '12px', color: '#f8fafc' }}
-                itemStyle={{ padding: '2px 0' }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload as COTHistoryPoint;
+                    return (
+                      <div style={{ background: '#1c1c1e', border: '1px solid #3a3a3c', borderRadius: '12px', padding: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 100 }}>
+                        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', marginBottom: '8px' }}>
+                           <div style={{ color: '#8e8e93', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase' }}>Report Date</div>
+                           <div style={{ color: '#fff', fontSize: '13px', fontWeight: 900 }}>{data.date}</div>
+                        </div>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                          <div>
+                            <div style={{ color: '#3b82f6', fontSize: '10px', fontWeight: 800, marginBottom: '4px' }}>SPECULATORS (NON-COMM)</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f8fafc', fontSize: '11px', gap: '10px' }}>
+                               <span>Long</span>
+                               <span style={{ fontWeight: 800 }}>{data.nonCommLong.toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f8fafc', fontSize: '11px', gap: '10px' }}>
+                               <span>Short</span>
+                               <span style={{ fontWeight: 800 }}>{data.nonCommShort.toLocaleString()}</span>
+                            </div>
+                          </div>
+                          
+                          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '1rem' }}>
+                            <div style={{ color: '#ef4444', fontSize: '10px', fontWeight: 800, marginBottom: '4px' }}>HEDGERS (COMMERCIAL)</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f8fafc', fontSize: '11px', gap: '10px' }}>
+                               <span>Long</span>
+                               <span style={{ fontWeight: 800 }}>{data.commLong.toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f8fafc', fontSize: '11px', gap: '10px' }}>
+                               <span>Short</span>
+                               <span style={{ fontWeight: 800 }}>{data.commShort.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <div style={{ color: '#eab308', fontWeight: 900, fontSize: '12px' }}>{data.longPct.toFixed(1)}% LONG</div>
+                           <div style={{ color: '#94a3b8', fontWeight: 800, fontSize: '10px' }}>NET: {data.netPosition.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
               />
               <Bar yAxisId="position" dataKey="long" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} isAnimationActive={false} />
               <Bar yAxisId="position" dataKey="short" stackId="a" fill="#ef4444" radius={[0, 0, 0, 0]} isAnimationActive={false} />

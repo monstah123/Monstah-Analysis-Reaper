@@ -59,8 +59,16 @@ export default async function handler(req, res) {
       seenDates.add(date);
       return true;
     }).map((row, index, arr) => {
-      const long = parseFloat(row.noncomm_positions_long_all) || 0;
-      const short = parseFloat(row.noncomm_positions_short_all) || 0;
+    }).map((row, index, arr) => {
+      // Legacy fields (Used for most FX and older reports)
+      const ncLong = parseFloat(row.noncomm_positions_long_all || row.asset_mgr_positions_long_all || row.lev_money_positions_long_all) || 0;
+      const ncShort = parseFloat(row.noncomm_positions_short_all || row.asset_mgr_positions_short_all || row.lev_money_positions_short_all) || 0;
+      
+      const cLong = parseFloat(row.comm_positions_long_all || row.dealer_positions_long_all) || 0;
+      const cShort = parseFloat(row.comm_positions_short_all || row.dealer_positions_short_all) || 0;
+      
+      const long = ncLong; // We prioritize Non-Commercial for the main chart
+      const short = ncShort;
       const total = long + short;
       const longPct = total > 0 ? (long / total) * 100 : 50;
       
@@ -68,20 +76,26 @@ export default async function handler(req, res) {
       let deltaLong = 0;
       let deltaShort = 0;
       if (nextRow) {
-        deltaLong = long - (parseFloat(nextRow.noncomm_positions_long_all) || 0);
-        deltaShort = short - (parseFloat(nextRow.noncomm_positions_short_all) || 0);
+        const nextNC = parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0;
+        const nextNCS = parseFloat(nextRow.noncomm_positions_short_all || nextRow.asset_mgr_positions_short_all || nextRow.lev_money_positions_short_all) || 0;
+        deltaLong = long - nextNC;
+        deltaShort = short - nextNCS;
       }
 
       return {
         date: row.report_date_as_yyyy_mm_dd.split('T')[0],
         long,
         short,
+        nonCommLong: ncLong,
+        nonCommShort: ncShort,
+        commLong: cLong,
+        commShort: cShort,
         longPct,
         shortPct: 100 - longPct,
         netPosition: long - short,
         deltaLong,
         deltaShort,
-        netChangePct: nextRow ? longPct - ( (parseFloat(nextRow.noncomm_positions_long_all) || 0) / ( (parseFloat(nextRow.noncomm_positions_long_all) || 0) + (parseFloat(nextRow.noncomm_positions_short_all) || 0) ) * 100 ) : 0
+        netChangePct: nextRow ? longPct - ( (parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0) / ( (parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0) + (parseFloat(nextRow.noncomm_positions_short_all || nextRow.asset_mgr_positions_short_all || nextRow.lev_money_positions_short_all) || 0) ) * 100 ) : 0
       };
     });
 

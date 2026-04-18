@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
+import COTHistory from '../components/COTHistory';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -175,6 +176,9 @@ const Sentiment: React.FC = () => {
           <MyfxbookWidget />
         </div>
       </div>
+
+      {/* COT Data History (Institutional Grade) */}
+      <COTHistory initialSymbol="NASDAQ" />
     </div>
   );
 };

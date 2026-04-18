@@ -64,8 +64,12 @@ const COTHistory: React.FC<COTHistoryProps> = ({ initialSymbol = 'NASDAQ' }) => 
     fetchHistory();
   }, [selectedSymbol]);
 
-  // Reverse history for chart (oldest to newest)
-  const chartData = useMemo(() => [...history].reverse(), [history]);
+  // Filter history based on lookback for chart (newest-first -> take top N -> reverse for L-to-R)
+  const chartData = useMemo(() => {
+    const lb = lookbacks.find(l => l.id === lookback);
+    const weeks = lb ? lb.weeks : 12;
+    return [...history].slice(0, weeks).reverse();
+  }, [history, lookback]);
 
   return (
     <div className="settings-card" style={{ background: '#1c1c1e', borderRadius: '16px', border: '1px solid #2c2c2e', padding: '1.5rem', marginTop: '2rem', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>

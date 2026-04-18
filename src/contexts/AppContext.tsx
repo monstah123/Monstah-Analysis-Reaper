@@ -218,7 +218,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (res.ok) {
           const json = await res.json();
           if (json.success) {
-            neuralData = json.batch || {};
+            neuralData = json.sentiment || {};
             neuralMacro = json.macro || null;
             neuralYields = json.yields || null;
           }
@@ -255,13 +255,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           if (data) {
             // Institutional Positioning (Raw counts from CFTC)
-            cL = data.iLong ?? null;
-            cS = data.iShort ?? null;
+            cL = data.contractsLong ?? data.iLong ?? null;
+            cS = data.contractsShort ?? data.iShort ?? null;
             
+            // Apply percentages if raw counts are missing but Pct exists
+            if (cL === null && data.longPct !== undefined) {
+               cL = data.longPct;
+               cS = data.shortPct;
+            }
+
             // Retail Positioning (Official Sync)
             if (!a.snatcherActive) {
-              rL = data.long ?? null;
-              rS = data.short ?? null;
+              rL = data.long ?? data.retailLong ?? 50;
+              rS = data.short ?? data.retailShort ?? 50;
             }
           } else {
             // Stage 3: Fuzzy Normalization for Institutional Feeds (DAX, Oil, Spreads)

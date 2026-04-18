@@ -111,14 +111,16 @@ const COTHistory: React.FC<COTHistoryProps> = ({ initialSymbol = 'NASDAQ' }) => 
              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8e8e93', fontSize: '12px' }}>Analyzing Institutional Flows…</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
               <XAxis 
                 dataKey="date" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#8e8e93', fontSize: 10 }} 
-                // Only show a few ticks to keep it clean
-                interval={Math.floor(chartData.length / 8)}
+                tick={{ fill: '#8e8e93', fontSize: 9 }} 
+                // Dynamically adjust interval to keep labels readable
+                interval={Math.ceil(chartData.length / 10)}
+                angle={-15}
+                textAnchor="end"
               />
               <YAxis 
                 yAxisId="position"

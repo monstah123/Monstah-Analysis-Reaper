@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 /**
- * Institutional COT History Engine
- * Fetches historical data for a specific asset from CFTC.gov
+ * Institutional COT History Engine 2.0
+ * Fetches deep historical data for a specific asset from CFTC.gov
  */
 export default async function handler(req, res) {
   const { symbol } = req.query;
@@ -32,15 +32,21 @@ export default async function handler(req, res) {
   if (!cftcNames) return res.status(404).json({ success: false, error: 'Symbol not mapped for COT history' });
 
   try {
+    // Create SoQL multi-market filter for the symbol
+    const nameFilter = cftcNames.map(n => `market_and_exchange_names LIKE '%${n}%'`).join(' OR ');
+    const query = `$limit=5000&$where=(${encodeURIComponent(nameFilter)})&$order=report_date_as_yyyy_mm_dd DESC`;
+
+    // Fetch from BOTH datasets with the specific symbol filter to ensure depth
     const [res1, res2] = await Promise.allSettled([
-      axios.get('https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=1000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 }),
-      axios.get('https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=1000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 })
+      axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?${query}`, { timeout: 15000 }),
+      axios.get(`https://publicreporting.cftc.gov/resource/dea3-kfc2.json?${query}`, { timeout: 15000 })
     ]);
 
     let rawData = [];
     if (res1.status === 'fulfilled' && res1.value?.data) rawData.push(...res1.value.data);
     if (res2.status === 'fulfilled' && res2.value?.data) rawData.push(...res2.value.data);
 
+    // Filter to ensure exact matches
     const filtered = rawData.filter(row => 
       row.market_and_exchange_names && 
       cftcNames.some(name => row.market_and_exchange_names.includes(name))

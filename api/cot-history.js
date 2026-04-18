@@ -32,28 +32,31 @@ export default async function handler(req, res) {
   if (!cftcNames) return res.status(404).json({ success: false, error: 'Symbol not mapped for COT history' });
 
   try {
-    // We query both datasets to be safe, filtering by market names
-    const namesQuery = cftcNames.map(n => `market_and_exchange_names='${n}'`).join(' OR ');
-    
-    // TFF report for financials/currencies (dea3-kfc2)
-    // Disaggregated for commodities/crypto (6dca-aqww)
+    // Fetch a large batch of recent records from both datasets
     const [res1, res2] = await Promise.allSettled([
-      axios.get(`https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$where=(${namesQuery})&$limit=52&$order=report_date_as_yyyy_mm_dd DESC`),
-      axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$where=(${namesQuery})&$limit=52&$order=report_date_as_yyyy_mm_dd DESC`)
+      axios.get('https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 }),
+      axios.get('https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC', { timeout: 15000 })
     ]);
 
     let rawData = [];
-    if (res1.status === 'fulfilled') rawData.push(...res1.value.data);
-    if (res2.status === 'fulfilled') rawData.push(...res2.value.data);
+    if (res1.status === 'fulfilled' && res1.value?.data) rawData.push(...res1.value.data);
+    if (res2.status === 'fulfilled' && res2.value?.data) rawData.push(...res2.value.data);
+
+    // Filter for the requested symbol's market names in JS (more robust than SoQL)
+    const filtered = rawData.filter(row => 
+      row.market_and_exchange_names && 
+      cftcNames.some(name => row.market_and_exchange_names.includes(name))
+    );
 
     // Sort by date descending
-    rawData.sort((a, b) => new Date(b.report_date_as_yyyy_mm_dd).getTime() - new Date(a.report_date_as_yyyy_mm_dd).getTime());
+    filtered.sort((a, b) => new Date(b.report_date_as_yyyy_mm_dd).getTime() - new Date(a.report_date_as_yyyy_mm_dd).getTime());
 
-    // Deduplicate dates (in case an asset appears in both datasets or has multiple entries)
+    // Deduplicate dates
     const seenDates = new Set();
-    const history = rawData.filter(row => {
-      if (seenDates.has(row.report_date_as_yyyy_mm_dd)) return false;
-      seenDates.add(row.report_date_as_yyyy_mm_dd);
+    const history = filtered.filter(row => {
+      const date = row.report_date_as_yyyy_mm_dd.split('T')[0];
+      if (seenDates.has(date)) return false;
+      seenDates.add(date);
       return true;
     }).map((row, index, arr) => {
       const long = parseFloat(row.noncomm_positions_long_all) || 0;
@@ -61,7 +64,6 @@ export default async function handler(req, res) {
       const total = long + short;
       const longPct = total > 0 ? (long / total) * 100 : 50;
       
-      // Calculate delta from previous week
       const nextRow = arr[index + 1];
       let deltaLong = 0;
       let deltaShort = 0;

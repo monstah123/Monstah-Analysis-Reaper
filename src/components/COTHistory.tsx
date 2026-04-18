@@ -170,8 +170,8 @@ const COTHistory: React.FC<COTHistoryProps> = ({ initialSymbol = 'NASDAQ' }) => 
                   return null;
                 }}
               />
-              <Bar yAxisId="position" dataKey="long" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} isAnimationActive={false} />
-              <Bar yAxisId="position" dataKey="short" stackId="a" fill="#ef4444" radius={[0, 0, 0, 0]} isAnimationActive={false} />
+              <Bar yAxisId="position" dataKey="long" stackId="a" fill="#3b82f6" radius={[0, 0, 0, 0]} isAnimationActive={false} barSize={40} />
+              <Bar yAxisId="position" dataKey="short" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} isAnimationActive={false} barSize={40} />
               <Line 
                 yAxisId="pct"
                 type="monotone" 

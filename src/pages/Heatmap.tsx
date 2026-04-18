@@ -3,15 +3,23 @@ import { useApp } from '../contexts/AppContext';
 
 const Heatmap: React.FC = () => {
   const { assets, marketData, setSelectedAsset, setActiveView } = useApp();
+  const [filter, setFilter] = React.useState('All');
 
-  // Sort assets by magnitude of change to highlight the biggest movers
+  const categories = ['All', 'Forex', 'Indices', 'Commodities', 'Crypto'];
+
+  // Sort and filter assets
   const sortedAssets = useMemo(() => {
-     return [...assets].sort((a, b) => {
+     let filtered = [...assets];
+     if (filter !== 'All') {
+        filtered = filtered.filter(a => a.category === filter);
+     }
+     
+     return filtered.sort((a, b) => {
         const cA = marketData[a.id]?.change24h || 0;
         const cB = marketData[b.id]?.change24h || 0;
         return Math.abs(cB) - Math.abs(cA);
      });
-  }, [assets, marketData]);
+  }, [assets, marketData, filter]);
 
   const getHeatmapColor = (change: number) => {
      const abs = Math.abs(change);
@@ -31,7 +39,7 @@ const Heatmap: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: '5rem' }}>
-      <header className="header" style={{ marginBottom: '2rem' }}>
+      <header className="header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
         <div className="header-title">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 10px #22c55e', animation: 'pulse-dot 2s infinite' }}></div>
@@ -39,6 +47,29 @@ const Heatmap: React.FC = () => {
           </div>
           <h1>🌡️ Institutional Heatmap</h1>
           <p>Real-time performance matrix across Global Markets. 0% Mock Data. 100% Institutional Parity.</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+           <span style={{ fontSize: '0.7rem', fontWeight: 900, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Market Selector</span>
+           <select 
+             value={filter} 
+             onChange={(e) => setFilter(e.target.value)}
+             style={{
+               background: '#1e293b',
+               border: '1px solid rgba(255,255,255,0.1)',
+               color: '#fff',
+               padding: '0.6rem 1.2rem',
+               borderRadius: '10px',
+               fontSize: '0.85rem',
+               fontWeight: 700,
+               cursor: 'pointer',
+               outline: 'none',
+               minWidth: '200px',
+               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+             }}
+           >
+             {categories.map(c => <option key={c} value={c}>{c === 'All' ? 'ALL MARKETS' : c.toUpperCase()}</option>)}
+           </select>
         </div>
       </header>
 

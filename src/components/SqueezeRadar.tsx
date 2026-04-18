@@ -8,7 +8,7 @@ interface SqueezeRadarProps {
 }
 
 const SqueezeRadar: React.FC<SqueezeRadarProps> = ({ assets }) => {
-  const { audioEnabled, setAudioEnabled, squeezeAlerts, clearSqueezeAlerts } = useApp();
+  const { audioEnabled, setAudioEnabled } = useApp();
 
   const squeezeAssets = useMemo(() => {
     return assets.filter(a => {

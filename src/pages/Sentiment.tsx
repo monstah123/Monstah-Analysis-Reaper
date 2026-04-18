@@ -3,6 +3,7 @@ import { useApp } from '../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
 import COTHistory from '../components/COTHistory';
+import SqueezeRadar from '../components/SqueezeRadar';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -93,6 +94,8 @@ const Sentiment: React.FC = () => {
           <p>Commitment of Traders (COT) vs Retail Positioning (Contrarian)</p>
         </div>
       </header>
+
+      <SqueezeRadar assets={assets} />
 
       <div className="stats-bar" style={{ padding: '1.5rem 0' }}>
         <div className="stat-card">

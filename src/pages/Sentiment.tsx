@@ -112,10 +112,18 @@ const Sentiment: React.FC = () => {
         </div>
       </div>
 
-      {/* COT Chart */}
-      <div className="settings-card">
-        <h2 className="settings-section-title">Institutional Positioning (COT)</h2>
-        <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts.</p>
+      {/* Institutional COT Chart */}
+      <div className="settings-card" style={{ marginTop: '1.5rem', background: '#0f1623', border: '1px solid #1e2d48' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 className="settings-section-title" style={{ color: '#fff' }}>🏦 Institutional Positioning (COT)</h2>
+            <p className="settings-hint">Smart money (Non-commercials) net longs vs shorts — Updates Every Friday.</p>
+          </div>
+          <div className="verified-badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+            ✓ CFTC GOV DATA PULSE
+          </div>
+        </div>
+        
         {cotChartData.length > 0 ? (
           <div style={{ width: '100%', marginTop: '20px', overflowX: 'auto', minHeight: '300px' }}>
                 <BarChart 
@@ -146,19 +154,24 @@ const Sentiment: React.FC = () => {
               </BarChart>
           </div>
         ) : (
-          <div style={{ padding: '2rem 0', textAlign: 'center', color: '#4a5775', fontSize: '0.85rem' }}>
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#4a5775', fontSize: '0.85rem' }}>
             Syncing CFTC institutional data…
           </div>
         )}
       </div>
 
-
-
-      {/* Official Myfxbook Outlook Widget Section */}
-      <div className="settings-card" style={{ marginTop: '2rem', minHeight: '600px', background: '#0f1623' }}>
-        <h2 className="settings-section-title">📡 Official Myfxbook Live Feed</h2>
-        <p className="settings-hint">Direct sentiment source. Institutional sync continues via Reaper logic above.</p>
-        <div style={{ marginTop: '1.5rem', background: '#141b2d', padding: '10px', borderRadius: '8px', border: '1px solid #1e2d48' }}>
+      {/* Official Myfxbook Retail Outlook Widget Section */}
+      <div className="settings-card" style={{ marginTop: '2rem', minHeight: '700px', background: '#0f1623', border: '1px solid #1e2d48' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div>
+            <h2 className="settings-section-title" style={{ color: '#fff' }}>📡 Official Myfxbook Retail Sentiment</h2>
+            <p className="settings-hint">Direct Community Outlook feed (Social Sentiment / Contrarian).</p>
+          </div>
+          <div className="verified-badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}>
+            ✓ LIVE MYFXBOOK SYNC
+          </div>
+        </div>
+        <div style={{ background: '#141b2d', padding: '15px', borderRadius: '8px', border: '1px solid #1e2d48', minHeight: '650px' }}>
           <MyfxbookWidget />
         </div>
       </div>

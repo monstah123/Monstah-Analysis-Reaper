@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
       <MarketHours />
 
       {(filterCat === 'All' || filterCat === 'Forex') && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="dashboard-top-grid">
            <div style={{ minWidth: 0 }}>
               <RelativePerformance />
            </div>

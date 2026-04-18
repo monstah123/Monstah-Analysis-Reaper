@@ -32,8 +32,17 @@ const symbols = [
   { id: 'BITCOIN', name: 'BITCOIN' }
 ];
 
+const lookbacks = [
+  { id: '1M', name: '1 MONTH', weeks: 4 },
+  { id: '3M', name: '3 MONTHS', weeks: 12 },
+  { id: '6M', name: '6 MONTHS', weeks: 26 },
+  { id: '1Y', name: '1 YEAR', weeks: 52 },
+  { id: 'ALL', name: 'MAX (2 YEARS)', weeks: 999 }
+];
+
 const COTHistory: React.FC<COTHistoryProps> = ({ initialSymbol = 'NASDAQ' }) => {
   const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol);
+  const [lookback, setLookback] = useState('3M');
   const [history, setHistory] = useState<COTHistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,13 +87,18 @@ const COTHistory: React.FC<COTHistoryProps> = ({ initialSymbol = 'NASDAQ' }) => 
            </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-           <button style={{ background: '#3a3a3c', border: 'none', color: '#f8fafc', fontSize: '10px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px' }}>Help</button>
-           <button style={{ background: '#3a3a3c', border: 'none', color: '#f8fafc', fontSize: '10px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px' }}>Get COT Push Notifications</button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+           <select 
+             value={lookback}
+             onChange={(e) => setLookback(e.target.value)}
+             style={{ background: '#3a3a3c', border: '1px solid #48484a', color: '#f8fafc', fontSize: '10px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', outline: 'none' }}
+           >
+             {lookbacks.map(l => <option key={l.id} value={l.id}>Period: {l.name}</option>)}
+           </select>
            <select 
              value={selectedSymbol}
              onChange={(e) => setSelectedSymbol(e.target.value)}
-             style={{ background: '#3a3a3c', border: 'none', color: '#f8fafc', fontSize: '10px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', outline: 'none' }}
+             style={{ background: '#3a3a3c', border: '1px solid #48484a', color: '#f8fafc', fontSize: '10px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px', outline: 'none' }}
            >
              {symbols.map(s => <option key={s.id} value={s.id}>Symbol: {s.name}</option>)}
            </select>
@@ -186,33 +200,33 @@ const COTHistory: React.FC<COTHistoryProps> = ({ initialSymbol = 'NASDAQ' }) => 
         )}
       </div>
 
-      {/* Table Section */}
-      <div style={{ width: '100%', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'center' }}>
-          <thead>
+      {/* Table Section (Scrollable for deep history) */}
+      <div style={{ width: '100%', overflowX: 'auto', maxHeight: '400px', overflowY: 'auto', border: '1px solid #2c2c2e', borderRadius: '8px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'center' }}>
+          <thead style={{ position: 'sticky', top: 0, background: '#1c1c1e', zIndex: 5 }}>
             <tr style={{ borderBottom: '1px solid #2c2c2e', color: '#8e8e93' }}>
               <th style={{ padding: '12px 8px', textAlign: 'left' }}>Date</th>
-              <th style={{ padding: '12px 8px' }}>Net Change %</th>
-              <th style={{ padding: '12px 8px' }}>Long Contracts</th>
-              <th style={{ padding: '12px 8px' }}>Short Contracts</th>
-              <th style={{ padding: '12px 8px' }}>Δ Long Contracts</th>
-              <th style={{ padding: '12px 8px' }}>Δ Short Contracts</th>
+              <th style={{ padding: '12px 8px' }}>Net Chg %</th>
+              <th style={{ padding: '12px 8px' }}>NC Long</th>
+              <th style={{ padding: '12px 8px' }}>NC Short</th>
+              <th style={{ padding: '12px 8px' }}>Hedge Long</th>
+              <th style={{ padding: '12px 8px' }}>Hedge Short</th>
               <th style={{ padding: '12px 8px' }}>Long %</th>
               <th style={{ padding: '12px 8px' }}>Short %</th>
-              <th style={{ padding: '12px 8px', textAlign: 'right' }}>Net Position</th>
+              <th style={{ padding: '12px 8px', textAlign: 'right' }}>Net Pos</th>
             </tr>
           </thead>
           <tbody>
-            {history.slice(0, 12).map((row, i) => (
+            {history.slice(0, lookbacks.find(l => l.id === lookback)?.weeks || 12).map((row, i) => (
               <tr key={row.date} style={{ borderBottom: '1px solid #2c2c2e', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
                 <td style={{ padding: '12px 8px', textAlign: 'left', color: '#f8fafc', fontWeight: 600 }}>{row.date}</td>
                 <td style={{ padding: '12px 8px', color: row.netChangePct > 0 ? '#4ade80' : row.netChangePct < 0 ? '#fca5a5' : '#8e8e93' }}>
                   {row.netChangePct.toFixed(2)}%
                 </td>
-                <td style={{ padding: '12px 8px', color: '#3b82f6' }}>{row.long.toLocaleString()}</td>
-                <td style={{ padding: '12px 8px', color: '#ef4444' }}>{row.short.toLocaleString()}</td>
-                <td style={{ padding: '12px 8px' }}>{row.deltaLong > 0 ? `+${row.deltaLong.toLocaleString()}` : row.deltaLong.toLocaleString()}</td>
-                <td style={{ padding: '12px 8px' }}>{row.deltaShort > 0 ? `+${row.deltaShort.toLocaleString()}` : row.deltaShort.toLocaleString()}</td>
+                <td style={{ padding: '12px 8px', color: '#3b82f6' }}>{row.nonCommLong.toLocaleString()}</td>
+                <td style={{ padding: '12px 8px', color: '#ef4444' }}>{row.nonCommShort.toLocaleString()}</td>
+                <td style={{ padding: '12px 8px', color: '#3b82f6', opacity: 0.8 }}>{row.commLong.toLocaleString()}</td>
+                <td style={{ padding: '12px 8px', color: '#ef4444', opacity: 0.8 }}>{row.commShort.toLocaleString()}</td>
                 <td style={{ padding: '12px 8px' }}>{row.longPct.toFixed(2)}%</td>
                 <td style={{ padding: '12px 8px' }}>{row.shortPct.toFixed(2)}%</td>
                 <td style={{ padding: '12px 8px', textAlign: 'right', color: row.netPosition > 0 ? '#3b82f6' : '#ef4444', fontWeight: 700 }}>

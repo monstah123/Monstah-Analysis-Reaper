@@ -7,7 +7,7 @@ interface SqueezeRadarProps {
 }
 
 const SqueezeRadar: React.FC<SqueezeRadarProps> = ({ assets }) => {
-  const { audioEnabled, setAudioEnabled } = useApp();
+  const { audioEnabled, setAudioEnabled, squeezeAlerts, clearSqueezeAlerts } = useApp();
 
   const squeezeAssets = useMemo(() => {
     return assets.filter(a => {
@@ -112,18 +112,18 @@ const SqueezeRadar: React.FC<SqueezeRadarProps> = ({ assets }) => {
       <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
            <h4 style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0, fontWeight: 700, letterSpacing: '0.05em' }}>📟 RECENT SQUEEZE LOG</h4>
-           {(app.squeezeAlerts?.length ?? 0) > 0 && (
-             <button onClick={app.clearSqueezeAlerts} style={{ background: 'transparent', border: 'none', color: '#6366f1', fontSize: '10px', cursor: 'pointer', fontWeight: 700 }}>CLEAR LOG</button>
+           {(squeezeAlerts?.length ?? 0) > 0 && (
+             <button onClick={clearSqueezeAlerts} style={{ background: 'transparent', border: 'none', color: '#6366f1', fontSize: '10px', cursor: 'pointer', fontWeight: 700 }}>CLEAR LOG</button>
            )}
         </div>
 
-        {(!app.squeezeAlerts || app.squeezeAlerts.length === 0) ? (
+        {(!squeezeAlerts || squeezeAlerts.length === 0) ? (
           <div style={{ padding: '1rem', textAlign: 'center', color: '#4b5563', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
             No recent alerts. The log will populate as institutional flows diverge.
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {app.squeezeAlerts.map((alert, i) => {
+            {squeezeAlerts.map((alert: any, i: number) => {
               const secondsAgo = Math.floor((Date.now() - alert.timestamp) / 1000);
               const timeStr = secondsAgo < 60 ? `${secondsAgo}s ago` : `${Math.floor(secondsAgo / 60)}m ago`;
               

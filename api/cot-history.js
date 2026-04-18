@@ -59,7 +59,6 @@ export default async function handler(req, res) {
       seenDates.add(date);
       return true;
     }).map((row, index, arr) => {
-    }).map((row, index, arr) => {
       // Legacy fields (Used for most FX and older reports)
       const ncLong = parseFloat(row.noncomm_positions_long_all || row.asset_mgr_positions_long_all || row.lev_money_positions_long_all) || 0;
       const ncShort = parseFloat(row.noncomm_positions_short_all || row.asset_mgr_positions_short_all || row.lev_money_positions_short_all) || 0;

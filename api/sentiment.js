@@ -13,14 +13,15 @@ export default async function handler(req, res) {
 
     // EdgeFinder ID Register (100% Identification Persistence)
     const ASSET_REGISTER = {
-        'US30': { id: ['DOW JONES INDUSTRIAL AVG - CHICAGO BOARD OF TRADE'], category: 'Indices' },
+        'US30': { id: ['DOW JONES INDUSTRIAL AVERAGE - CHICAGO BOARD OF TRADE', 'DOW JONES INDUSTRIAL AVG- x $5 - CHICAGO BOARD OF TRADE'], category: 'Indices' },
         'SP500': { id: ['E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE', 'S&P 500 CONSOLIDATED - CHICAGO MERCANTILE EXCHANGE', 'S&P 500 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'NASDAQ': { id: ['NASDAQ-100 CONSOLIDATED - CHICAGO MERCANTILE EXCHANGE', 'NASDAQ MINI - CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'GOLD': { id: ['GOLD - COMMODITY EXCHANGE'], category: 'Commodities' },
-        'SILVER': { id: ['SILVER - COMMODITY EXCHANGE'], category: 'Commodities' },
-        'COPPER': { id: ['COPPER-Grade #1 - COMMODITY EXCHANGE'], category: 'Commodities' },
+        'NIKKEI': { id: ['NIKKEI STOCK AVERAGE - CHICAGO MERCANTILE EXCHANGE', 'NIKKEI STOCK AVERAGE YEN DENOM - CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'GOLD': { id: ['GOLD - COMMODITY EXCHANGE INC.', 'GOLD - COMMODITY EXCHANGE'], category: 'Commodities' },
+        'SILVER': { id: ['SILVER - COMMODITY EXCHANGE INC.', 'SILVER - COMMODITY EXCHANGE'], category: 'Commodities' },
+        'COPPER': { id: ['COPPER-GRADE #1 - COMMODITY EXCHANGE INC.', 'COPPER- #1 - COMMODITY EXCHANGE INC.', 'COPPER-Grade #1 - COMMODITY EXCHANGE'], category: 'Commodities' },
         'USOIL': { id: ['CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
-        'UKOIL': { id: ['BRENT LAST DAY FINANCIAL - ICE FUTURES EUROPE'], category: 'Commodities' },
+        'UKOIL': { id: ['BRENT LAST DAY - NEW YORK MERCANTILE EXCHANGE', 'CRUDE OIL, BRENT - NEW YORK MERCANTILE EXCHANGE', 'BRENT LAST DAY FINANCIAL - ICE FUTURES EUROPE'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'GBPUSD': { id: ['BRITISH POUND - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'USDJPY': { id: ['JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
@@ -29,7 +30,7 @@ export default async function handler(req, res) {
         'USDCHF': { id: ['SWISS FRANC - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'NZDUSD': { id: ['NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'BITCOIN': { id: ['BITCOIN - CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' },
-        'ETHEREUM': { id: ['ETHER - CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
+        'ETHEREUM': { id: ['ETHER CASH SETTLED - CHICAGO MERCANTILE EXCHANGE', 'ETHER - CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
     };
 
     try {

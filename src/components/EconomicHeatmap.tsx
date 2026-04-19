@@ -140,106 +140,143 @@ const EconomicHeatmap: React.FC = () => {
   }, [dataRows]);
 
   const renderGauge = (label: string, score: number) => {
-    // Score determines needle rotation. 180 is far left (0%), 360 is far right (100%)
-    const angle = 180 + (score / 100) * 180;
+    // 2026 Divergence Gauge Logic:
+    // Tracks start from the absolute center top (Neutral = 50)
+    // If > 50, it sweeps RIGHT. If < 50, it sweeps LEFT.
+    const isBullish = score > 50;
+    const isBearish = score < 50;
+    const absDelta = Math.abs(score - 50); // 0 to 50
+    const fillPercentage = (absDelta / 50) * 100; // 0 to 100% capacity of the half-track
     
+    // Geometry
+    const radius = 80;
+    const strokeLength = (Math.PI * radius) / 2; // Length of a quarter circle
+    const dashOffset = strokeLength - (fillPercentage / 100) * strokeLength;
+    
+    // End Dot Coordinates Math
+    // Normal math: 0 deg is right edge, -90 deg is top center.
+    // For Bullish: sweeps from -90 to 0 degrees.
+    // For Bearish: sweeps from -90 to -180 degrees.
+    const angleRange = (fillPercentage / 100) * (Math.PI / 2);
+    const finalAngle = isBullish ? (-Math.PI/2 + angleRange) : (-Math.PI/2 - angleRange);
+    
+    const dotX = 100 + radius * Math.cos(finalAngle);
+    const dotY = 100 + radius * Math.sin(finalAngle);
+
+    const themeColor = score > 50 ? '#3b82f6' : score < 50 ? '#ef4444' : '#64748b';
+    const bgGradient = score > 50 ? 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%)' : 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.08) 0%, transparent 70%)';
+
     return (
       <div style={{ 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center', 
-        background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.7))', 
-        border: '1px solid rgba(255, 255, 255, 0.05)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        background: '#121418', 
+        border: '1px solid rgba(255, 255, 255, 0.04)',
         padding: '1.5rem', 
         borderRadius: '16px', 
         width: '260px',
-        position: 'relative'
+        position: 'relative',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        backgroundImage: bgGradient
       }}>
         
-        {/* Floating Percentage Header */}
-        <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', fontSize: '12px', fontWeight: 800, padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-          {score.toFixed(2)}%
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: 700, margin: 0, letterSpacing: '0.3px' }}>
+            {label}
+          </h3>
+          <div style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8', fontSize: '10px', fontWeight: 800, padding: '4px 8px', borderRadius: '4px' }}>
+             BIAS VECTOR
+          </div>
         </div>
-
-        <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 800, margin: '0 0 1rem 0', alignSelf: 'flex-start', letterSpacing: '0.5px' }}>
-          {label} Bias
-        </h3>
         
-        <div style={{ position: 'relative', width: '180px', height: '100px', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+        <div style={{ position: 'relative', width: '200px', height: '110px', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
           <svg viewBox="0 0 200 110" width="100%" height="100%" style={{ overflow: 'visible' }}>
              <defs>
-               <filter id={`glow-${label.replace(/\s+/g, '')}`} x="-20%" y="-20%" width="140%" height="140%">
-                 <feGaussianBlur stdDeviation="3" result="blur" />
-                 <feMerge>
-                   <feMergeNode in="blur"/>
-                   <feMergeNode in="SourceGraphic"/>
-                 </feMerge>
-               </filter>
-               <linearGradient id="bearGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                 <stop offset="0%" stopColor="#f43f5e" />
-                 <stop offset="100%" stopColor="#9f1239" />
+               <linearGradient id={`bullGrad-${label}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                 <stop offset="0%" stopColor="#60a5fa" />
+                 <stop offset="100%" stopColor="#2563eb" />
                </linearGradient>
-               <linearGradient id="bullGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                 <stop offset="0%" stopColor="#1d4ed8" />
-                 <stop offset="100%" stopColor="#3b82f6" />
+               <linearGradient id={`bearGrad-${label}`} x1="100%" y1="0%" x2="0%" y2="100%">
+                 <stop offset="0%" stopColor="#fb7185" />
+                 <stop offset="100%" stopColor="#e11d48" />
                </linearGradient>
              </defs>
 
-             {/* Background Track */}
-             <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="16" strokeLinecap="round" />
+             {/* Faint Background Track (Full Half-Circle) */}
+             <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="12" strokeLinecap="round" />
+             
+             {/* Micro-Dash Inner Orbit Ring */}
+             <path d="M 35 100 A 65 65 0 0 1 165 100" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" strokeDasharray="1 10" strokeLinecap="round" />
 
-             {/* Red side (left, 0 to 50%) */}
-             <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="url(#bearGrad)" strokeWidth="16" strokeLinecap="round" style={{ filter: `url(#glow-${label.replace(/\s+/g, '')})` }} opacity={score < 50 ? "1" : "0.5"} />
+             {/* Left Sweep (Bearish) */}
+             {isBearish && (
+               <path 
+                 d="M 100 20 A 80 80 0 0 0 20 100" 
+                 fill="none" 
+                 stroke={`url(#bearGrad-${label})`} 
+                 strokeWidth="12" 
+                 strokeLinecap="round"
+                 strokeDasharray={strokeLength}
+                 strokeDashoffset={dashOffset}
+                 style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
+               />
+             )}
              
-             {/* Blue side (right, 50 to 100%) */}
-             <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="url(#bullGrad)" strokeWidth="16" strokeLinecap="round" style={{ filter: `url(#glow-${label.replace(/\s+/g, '')})` }} opacity={score >= 50 ? "1" : "0.5"} />
+             {/* Right Sweep (Bullish) */}
+             {isBullish && (
+               <path 
+                 d="M 100 20 A 80 80 0 0 1 180 100" 
+                 fill="none" 
+                 stroke={`url(#bullGrad-${label})`} 
+                 strokeWidth="12" 
+                 strokeLinecap="round"
+                 strokeDasharray={strokeLength}
+                 strokeDashoffset={dashOffset}
+                 style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1)' }}
+               />
+             )}
              
-             {/* Middle Splitter indicator (Tick) */}
-             <line x1="100" y1="10" x2="100" y2="30" stroke="#0f172a" strokeWidth="6" strokeLinecap="round" />
+             {/* Center Neutral Anchor */}
+             <circle cx="100" cy="20" r="4" fill="#1e293b" stroke="#334155" strokeWidth="2" />
+             
+             {/* The Dynamic Leading Dot */}
+             {(isBullish || isBearish) && (
+                <circle 
+                  cx={dotX} 
+                  cy={dotY} 
+                  r="6" 
+                  fill="#fff" 
+                  style={{ 
+                    filter: `drop-shadow(0 0 6px ${themeColor})`,
+                    transition: 'cx 1.5s cubic-bezier(0.16, 1, 0.3, 1), cy 1.5s cubic-bezier(0.16, 1, 0.3, 1)' 
+                  }} 
+                />
+             )}
           </svg>
 
-          {/* Sleek Luminous Needle */}
-          <div style={{
-            position: 'absolute',
-            bottom: '10px',
-            left: '50%',
-            width: '80px',
-            height: '3px',
-            background: 'linear-gradient(90deg, transparent 10%, #fbbf24 90%)',
-            boxShadow: '2px 0px 8px rgba(251, 191, 36, 0.8)',
-            transformOrigin: 'left center',
-            transform: `translate(0, -50%) rotate(${angle}deg)`,
-            borderRadius: '0 4px 4px 0',
-            zIndex: 2,
-            transition: 'transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-          }} />
-          
-          {/* Glassy Center Ring */}
-          <div style={{
-            position: 'absolute',
-            bottom: '-4px', // Aligned with the origin of the needle
-            left: '50%',
-            width: '28px',
-            height: '28px',
-            background: '#1e293b',
-            borderRadius: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 3,
-            border: '4px solid #3b82f6',
-            boxShadow: '0 0 15px rgba(59, 130, 246, 0.4), inset 0 2px 4px rgba(0,0,0,0.5)'
-          }} />
+          {/* Central Typography Typography */}
+          <div style={{ position: 'absolute', bottom: '0px', width: '100%', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff', letterSpacing: '-1px', lineHeight: '1' }}>
+              {score.toFixed(0)}<span style={{ fontSize: '18px', color: '#94a3b8', verticalAlign: 'top', marginLeft: '2px' }}>%</span>
+            </div>
+            <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'center' }}>
+               <div style={{ 
+                 background: score > 50 ? 'rgba(59, 130, 246, 0.1)' : score < 50 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', 
+                 color: themeColor, 
+                 fontSize: '10px', 
+                 fontWeight: 800, 
+                 padding: '4px 10px', 
+                 borderRadius: '20px', 
+                 letterSpacing: '1px',
+                 textTransform: 'uppercase'
+               }}>
+                 {score > 50 ? 'Net Bullish' : score < 50 ? 'Net Bearish' : 'Neutral'}
+               </div>
+            </div>
+          </div>
         </div>
         
-        {/* Dynamic Status Text */}
-        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <span style={{ fontSize: '28px', fontWeight: 900, color: '#f8fafc', textShadow: '0 2px 10px rgba(0,0,0,0.5)', lineHeight: '1' }}>
-            {score.toFixed(0)}%
-          </span>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: score >= 50 ? '#60a5fa' : '#f43f5e', textTransform: 'uppercase', letterSpacing: '2px', marginTop: '4px' }}>
-            {score > 50 ? 'Net Bullish' : score < 50 ? 'Net Bearish' : 'Neutral'}
-          </span>
-        </div>
       </div>
     );
   };

@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         // Parallel Institutional Fetch
         const [resLegacy, resTFF, resGdp, resCpi, resFed, resNfp] = await Promise.allSettled([
             axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
@@ -44,8 +44,9 @@ export default async function handler(req, res) {
         ]);
 
         let rawData = [];
-        if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data);
+        // Prioritize Traders in Financial Futures (TFF) so indices hit Asset Manager columns first
         if (resTFF.status === 'fulfilled') rawData.push(...resTFF.value.data);
+        if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data);
 
         const results = {};
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
@@ -53,8 +54,8 @@ export default async function handler(req, res) {
             const match = rawData.find(row => config.id.some(acceptedId => row.market_and_exchange_names?.toUpperCase() === acceptedId.toUpperCase()));
 
             if (match) {
-                const ncLong = parseFloat(match.noncomm_positions_long_all || match.asset_mgr_positions_long_all || match.lev_money_positions_long_all) || 0;
-                const ncShort = parseFloat(match.noncomm_positions_short_all || match.asset_mgr_positions_short_all || match.lev_money_positions_short_all) || 0;
+                const ncLong = parseFloat(match.asset_mgr_positions_long || match.asset_mgr_positions_long_all || match.noncomm_positions_long_all || match.lev_money_positions_long || match.lev_money_positions_long_all) || 0;
+                const ncShort = parseFloat(match.asset_mgr_positions_short || match.asset_mgr_positions_short_all || match.noncomm_positions_short_all || match.lev_money_positions_short || match.lev_money_positions_short_all) || 0;
                 const total = ncLong + ncShort;
                 
                 if (total > 0) {

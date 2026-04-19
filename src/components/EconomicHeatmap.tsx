@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 // Institutional Real-Time Macro Heatmap (NO MOCKUPS)
 // Powered strictly by Federal Reserve Economic Data (FRED)
@@ -118,6 +118,108 @@ const EconomicHeatmap: React.FC = () => {
     return 'transparent';
   };
 
+  // --- Gauge Scoring Logic ---
+  const { usdScore, stocksScore } = useMemo(() => {
+    let usdBull = 0, usdBear = 0;
+    let stkBull = 0, stkBear = 0;
+
+    dataRows.forEach(r => {
+       if (r.usdImpact === 'Bullish') usdBull++;
+       if (r.usdImpact === 'Bearish') usdBear++;
+       if (r.stocksImpact === 'Bullish') stkBull++;
+       if (r.stocksImpact === 'Bearish') stkBear++;
+    });
+
+    const usdTotal = usdBull + usdBear;
+    const stkTotal = stkBull + stkBear;
+
+    return {
+      usdScore: usdTotal > 0 ? (usdBull / usdTotal) * 100 : 50,
+      stocksScore: stkTotal > 0 ? (stkBull / stkTotal) * 100 : 50
+    };
+  }, [dataRows]);
+
+  const renderGauge = (label: string, score: number) => {
+    // 0 score = 180deg (far left), 100 score = 0deg or 360deg (far right)
+    // Actually, straight left is 180deg, straight right is 360deg
+    const angle = 180 + (score / 100) * 180;
+    
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#2c2c2e', padding: '0', borderRadius: '8px', overflow: 'hidden', width: '220px' }}>
+        <div style={{ background: '#3b82f6', width: '100%', textAlign: 'center', color: '#fff', fontSize: '15px', fontWeight: 800, padding: '8px 0' }}>
+          {score.toFixed(2)}%
+        </div>
+        
+        <div style={{ padding: '20px 20px 10px', position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: '140px', height: '70px', overflow: 'hidden' }}>
+            {/* SVG Arc Track */}
+            <svg viewBox="0 0 200 100" width="100%" height="100%" style={{ overflow: 'visible' }}>
+               {/* Red side (left, 0 to 50%) */}
+               <path d="M 10 90 A 80 80 0 0 1 100 10" fill="none" stroke="#ef4444" strokeWidth="20" strokeLinecap="butt" />
+               <path d="M 10 90 A 80 80 0 0 1 100 10" fill="none" stroke="#333" strokeDasharray="10 20" strokeWidth="22" strokeLinecap="butt" opacity="0.3" />
+
+               {/* Blue side (right, 50 to 100%) */}
+               <path d="M 100 10 A 80 80 0 0 1 190 90" fill="none" stroke="#3b82f6" strokeWidth="20" strokeLinecap="butt" />
+               <path d="M 100 10 A 80 80 0 0 1 190 90" fill="none" stroke="#333" strokeDasharray="10 20" strokeWidth="22" strokeLinecap="butt" opacity="0.3" />
+               
+               {/* Middle Splitter */}
+               <line x1="100" y1="0" x2="100" y2="20" stroke="#1c1c1e" strokeWidth="4" />
+            </svg>
+
+            {/* Label inside Gauge */}
+            <div style={{
+               position: 'absolute',
+               bottom: '20px',
+               left: '50%',
+               transform: 'translateX(-50%)',
+               fontSize: '18px',
+               fontWeight: 800,
+               color: '#1c1c1e',
+               WebkitTextStroke: '0.5px #fff',
+               zIndex: 1,
+               textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}>
+              {label}
+            </div>
+
+            {/* Needle */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0px',
+              left: '50%',
+              width: '65px',
+              height: '4px',
+              background: '#ea580c',
+              transformOrigin: 'left center',
+              transform: `translate(0, -50%) rotate(${angle}deg)`,
+              borderRadius: '2px',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
+              zIndex: 2
+            }} />
+            
+            {/* Center dot */}
+            <div style={{
+              position: 'absolute',
+              bottom: '-10px',
+              left: '50%',
+              width: '24px',
+              height: '24px',
+              background: '#3b82f6',
+              borderRadius: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 3,
+              border: '3px solid #fff',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.4)'
+            }} />
+          </div>
+        </div>
+        <div style={{ fontSize: '20px', fontWeight: 800, color: '#f8fafc', paddingBottom: '15px' }}>
+          {score.toFixed(0)}%
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="settings-card" style={{ marginTop: '2rem', background: '#1c1c1e', border: '1px solid #2c2c2e', padding: '1.5rem', borderRadius: '12px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -174,6 +276,11 @@ const EconomicHeatmap: React.FC = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div style={{ display: 'flex', gap: '2rem', justifyContent: 'flex-end', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+        {renderGauge('USD', usdScore)}
+        {renderGauge('US Stocks', stocksScore)}
       </div>
     </div>
   );

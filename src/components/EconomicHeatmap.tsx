@@ -140,81 +140,105 @@ const EconomicHeatmap: React.FC = () => {
   }, [dataRows]);
 
   const renderGauge = (label: string, score: number) => {
-    // 0 score = 180deg (far left), 100 score = 0deg or 360deg (far right)
-    // Actually, straight left is 180deg, straight right is 360deg
+    // Score determines needle rotation. 180 is far left (0%), 360 is far right (100%)
     const angle = 180 + (score / 100) * 180;
     
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#2c2c2e', padding: '0', borderRadius: '8px', overflow: 'hidden', width: '220px' }}>
-        <div style={{ background: '#3b82f6', width: '100%', textAlign: 'center', color: '#fff', fontSize: '15px', fontWeight: 800, padding: '8px 0' }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.7))', 
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        padding: '1.5rem', 
+        borderRadius: '16px', 
+        width: '260px',
+        position: 'relative'
+      }}>
+        
+        {/* Floating Percentage Header */}
+        <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', fontSize: '12px', fontWeight: 800, padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
           {score.toFixed(2)}%
         </div>
+
+        <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: 800, margin: '0 0 1rem 0', alignSelf: 'flex-start', letterSpacing: '0.5px' }}>
+          {label} Bias
+        </h3>
         
-        <div style={{ padding: '20px 20px 10px', position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ position: 'relative', width: '140px', height: '70px', overflow: 'hidden' }}>
-            {/* SVG Arc Track */}
-            <svg viewBox="0 0 200 100" width="100%" height="100%" style={{ overflow: 'visible' }}>
-               {/* Red side (left, 0 to 50%) */}
-               <path d="M 10 90 A 80 80 0 0 1 100 10" fill="none" stroke="#ef4444" strokeWidth="20" strokeLinecap="butt" />
-               <path d="M 10 90 A 80 80 0 0 1 100 10" fill="none" stroke="#333" strokeDasharray="10 20" strokeWidth="22" strokeLinecap="butt" opacity="0.3" />
+        <div style={{ position: 'relative', width: '180px', height: '100px', display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+          <svg viewBox="0 0 200 110" width="100%" height="100%" style={{ overflow: 'visible' }}>
+             <defs>
+               <filter id={`glow-${label.replace(/\s+/g, '')}`} x="-20%" y="-20%" width="140%" height="140%">
+                 <feGaussianBlur stdDeviation="3" result="blur" />
+                 <feMerge>
+                   <feMergeNode in="blur"/>
+                   <feMergeNode in="SourceGraphic"/>
+                 </feMerge>
+               </filter>
+               <linearGradient id="bearGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                 <stop offset="0%" stopColor="#f43f5e" />
+                 <stop offset="100%" stopColor="#9f1239" />
+               </linearGradient>
+               <linearGradient id="bullGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                 <stop offset="0%" stopColor="#1d4ed8" />
+                 <stop offset="100%" stopColor="#3b82f6" />
+               </linearGradient>
+             </defs>
 
-               {/* Blue side (right, 50 to 100%) */}
-               <path d="M 100 10 A 80 80 0 0 1 190 90" fill="none" stroke="#3b82f6" strokeWidth="20" strokeLinecap="butt" />
-               <path d="M 100 10 A 80 80 0 0 1 190 90" fill="none" stroke="#333" strokeDasharray="10 20" strokeWidth="22" strokeLinecap="butt" opacity="0.3" />
-               
-               {/* Middle Splitter */}
-               <line x1="100" y1="0" x2="100" y2="20" stroke="#1c1c1e" strokeWidth="4" />
-            </svg>
+             {/* Background Track */}
+             <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="16" strokeLinecap="round" />
 
-            {/* Label inside Gauge */}
-            <div style={{
-               position: 'absolute',
-               bottom: '20px',
-               left: '50%',
-               transform: 'translateX(-50%)',
-               fontSize: '18px',
-               fontWeight: 800,
-               color: '#1c1c1e',
-               WebkitTextStroke: '0.5px #fff',
-               zIndex: 1,
-               textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-            }}>
-              {label}
-            </div>
+             {/* Red side (left, 0 to 50%) */}
+             <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="url(#bearGrad)" strokeWidth="16" strokeLinecap="round" style={{ filter: `url(#glow-${label.replace(/\s+/g, '')})` }} opacity={score < 50 ? "1" : "0.5"} />
+             
+             {/* Blue side (right, 50 to 100%) */}
+             <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="url(#bullGrad)" strokeWidth="16" strokeLinecap="round" style={{ filter: `url(#glow-${label.replace(/\s+/g, '')})` }} opacity={score >= 50 ? "1" : "0.5"} />
+             
+             {/* Middle Splitter indicator (Tick) */}
+             <line x1="100" y1="10" x2="100" y2="30" stroke="#0f172a" strokeWidth="6" strokeLinecap="round" />
+          </svg>
 
-            {/* Needle */}
-            <div style={{
-              position: 'absolute',
-              bottom: '0px',
-              left: '50%',
-              width: '65px',
-              height: '4px',
-              background: '#ea580c',
-              transformOrigin: 'left center',
-              transform: `translate(0, -50%) rotate(${angle}deg)`,
-              borderRadius: '2px',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
-              zIndex: 2
-            }} />
-            
-            {/* Center dot */}
-            <div style={{
-              position: 'absolute',
-              bottom: '-10px',
-              left: '50%',
-              width: '24px',
-              height: '24px',
-              background: '#3b82f6',
-              borderRadius: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 3,
-              border: '3px solid #fff',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.4)'
-            }} />
-          </div>
+          {/* Sleek Luminous Needle */}
+          <div style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '50%',
+            width: '80px',
+            height: '3px',
+            background: 'linear-gradient(90deg, transparent 10%, #fbbf24 90%)',
+            boxShadow: '2px 0px 8px rgba(251, 191, 36, 0.8)',
+            transformOrigin: 'left center',
+            transform: `translate(0, -50%) rotate(${angle}deg)`,
+            borderRadius: '0 4px 4px 0',
+            zIndex: 2,
+            transition: 'transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+          }} />
+          
+          {/* Glassy Center Ring */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-4px', // Aligned with the origin of the needle
+            left: '50%',
+            width: '28px',
+            height: '28px',
+            background: '#1e293b',
+            borderRadius: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 3,
+            border: '4px solid #3b82f6',
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.4), inset 0 2px 4px rgba(0,0,0,0.5)'
+          }} />
         </div>
-        <div style={{ fontSize: '20px', fontWeight: 800, color: '#f8fafc', paddingBottom: '15px' }}>
-          {score.toFixed(0)}%
+        
+        {/* Dynamic Status Text */}
+        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <span style={{ fontSize: '28px', fontWeight: 900, color: '#f8fafc', textShadow: '0 2px 10px rgba(0,0,0,0.5)', lineHeight: '1' }}>
+            {score.toFixed(0)}%
+          </span>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: score >= 50 ? '#60a5fa' : '#f43f5e', textTransform: 'uppercase', letterSpacing: '2px', marginTop: '4px' }}>
+            {score > 50 ? 'Net Bullish' : score < 50 ? 'Net Bearish' : 'Neutral'}
+          </span>
         </div>
       </div>
     );

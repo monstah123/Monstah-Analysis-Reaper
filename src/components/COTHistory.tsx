@@ -24,7 +24,7 @@ interface COTHistoryProps {
 const symbols = [
   { id: 'NASDAQ', name: 'NASDAQ' },
   { id: 'SP500', name: 'S&P 500' },
-  { id: 'US30', name: 'US30 (DOW)' },
+  { id: 'US30', name: 'US30' },
   { id: 'DAX', name: 'DAX (GER40)' },
   { id: 'NIKKEI', name: 'NIKKEI 225' },
   { id: 'GOLD', name: 'GOLD' },

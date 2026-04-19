@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     'SILVER': ['SILVER'],
     'COPPER': ['COPPER-GRADE #1', 'COPPER- #1', 'COPPER - COMMODITY EXCHANGE'],
     'USOIL': ['CRUDE OIL, LIGHT SWEET'],
-    'UKOIL': ['CRUDE OIL, LIGHT SWEET'],
+    'UKOIL': ['BRENT CRUDE'],
     'BITCOIN': ['BITCOIN'],
     'ETHEREUM': ['ETHER']
   };
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     // Group by date and pick the one with the highest speculative volume to avoid "empty" secondary reports
     const groupedByDate = filtered.reduce((acc, row) => {
       const date = row.report_date_as_yyyy_mm_dd.split('T')[0];
-      const currentVol = parseFloat(row.noncomm_positions_long_all || row.asset_mgr_positions_long_all || 0);
+      const currentVol = parseFloat(row.noncomm_positions_long_all || row.lev_money_positions_long_all || row.asset_mgr_positions_long_all || 0);
       
       if (!acc[date] || currentVol > acc[date].vol) {
         acc[date] = { row, vol: currentVol };
@@ -69,8 +69,8 @@ export default async function handler(req, res) {
         const index = Object.keys(groupedByDate).indexOf(date);
         const arr = Object.values(groupedByDate).map(v => v.row);
 
-        const ncLong = parseFloat(row.noncomm_positions_long_all || row.asset_mgr_positions_long_all || row.lev_money_positions_long_all) || 0;
-        const ncShort = parseFloat(row.noncomm_positions_short_all || row.asset_mgr_positions_short_all || row.lev_money_positions_short_all) || 0;
+        const ncLong = parseFloat(row.noncomm_positions_long_all || row.lev_money_positions_long_all || row.asset_mgr_positions_long_all) || 0;
+        const ncShort = parseFloat(row.noncomm_positions_short_all || row.lev_money_positions_short_all || row.asset_mgr_positions_short_all) || 0;
         const cLong = parseFloat(row.comm_positions_long_all || row.dealer_positions_long_all) || 0;
         const cShort = parseFloat(row.comm_positions_short_all || row.dealer_positions_short_all) || 0;
         
@@ -85,8 +85,8 @@ export default async function handler(req, res) {
         let prevLongPct = 50;
         
         if (nextRow) {
-          const nL = parseFloat(nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.lev_money_positions_long_all) || 0;
-          const nS = parseFloat(nextRow.noncomm_positions_short_all || nextRow.asset_mgr_positions_short_all || nextRow.lev_money_positions_short_all) || 0;
+          const nL = parseFloat(nextRow.noncomm_positions_long_all || nextRow.lev_money_positions_long_all || nextRow.asset_mgr_positions_long_all) || 0;
+          const nS = parseFloat(nextRow.noncomm_positions_short_all || nextRow.lev_money_positions_short_all || nextRow.asset_mgr_positions_short_all) || 0;
           deltaLong = ncLong - nL;
           deltaShort = ncShort - nS;
           const nTotal = nL + nS;

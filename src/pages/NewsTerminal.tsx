@@ -5,11 +5,36 @@ import { type NewsHeadline } from '../services/alphaVantage';
 const NewsTerminal: React.FC = () => {
   const { } = useApp();
   const newsContainerRef = useRef<HTMLDivElement>(null);
-  const bloombergRef = useRef<HTMLVideoElement>(null);
-  const streetWireRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<any>(null);
   const [headlines, setHeadlines] = useState<NewsHeadline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeChannel, setActiveChannel] = useState('schwab');
+
+  const channels: Record<string, { label: string; icon: string; desc: string; url: string; type: 'hls' | 'youtube' }> = {
+    schwab: {
+      label: 'Schwab Network',
+      icon: '📺',
+      desc: 'Live markets, expert analysis, 24/7',
+      url: 'https://d1ewctnvcwvvvu.cloudfront.net/playlist.m3u8',
+      type: 'hls',
+    },
+    bloomberg: {
+      label: 'Bloomberg TV',
+      icon: '📡',
+      desc: 'Global finance & market news',
+      url: 'https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8',
+      type: 'hls',
+    },
+    cnbc: {
+      label: 'CNBC',
+      icon: '🗞️',
+      desc: 'Business & financial news',
+      url: 'https://www.youtube.com/embed/live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA&autoplay=1&mute=1&rel=0&modestbranding=1',
+      type: 'youtube',
+    },
+  };
 
   const fetchNews = useCallback(async () => {
     setIsLoading(true);
@@ -68,36 +93,54 @@ const NewsTerminal: React.FC = () => {
     newsContainerRef.current.appendChild(script);
   }, []);
 
-  // Institutional Live Satellite Feeds - Dual HLS Sync
+  // Live stream switcher with HLS cleanup
   useEffect(() => {
-    const setupStream = (video: HTMLVideoElement | null, url: string) => {
-      if (!video) return;
-      
-      if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-      } else {
-        const script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
-        script.onload = () => {
-          // @ts-ignore
-          if (window.Hls && window.Hls.isSupported()) {
-            // @ts-ignore
-            const hls = new window.Hls();
-            hls.loadSource(url);
-            hls.attachMedia(video);
-          }
-        };
-        document.body.appendChild(script);
+    const ch = channels[activeChannel];
+
+    // Always destroy any existing HLS instance when switching channels
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    // YouTube channels render an iframe — no HLS setup needed
+    if (ch.type === 'youtube') return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.src = '';
+
+    const initStream = () => {
+      // @ts-ignore
+      if (window.Hls && window.Hls.isSupported()) {
+        // @ts-ignore
+        const hls = new window.Hls({ enableWorker: true, lowLatencyMode: true, capLevelToPlayerSize: true });
+        hls.loadSource(ch.url);
+        hls.attachMedia(video);
+        hlsRef.current = hls;
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = ch.url;
       }
     };
 
-    setupStream(bloombergRef.current, "https://liveprodusphoenixeast.akamaized.net/USPhx-HD/Channel-TX-USPhx-AWS-virginia-1/Source-USPhx-16k-1-s6lk2-BP-07-02-81ykIWnsMsg_live.m3u8");
-    setupStream(streetWireRef.current, "https://d1ewctnvcwvvvu.cloudfront.net/playlist.m3u8");
+    // @ts-ignore
+    if (!window.Hls) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+      script.onload = initStream;
+      document.body.appendChild(script);
+    } else {
+      initStream();
+    }
 
     return () => {
-      // Cleanup script injection if needed, though multiple injections of hls.js are generally fine
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
     };
-  }, []);
+  }, [activeChannel]);
 
   // Use real sentiment data to determine global mood
   const currentNarrative = useMemo(() => {
@@ -121,6 +164,54 @@ const NewsTerminal: React.FC = () => {
           0% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(1.2); }
           100% { opacity: 1; transform: scale(1); }
+        }
+        .channel-tabs {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+        }
+        .channel-tab {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.9rem 1rem;
+          border-radius: 14px;
+          cursor: pointer;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03);
+          transition: all 0.2s ease;
+          text-align: center;
+        }
+        .channel-tab:hover {
+          background: rgba(255,255,255,0.06);
+          border-color: rgba(255,255,255,0.15);
+        }
+        .channel-tab.active {
+          background: linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(99,102,241,0.12) 100%);
+          border-color: #3b82f6;
+          box-shadow: 0 0 20px rgba(59,130,246,0.15);
+        }
+        .channel-tab-icon {
+          font-size: 1.5rem;
+        }
+        .channel-tab-label {
+          font-size: 0.82rem;
+          font-weight: 800;
+          color: #f8fafc;
+          letter-spacing: 0.02em;
+        }
+        .channel-tab.active .channel-tab-label {
+          color: #93c5fd;
+        }
+        .channel-tab-desc {
+          font-size: 0.68rem;
+          color: #64748b;
+          line-height: 1.3;
+        }
+        .channel-tab.active .channel-tab-desc {
+          color: #8b9ab8;
         }
       `}</style>
       <header className="header" style={{ padding: 0 }}>
@@ -162,36 +253,68 @@ const NewsTerminal: React.FC = () => {
         </div>
       </div>
 
-      {/* Full-Width Institutional Video Matrix */}
-      <div className="settings-card" style={{ marginTop: '1.5rem', padding: 0, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', animation: 'pulse-dot 2s infinite' }} />
-            <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>SAT-LINK ACTIVE</span>
-          </div>
-          <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, marginLeft: 'auto' }}>
+      {/* Institutional Video Matrix */}
+      <div className="settings-card" style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        {/* SAT-LINK Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', animation: 'pulse-dot 2s infinite', flexShrink: 0 }} />
+          <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>
+            SAT-LINK ACTIVE
+          </span>
+          <span style={{ marginLeft: 'auto', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.72rem', fontWeight: 800, color: '#f8fafc' }}>
             INSTITUTIONAL VIDEO MATRIX
-          </h3>
+          </span>
         </div>
-        <div className="video-matrix-grid" style={{ background: 'rgba(255,255,255,0.1)' }}>
-          {/* Channel 1: Bloomberg */}
-          <div 
-            style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
-            onClick={() => bloombergRef.current?.requestFullscreen()}
-          >
-            <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH1: BLOOMBERG</div>
-            <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
-            <video ref={bloombergRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
+
+        {/* Channel Selector Tabs */}
+        <div className="channel-tabs">
+          {Object.entries(channels).map(([key, ch]) => (
+            <button
+              key={key}
+              className={`channel-tab${activeChannel === key ? ' active' : ''}`}
+              onClick={() => setActiveChannel(key)}
+            >
+              <span className="channel-tab-icon">{ch.icon}</span>
+              <span className="channel-tab-label">{ch.label}</span>
+              <span className="channel-tab-desc">{ch.desc}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Video Player */}
+        <div style={{
+          position: 'relative',
+          paddingBottom: '56.25%',
+          height: 0,
+          overflow: 'hidden',
+          borderRadius: '16px',
+          border: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+          background: '#000'
+        }}>
+          <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, background: 'rgba(0,0,0,0.65)', padding: '3px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(6px)', letterSpacing: '0.05em' }}>
+            {channels[activeChannel].icon} {channels[activeChannel].label.toUpperCase()}
           </div>
-          {/* Channel 2: Street Wire */}
-          <div 
-            style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', cursor: 'pointer' }}
-            onClick={() => streetWireRef.current?.requestFullscreen()}
-          >
-            <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10, background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#fff', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>CH2: STREET WIRE</div>
-            <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10, background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>⛶</div>
-            <video ref={streetWireRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted controls playsInline />
-          </div>
+
+          {channels[activeChannel].type === 'youtube' ? (
+            <iframe
+              key={activeChannel}
+              src={channels[activeChannel].url}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+              title={channels[activeChannel].label}
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000' }}
+              autoPlay
+              muted
+              controls
+              playsInline
+            />
+          )}
         </div>
       </div>
 

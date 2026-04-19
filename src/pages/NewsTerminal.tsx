@@ -159,7 +159,7 @@ const NewsTerminal: React.FC = () => {
     return {
       mood: avg > 0.15 ? 'Institutional Bullish' : avg < -0.15 ? 'Institutional Bearish' : 'Neutral / Mixed',
       reason: 'Automated sentiment analysis based on late-breaking institutional headlines.',
-      topAsset: headlines[0]?.title.split(' ')[0] || 'FX', // First word of newest headline as a rough'top asset'
+      topAsset: headlines[0]?.title.length > 60 ? headlines[0].title.slice(0, 60) + '…' : (headlines[0]?.title || 'FX'),
       riskFactor: 'Volatily in sentiment readings indicates market uncertainty.'
     };
   }, [headlines]);
@@ -255,7 +255,7 @@ const NewsTerminal: React.FC = () => {
            </div>
            <div>
               <span style={{ fontSize: '0.65rem', color: '#8b9ab8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Latest Focus</span>
-              <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#3b82f6' }}>{currentNarrative.topAsset}</p>
+              <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', lineHeight: 1.4 }}>{currentNarrative.topAsset}</p>
            </div>
         </div>
       </div>

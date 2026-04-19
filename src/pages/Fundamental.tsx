@@ -56,7 +56,7 @@ const Fundamental: React.FC = () => {
         </div>
       </header>
 
-      <div className="stats-bar" style={{ padding: '1.5rem 0', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <div className="stats-bar" style={{ padding: '1.5rem 0' }}>
         {pillars.map(p => {
           const status = getStatus(p.label, p.val);
           return (
@@ -76,7 +76,7 @@ const Fundamental: React.FC = () => {
         })}
       </div>
 
-      <div className="settings-row-2" style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
+      <div className="settings-row-2" style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
         {sortedByScore.slice(0, 12).map((a, i) => (
           <div key={a.id} className="settings-card" style={{ 
             animation: `fadeInRow 0.5s ease forwards`, 

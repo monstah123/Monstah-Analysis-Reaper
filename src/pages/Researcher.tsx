@@ -194,12 +194,12 @@ export default function Researcher() {
 
         {!report && !loading && (
           <div className="live-tv-container fade-in" style={{ marginTop: '2rem' }}>
-            <div className="section-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="section-header" style={{ marginBottom: '1rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse-dot 2s infinite' }}></div>
                 <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem', color: '#94a3b8' }}>Live Satellite Feed <span style={{ color: '#ef4444' }}>• ACTIVE</span></h3>
               </div>
-              <div className="channel-selector" style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className="channel-selector" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {['bloomberg', 'macrobox', 'custom'].map((ch) => (
                   <button 
                     key={ch}

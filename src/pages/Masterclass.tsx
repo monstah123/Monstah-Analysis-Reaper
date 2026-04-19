@@ -10,7 +10,7 @@ const TrainingModules = [
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <div style={{ padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
            <h3 style={{ fontSize: '1rem', marginBottom: '0.8rem', color: '#6366f1' }}>⚡ THE EXECUTION CHEAT SHEET</h3>
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+           <div className="masterclass-inner-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid #ef4444' }}>
                  <strong style={{ color: '#ef4444', fontSize: '0.85rem' }}>SELL SIGNAL 📉</strong>
                  <ul style={{ fontSize: '0.8rem', color: '#fca5a5', paddingLeft: '1.2rem', margin: '0.5rem 0' }}>
@@ -101,7 +101,7 @@ const TrainingModules = [
     subtitle: 'Exploiting Asset Relationships',
     content: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="masterclass-inner-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
            <div style={{ padding: '1.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
               <h4 style={{ fontSize: '0.85rem', color: '#3b82f6', marginBottom: '0.5rem' }}>POSITIVE (+1.0)</h4>
               <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>Assets move in lockstep. (e.g., AUD/USD and Gold). If Gold flies, AUD/USD usually follows.</p>
@@ -132,7 +132,7 @@ const TrainingModules = [
            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
              The "Squeeze" is the most powerful signal in the Reaper arsenal. It occurs when **Institutional (COT)** and **Retail (Myfxbook)** positioning are polar opposites.
            </p>
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+           <div className="masterclass-inner-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
               <div style={{ background: '#3b82f61a', padding: '1rem', borderRadius: '8px', border: '1px solid #3b82f644' }}>
                  <strong style={{ color: '#3b82f6', fontSize: '0.85rem' }}>BLUE BAR (INSTITUTIONS)</strong>
                  <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '4px 0' }}>Represents the "Smart Money" who drive the market trends.</p>
@@ -171,7 +171,32 @@ const Masterclass: React.FC = () => {
         <button className="btn btn-secondary" onClick={() => setActiveView('landing')}>EXIT TO LOBBY</button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem', alignItems: 'flex-start' }}>
+      <style>{`
+        .masterclass-layout {
+          display: grid;
+          grid-template-columns: 300px 1fr;
+          gap: 2rem;
+          align-items: flex-start;
+        }
+        @media (max-width: 768px) {
+          .masterclass-layout {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+          }
+          .masterclass-content {
+            padding: 1rem !important;
+            min-height: auto !important;
+            gap: 1rem !important;
+          }
+          .masterclass-inner-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .masterclass-header {
+            margin-bottom: 0.75rem !important;
+          }
+        }
+      `}</style>
+      <div className="masterclass-layout">
         {/* Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {TrainingModules.map((m, idx) => (
@@ -198,7 +223,7 @@ const Masterclass: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="settings-card" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 41, 0.8)', minHeight: '600px' }}>
+        <div className="settings-card masterclass-content" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 41, 0.8)', minHeight: '600px' }}>
            <div>
               <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Reaper Academy • v13.3</div>
               <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem', color: '#fff' }}>{TrainingModules[activeModule].title}</h2>

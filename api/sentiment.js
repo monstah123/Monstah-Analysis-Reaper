@@ -13,23 +13,23 @@ export default async function handler(req, res) {
 
     // EdgeFinder ID Register (100% Identification Persistence)
     const ASSET_REGISTER = {
-        'US30': { id: 'DOW JONES INDUSTRIAL AVG - CHICAGO BOARD OF TRADE', category: 'Indices' },
-        'SP500': { id: 'S&P 500 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE', category: 'Indices' },
-        'NASDAQ': { id: 'NASDAQ-100 CONSOLIDATED - CHICAGO MERCANTILE EXCHANGE', category: 'Indices' },
-        'GOLD': { id: 'GOLD - COMMODITY EXCHANGE', category: 'Commodities' },
-        'SILVER': { id: 'SILVER - COMMODITY EXCHANGE', category: 'Commodities' },
-        'COPPER': { id: 'COPPER-Grade #1 - COMMODITY EXCHANGE', category: 'Commodities' },
-        'USOIL': { id: 'CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE', category: 'Commodities' },
-        'UKOIL': { id: 'BRENT LAST DAY FINANCIAL - ICE FUTURES EUROPE', category: 'Commodities' },
-        'EURUSD': { id: 'EURO FX - CHICAGO MERCANTILE EXCHANGE', category: 'Currency' },
-        'GBPUSD': { id: 'BRITISH POUND - CHICAGO MERCANTILE EXCHANGE', category: 'Currency' },
-        'USDJPY': { id: 'JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE', category: 'Currency' },
-        'AUDUSD': { id: 'AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE', category: 'Currency' },
-        'USDCAD': { id: 'CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE', category: 'Currency' },
-        'USDCHF': { id: 'SWISS FRANC - CHICAGO MERCANTILE EXCHANGE', category: 'Currency' },
-        'NZDUSD': { id: 'NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE', category: 'Currency' },
-        'BITCOIN': { id: 'BITCOIN - CHICAGO MERCANTILE EXCHANGE', category: 'Crypto' },
-        'ETHEREUM': { id: 'ETHER - CHICAGO MERCANTILE EXCHANGE', category: 'Crypto' }
+        'US30': { id: ['DOW JONES INDUSTRIAL AVG - CHICAGO BOARD OF TRADE'], category: 'Indices' },
+        'SP500': { id: ['E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE', 'S&P 500 CONSOLIDATED - CHICAGO MERCANTILE EXCHANGE', 'S&P 500 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'NASDAQ': { id: ['NASDAQ-100 CONSOLIDATED - CHICAGO MERCANTILE EXCHANGE', 'NASDAQ MINI - CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'GOLD': { id: ['GOLD - COMMODITY EXCHANGE'], category: 'Commodities' },
+        'SILVER': { id: ['SILVER - COMMODITY EXCHANGE'], category: 'Commodities' },
+        'COPPER': { id: ['COPPER-Grade #1 - COMMODITY EXCHANGE'], category: 'Commodities' },
+        'USOIL': { id: ['CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
+        'UKOIL': { id: ['BRENT LAST DAY FINANCIAL - ICE FUTURES EUROPE'], category: 'Commodities' },
+        'EURUSD': { id: ['EURO FX - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'GBPUSD': { id: ['BRITISH POUND - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'USDJPY': { id: ['JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'AUDUSD': { id: ['AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'USDCAD': { id: ['CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'USDCHF': { id: ['SWISS FRANC - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'NZDUSD': { id: ['NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'BITCOIN': { id: ['BITCOIN - CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' },
+        'ETHEREUM': { id: ['ETHER - CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
     };
 
     try {
@@ -49,8 +49,8 @@ export default async function handler(req, res) {
 
         const results = {};
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
-            // EdgeFinder ID Lockdown: Strict Equal Search
-            const match = rawData.find(row => row.market_and_exchange_names?.toUpperCase() === config.id.toUpperCase());
+            // EdgeFinder ID Lockdown: Strict Equal Search within an array of possibilities
+            const match = rawData.find(row => config.id.some(acceptedId => row.market_and_exchange_names?.toUpperCase() === acceptedId.toUpperCase()));
 
             if (match) {
                 const ncLong = parseFloat(match.noncomm_positions_long_all || match.asset_mgr_positions_long_all || match.lev_money_positions_long_all) || 0;

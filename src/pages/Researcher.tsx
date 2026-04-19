@@ -320,6 +320,8 @@ export default function Researcher() {
           margin-top: 1rem;
         }
         .search-tags span {
+          display: inline-block;
+          white-space: nowrap;
           background: rgba(255, 255, 255, 0.05);
           padding: 0.4rem 1rem;
           border-radius: 30px;
@@ -389,6 +391,7 @@ export default function Researcher() {
           color: #e2e8f0;
           font-size: 1.1rem;
           white-space: pre-wrap;
+          word-break: break-word;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
         .source-link {

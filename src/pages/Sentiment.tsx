@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
 import COTHistory from '../components/COTHistory';
 import SqueezeRadar from '../components/SqueezeRadar';
+import EconomicHeatmap from '../components/EconomicHeatmap';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -182,6 +183,9 @@ const Sentiment: React.FC = () => {
 
       {/* COT Data History (Institutional Grade) */}
       <COTHistory initialSymbol="NASDAQ" />
+
+      {/* Real-time Economic Heatmap */}
+      <EconomicHeatmap />
     </div>
   );
 };

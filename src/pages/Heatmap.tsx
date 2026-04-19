@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const Heatmap: React.FC = () => {
-  const { assets, marketData, setSelectedAsset, setActiveView } = useApp();
+  const { assets, marketData, setSelectedAsset, setActiveView, playMoneySound } = useApp();
   const [filter, setFilter] = React.useState('All');
 
   const categories = ['All', 'Forex', 'Indices', 'Commodities', 'Crypto'];
@@ -93,6 +93,7 @@ const Heatmap: React.FC = () => {
              <div 
                key={asset.id}
                className="heatmap-tile"
+               onMouseEnter={() => playMoneySound()}
                onClick={() => {
                  console.log('Reaper: Selecting Market ->', asset.id);
                  setSelectedAsset(asset);

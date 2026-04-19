@@ -34,6 +34,13 @@ const NewsTerminal: React.FC = () => {
       url: 'https://www.youtube.com/embed/live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA&autoplay=1&mute=1&rel=0&modestbranding=1',
       type: 'youtube',
     },
+    streetbeat: {
+      label: 'Street Beat',
+      icon: '🏙️',
+      desc: 'Real-time market street feed',
+      url: 'https://d1ewctnvcwvvvu.cloudfront.net/playlist.m3u8',
+      type: 'hls',
+    },
   };
 
   const fetchNews = useCallback(async () => {
@@ -167,7 +174,7 @@ const NewsTerminal: React.FC = () => {
         }
         .channel-tabs {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 0.75rem;
           margin-bottom: 1rem;
         }

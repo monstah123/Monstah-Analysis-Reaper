@@ -86,6 +86,9 @@ export default async function handler(req, res) {
           parseLegacy('GOLD', 'GOLD');
           parseLegacy('CRUDE OIL, LIGHT SWEET', 'USOIL');
           parseLegacy('BRENT CRUDE', 'UKOIL');
+          parseLegacy('COPPER-GRADE #1', 'COPPER');
+          parseLegacy('COPPER- #1', 'COPPER');
+          parseLegacy('COPPER', 'COPPER');
 
        } catch (e) {}
     }

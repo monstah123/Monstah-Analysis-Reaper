@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     'DAX': ['DAX-40 STOCK INDEX', 'DAX-30 STOCK INDEX'],
     'GOLD': ['GOLD'],
     'SILVER': ['SILVER'],
-    'COPPER': ['COPPER-Grade #1'],
+    'COPPER': ['COPPER-GRADE #1', 'COPPER- #1', 'COPPER - COMMODITY EXCHANGE'],
     'USOIL': ['CRUDE OIL, LIGHT SWEET'],
     'UKOIL': ['CRUDE OIL, LIGHT SWEET'],
     'BITCOIN': ['BITCOIN'],

@@ -24,6 +24,7 @@ import Researcher from './pages/Researcher';
 import AITerminal from './pages/AITerminal';
 import Calculator from './pages/Calculator';
 import Masterclass from './pages/Masterclass';
+import Polymarket from './pages/Polymarket';
 import ReaperRulebook from './components/ReaperRulebook';
 
 function AppContent() {
@@ -46,6 +47,7 @@ function AppContent() {
       case 'ai-terminal':    return <AITerminal />;
       case 'calculator':     return <Calculator />;
       case 'masterclass':    return <Masterclass />;
+      case 'polymarket':     return <Polymarket />;
       case 'settings':       return <Settings />;
       default:               return <Dashboard />;
     }

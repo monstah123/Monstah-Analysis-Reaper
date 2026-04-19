@@ -18,6 +18,7 @@ const analysisItems = [
   { id: 'cot-deep-dive',  label: 'COT Deep-Dive',  icon: '🗳️' },
   { id: 'calculator',     label: 'Calculator',     icon: '🧮' },
   { id: 'research',       label: 'Global Intel',   icon: '🌍' },
+  { id: 'polymarket',     label: 'Polymarket',     icon: '🔮' },
   { id: 'masterclass',    label: 'Masterclass',    icon: '🎓' },
 ];
 

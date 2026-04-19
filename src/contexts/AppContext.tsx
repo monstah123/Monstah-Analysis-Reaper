@@ -300,17 +300,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           const liveSignalsCount = [cPct, rPct, scores.gdp, scores.inflation].filter(s => s !== null).length;
           
-          // Total Matrix Score (v29.5 - Execution Grade)
-          const newTotals = (cPct !== null ? cI : 0) + (rPct !== null ? rP : 0) + 
-                            (scores.gdp || 0) + (scores.inflation || 0) + 
-                            (scores.interestRates || 0) + (scores.employmentChange || 0);
+          // Dynamic Macro Alignment Engine (v30.0 - Institutional Model)
+          // 1. Calculate Base US Macro Strength Score
+          const usMacroScore = (scores.gdp || 0) + (scores.inflation || 0) + 
+                               (scores.interestRates || 0) + (scores.employmentChange || 0);
+
+          // 2. Route Macro Impact Based on Asset Class & Currency Geography
+          let macroImpact = usMacroScore;
+          if (a.id === 'EURUSD' || a.id === 'GBPUSD' || a.id === 'AUDUSD' || a.id === 'NZDUSD' || a.category === 'Crypto' || a.id === 'GOLD' || a.id === 'SILVER') {
+              // Inverse Impact: A strong US Economy (strong dollar) crushes XXX/USD pairs and precious metals
+              macroImpact = -usMacroScore;
+          } else if (a.id === 'USDJPY' || a.id === 'USDCAD' || a.id === 'USDCHF') {
+              // Direct Impact: A strong US Economy propels USD/XXX pairs
+              macroImpact = usMacroScore;
+          } else if (a.category === 'Indices') {
+              // Complex Equities Impact: Growth is good (+), but we apply it normally (already structured in usMacroScore)
+              macroImpact = usMacroScore;
+          } else if (a.id === 'USOIL' || a.id === 'UKOIL' || a.id === 'COPPER') {
+              // Industrial Commodities: GDP growth implies demand, so direct impact
+              macroImpact = usMacroScore;
+          }
+
+          // Total Matrix Score (v30.0 - Execution Grade)
+          const newTotals = (cPct !== null ? cI : 0) + (rPct !== null ? rP : 0) + macroImpact;
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
           if (liveSignalsCount > 0) {
-            if (newTotals >= 5) dynamicBias = 'Very Bullish';
+            if (newTotals >= 3) dynamicBias = 'Very Bullish';
             else if (newTotals >= 1) dynamicBias = 'Bullish';
             else if (newTotals === 0) dynamicBias = 'Neutral';
-            else if (newTotals >= -4) dynamicBias = 'Bearish';
+            else if (newTotals >= -2) dynamicBias = 'Bearish';
             else dynamicBias = 'Very Bearish';
           }
 

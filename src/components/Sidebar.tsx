@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavChange }) => {
           display: 'flex',
           gap: '0.3rem'
         }}>
-          Monstah <span style={{ color: 'inherit' }}>Reaper</span>
+          Monstah!!! <span style={{ color: 'inherit' }}>Reaper</span>
         </span>
 
         {/* CSS Keyframes for the Brush Sweep */}

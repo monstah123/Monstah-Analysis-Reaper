@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
         </div>
 
         <h1 className="login-title">
-          Monstah <span className="login-title-accent">Reaper</span>
+          Monstah!!! <span className="login-title-accent">Reaper</span>
         </h1>
         <p className="login-subtitle">
           Institutional-grade market intelligence — sign in to access your personalised dashboard and watchlist.

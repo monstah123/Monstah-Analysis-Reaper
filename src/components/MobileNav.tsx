@@ -33,7 +33,7 @@ const MobileNav: React.FC = () => {
             display: 'flex',
             gap: '0.3rem'
           }}>
-            Monstah <span style={{ color: 'inherit' }}>Reaper</span>
+            Monstah!!! <span style={{ color: 'inherit' }}>Reaper</span>
           </span>
           <style dangerouslySetInnerHTML={{ __html: `
             @keyframes logoSweep {
@@ -51,7 +51,7 @@ const MobileNav: React.FC = () => {
           <div className="mobile-sidebar-header">
             <div className="sidebar-logo">
               <span className="logo-icon">☠️</span>
-              <span>Monstah <span>Reaper</span></span>
+              <span>Monstah!!! <span>Reaper</span></span>
             </div>
             <button className="close-sidebar-btn" onClick={() => setIsOpen(false)}>✕</button>
           </div>

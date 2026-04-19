@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useApp } from '../contexts/AppContext';
 
 // Institutional Real-Time Macro Heatmap (NO MOCKUPS)
 // Powered strictly by Federal Reserve Economic Data (FRED)
@@ -36,6 +37,7 @@ const formatValue = (val: number | null, formatType: string) => {
 };
 
 const EconomicHeatmap: React.FC = () => {
+  const { playMoneySound } = useApp();
   const [dataRows, setDataRows] = useState<MacroDataRow[]>(MACRO_INDICATORS.map(ind => ({
     id: ind.id,
     name: ind.name,
@@ -167,7 +169,10 @@ const EconomicHeatmap: React.FC = () => {
     const bgGradient = score > 50 ? 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%)' : 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.08) 0%, transparent 70%)';
 
     return (
-      <div style={{ 
+      <div 
+        onMouseEnter={() => playMoneySound()}
+        className="heatmap-gauge-card"
+        style={{ 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center', 
@@ -178,7 +183,9 @@ const EconomicHeatmap: React.FC = () => {
         width: '260px',
         position: 'relative',
         boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-        backgroundImage: bgGradient
+        backgroundImage: bgGradient,
+        cursor: 'pointer',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease'
       }}>
         
         <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -307,7 +314,12 @@ const EconomicHeatmap: React.FC = () => {
           </thead>
           <tbody>
             {dataRows.map((row) => (
-              <tr key={row.id} style={{ borderBottom: '1px solid #2c2c2e', color: '#f8fafc' }}>
+              <tr 
+                key={row.id} 
+                onMouseEnter={() => playMoneySound()}
+                style={{ borderBottom: '1px solid #2c2c2e', color: '#f8fafc', transition: 'background 0.2s ease' }}
+                className="heatmap-row"
+              >
                 <td style={{ padding: '10px', textAlign: 'left', fontWeight: 600, border: '1px solid #3f3f46' }}>{row.name}</td>
                 <td style={{ padding: '10px', color: '#fbbf24', border: '1px solid #3f3f46' }}>{row.date}</td>
                 <td style={{ padding: '10px', fontWeight: 700, color: '#60a5fa', border: '1px solid #3f3f46' }}>{formatValue(row.actual, row.format)}</td>
@@ -343,6 +355,15 @@ const EconomicHeatmap: React.FC = () => {
         {renderGauge('USD', usdScore)}
         {renderGauge('US Stocks', stocksScore)}
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .heatmap-gauge-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.6) !important;
+        }
+        .heatmap-row:hover {
+          background: rgba(255, 255, 255, 0.02) !important;
+        }
+      `}} />
     </div>
   );
 };

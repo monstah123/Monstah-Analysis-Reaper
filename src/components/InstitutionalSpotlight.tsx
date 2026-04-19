@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 
 const InstitutionalSpotlight: React.FC = () => {
-  const { marketData, activeView, activeSetup, setActiveSetup } = useApp();
+  const { marketData, activeView, activeSetup, setActiveSetup, playMoneySound } = useApp();
   
   // Dedicate a "Sprint Loop" for the radar (v28.6)
   useEffect(() => {
@@ -42,7 +42,9 @@ const InstitutionalSpotlight: React.FC = () => {
   const isHit = progress >= 100;
 
   return (
-    <div style={{ 
+    <div 
+      onMouseEnter={() => playMoneySound()}
+      style={{ 
       margin: '0 0 1.5rem 0',
       background: isHit ? 'linear-gradient(90deg, rgba(168, 162, 158, 0.2) 0%, rgba(202, 138, 4, 0.4) 100%)' : 'linear-gradient(90deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)', 
       borderLeft: `4px solid ${isHit ? '#fbbf24' : (type === 'SHORT' ? '#ef4444' : '#10b981')}`,

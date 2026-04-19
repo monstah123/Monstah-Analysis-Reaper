@@ -18,41 +18,44 @@ export default async function handler(req, res) {
     // 2. Parser Logic: Find Asset Blocks and Extract Speculative Longs/Shorts
     // We map the CFTC names to our frontend IDs
     const mappings = [
-      { id: 'EURUSD', name: 'EURO CURRENCY' },
-      { id: 'GBPUSD', name: 'BRITISH POUND' },
-      { id: 'USDJPY', name: 'JAPANESE YEN' },
-      { id: 'AUDUSD', name: 'AUSTRALIAN DOLLAR' },
-      { id: 'USDCAD', name: 'CANADIAN DOLLAR' },
-      { id: 'NZDUSD', name: 'NZ DOLLAR' },
-      { id: 'USDCHF', name: 'SWISS FRANC' },
-      { id: 'SP500', name: 'S&P 500 STOCK INDEX' },
-      { id: 'NASDAQ', name: 'NASDAQ 100 STOCK INDEX' },
-      { id: 'US30', name: 'DOW JONES INDUSTRIAL' }
+      { id: 'EURUSD', names: ['EURO FX', 'EURO CURRENCY'] },
+      { id: 'GBPUSD', names: ['BRITISH POUND'] },
+      { id: 'USDJPY', names: ['JAPANESE YEN'] },
+      { id: 'AUDUSD', names: ['AUSTRALIAN DOLLAR'] },
+      { id: 'USDCAD', names: ['CANADIAN DOLLAR'] },
+      { id: 'NZDUSD', names: ['NZ DOLLAR'] },
+      { id: 'USDCHF', names: ['SWISS FRANC'] },
+      { id: 'SP500', names: ['E-MINI S&P 500', 'S&P 500 CONSOLIDATED', 'S&P 500 STOCK INDEX'] },
+      { id: 'NASDAQ', names: ['NASDAQ-100 CONSOLIDATED', 'NASDAQ MINI', 'NASDAQ 100'] },
+      { id: 'US30', names: ['DOW JONES INDUSTRIAL AVERAGE CONSOLIDATED', 'DOW JONES INDUSTRIAL', 'DJIA CONSOLIDATED'] }
     ];
 
     const results = {};
 
     mappings.forEach(m => {
-       const uName = m.name.toUpperCase();
-       const assetIndex = txt.toUpperCase().indexOf(uName);
-       if (assetIndex !== -1) {
-          const block = txt.substring(assetIndex, assetIndex + 2000);
-          const lines = block.split('\n');
-          
-          // TFF Report (Financial) - Find the row that starts with 'Positions' (Case Insensitive)
-          const posRow = lines.find(l => l.trim().toUpperCase().startsWith('POSITIONS'));
-          if (posRow) {
-             // Columns in TFF (approx): [POSITIONS] [OI] [AssetMgr L] [S] [LevFunds L] [S]
-             // We need columns 4 and 5 (0-indexed: 4 and 5 if 1 is OI)
-             const cols = posRow.trim().split(/\s+/);
-             if (cols.length >= 6) {
-                results[m.id] = {
-                   long: parseInt(cols[4].replace(/,/g, '')),
-                   short: parseInt(cols[5].replace(/,/g, '')),
-                   source: 'CFTC TFF Report'
-                };
-             }
-          }
+       for (const name of m.names) {
+         const uName = name.toUpperCase();
+         const assetIndex = txt.toUpperCase().indexOf(uName);
+         if (assetIndex !== -1) {
+            const block = txt.substring(assetIndex, assetIndex + 2000);
+            const lines = block.split('\n');
+            
+            // TFF Report (Financial) - Find the row that starts with 'Positions' (Case Insensitive)
+            const posRow = lines.find(l => l.trim().toUpperCase().startsWith('POSITIONS'));
+            if (posRow) {
+               // Columns in TFF (approx): [POSITIONS] [OI] [AssetMgr L] [S] [LevFunds L] [S]
+               // We need Asset Manager L & S (columns 4 and 5)
+               const cols = posRow.trim().split(/\s+/);
+               if (cols.length >= 6) {
+                  results[m.id] = {
+                     long: parseInt(cols[4].replace(/,/g, '')),
+                     short: parseInt(cols[5].replace(/,/g, '')),
+                     source: 'CFTC TFF Report'
+                  };
+                  break; // Found it, stop looking for other names for this asset
+               }
+            }
+         }
        }
     });
 

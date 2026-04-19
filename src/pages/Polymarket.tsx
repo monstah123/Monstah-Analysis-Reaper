@@ -21,7 +21,7 @@ const Polymarket: React.FC = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=50');
+      const response = await fetch('/api/polymarket');
       const data = await response.json();
       // Sort by volume so the biggest/most popular markets are shown
       const sorted = data.sort((a: PolymarketEvent, b: PolymarketEvent) => (b.volume || 0) - (a.volume || 0));

@@ -131,7 +131,7 @@ export default function Researcher() {
       </header>
 
       <div className="research-grid">
-        <section className="search-box">
+        <section className="research-search-section">
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"

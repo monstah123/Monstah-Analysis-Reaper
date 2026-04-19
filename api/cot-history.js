@@ -38,14 +38,16 @@ export default async function handler(req, res) {
     const nameFilter = cftcNames.map(n => `market_and_exchange_names LIKE '%${n}%'`).join(' OR ');
     const query = `$limit=5000&$where=(${encodeURIComponent(nameFilter)})&$order=report_date_as_yyyy_mm_dd DESC`;
 
-    const [res1, res2] = await Promise.allSettled([
+    const [res1, res2, res3] = await Promise.allSettled([
       axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?${query}`, { timeout: 15000 }),
-      axios.get(`https://publicreporting.cftc.gov/resource/dea3-kfc2.json?${query}`, { timeout: 15000 })
+      axios.get(`https://publicreporting.cftc.gov/resource/dea3-kfc2.json?${query}`, { timeout: 15000 }),
+      axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?${query}`, { timeout: 15000 })
     ]);
 
     let rawData = [];
     if (res1.status === 'fulfilled' && res1.value?.data) rawData.push(...res1.value.data);
     if (res2.status === 'fulfilled' && res2.value?.data) rawData.push(...res2.value.data);
+    if (res3.status === 'fulfilled' && res3.value?.data) rawData.push(...res3.value.data);
 
     const filtered = rawData.filter(row => 
       row.market_and_exchange_names && 
@@ -55,7 +57,7 @@ export default async function handler(req, res) {
     // Group by date and pick the one with the highest speculative volume to avoid "empty" secondary reports
     const groupedByDate = filtered.reduce((acc, row) => {
       const date = row.report_date_as_yyyy_mm_dd.split('T')[0];
-      const currentVol = parseFloat(row.noncomm_positions_long_all || row.lev_money_positions_long_all || row.asset_mgr_positions_long_all || 0);
+      const currentVol = parseFloat(row.lev_money_positions_long_all || row.lev_money_positions_long || row.noncomm_positions_long_all || row.asset_mgr_positions_long_all || row.asset_mgr_positions_long || 0);
       
       if (!acc[date] || currentVol > acc[date].vol) {
         acc[date] = { row, vol: currentVol };
@@ -69,10 +71,10 @@ export default async function handler(req, res) {
         const index = Object.keys(groupedByDate).indexOf(date);
         const arr = Object.values(groupedByDate).map(v => v.row);
 
-        const ncLong = parseFloat(row.noncomm_positions_long_all || row.lev_money_positions_long_all || row.asset_mgr_positions_long_all) || 0;
-        const ncShort = parseFloat(row.noncomm_positions_short_all || row.lev_money_positions_short_all || row.asset_mgr_positions_short_all) || 0;
-        const cLong = parseFloat(row.comm_positions_long_all || row.dealer_positions_long_all) || 0;
-        const cShort = parseFloat(row.comm_positions_short_all || row.dealer_positions_short_all) || 0;
+        const ncLong = parseFloat(row.lev_money_positions_long_all || row.lev_money_positions_long || row.noncomm_positions_long_all || row.asset_mgr_positions_long_all || row.asset_mgr_positions_long) || 0;
+        const ncShort = parseFloat(row.lev_money_positions_short_all || row.lev_money_positions_short || row.noncomm_positions_short_all || row.asset_mgr_positions_short_all || row.asset_mgr_positions_short) || 0;
+        const cLong = parseFloat(row.comm_positions_long_all || row.comm_positions_long || row.dealer_positions_long_all || row.dealer_positions_long) || 0;
+        const cShort = parseFloat(row.comm_positions_short_all || row.comm_positions_short || row.dealer_positions_short_all || row.dealer_positions_short) || 0;
         
         const total = ncLong + ncShort;
         const longPct = total > 0 ? (ncLong / total) * 100 : 50;
@@ -85,8 +87,8 @@ export default async function handler(req, res) {
         let prevLongPct = 50;
         
         if (nextRow) {
-          const nL = parseFloat(nextRow.noncomm_positions_long_all || nextRow.lev_money_positions_long_all || nextRow.asset_mgr_positions_long_all) || 0;
-          const nS = parseFloat(nextRow.noncomm_positions_short_all || nextRow.lev_money_positions_short_all || nextRow.asset_mgr_positions_short_all) || 0;
+          const nL = parseFloat(nextRow.lev_money_positions_long_all || nextRow.lev_money_positions_long || nextRow.noncomm_positions_long_all || nextRow.asset_mgr_positions_long_all || nextRow.asset_mgr_positions_long) || 0;
+          const nS = parseFloat(nextRow.lev_money_positions_short_all || nextRow.lev_money_positions_short || nextRow.noncomm_positions_short_all || nextRow.asset_mgr_positions_short_all || nextRow.asset_mgr_positions_short) || 0;
           deltaLong = ncLong - nL;
           deltaShort = ncShort - nS;
           const nTotal = nL + nS;

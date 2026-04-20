@@ -277,25 +277,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           let cS = a.cotShort ?? 50;
           let rP = a.retailPos || 0;
           let cI = a.cot || 0;
+          let cPct: number | null = null;
+          let rPct: number | null = null;
 
           if (data) {
-            // Institutional Positioning (Raw counts from CFTC)
             cL = data.contractsLong ?? data.iLong ?? null;
             cS = data.contractsShort ?? data.iShort ?? null;
             
-            // Apply percentages if raw counts are missing but Pct exists
             if (cL === null && data.longPct !== undefined) {
                cL = data.longPct;
                cS = data.shortPct;
+               cPct = data.longPct;
             }
 
-            // Retail Positioning (Official Sync)
             if (!a.snatcherActive) {
               rL = data.long ?? data.retailLong ?? 50;
               rS = data.short ?? data.retailShort ?? 50;
             }
           } else {
-            // Stage 3: Fuzzy Normalization for Institutional Feeds (DAX, Oil, Spreads)
             const fuzzyKey = a.id.toUpperCase();
             let matchedData = neuralData[fuzzyKey];
             
@@ -320,15 +319,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (total > 0) cPct = (cL / total) * 100;
           }
           
-          if (rL !== null && rS !== null) rPct = (rL / (rL + rS)) * 100;
+          if (rL !== null && rS !== null) {
+            const rTotal = rL + rS;
+            if (rTotal > 0) rPct = (rL / rTotal) * 100;
+          }
 
-          // Institutional Bias Scoring (v17.5 Calibration)
+          // Institutional Bias Scoring (v18.0 Premium Calibration)
           rP = (rPct !== null) ? (rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0) : 0;
           cI = (cPct !== null) ? (cPct >= 75 ? 2 : cPct >= 60 ? 1 : cPct <= 25 ? -2 : cPct <= 40 ? -1 : 0) : 0;
 
           const liveSignalsCount = [cPct, rPct, scores.gdp, scores.inflation].filter(s => s !== null).length;
           
-          // Dynamic Macro Alignment Engine
           const usMacroScore = (scores.gdp || 0) + (scores.inflation || 0) + 
                                (scores.interestRates || 0) + (scores.employmentChange || 0);
 

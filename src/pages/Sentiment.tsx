@@ -102,7 +102,7 @@ const Sentiment: React.FC = () => {
           <div className="stat-icon">🏦</div>
           <div className="stat-body">
             <span className="stat-label">Most Bullish (Inst.)</span>
-            <span className="stat-value" style={{ color: '#22c55e' }}>{mostBullish?.name}</span>
+            <span className="stat-value" style={{ color: '#3b82f6' }}>{mostBullish?.name}</span>
             <span className="stat-sub">COT Score: {(mostBullish?.cotScore ?? 0) > 0 ? `+${mostBullish?.cotScore}` : mostBullish?.cotScore}</span>
           </div>
         </div>
@@ -145,7 +145,7 @@ const Sentiment: React.FC = () => {
                   key="bar-long"
                   dataKey="long" 
                   stackId="a" 
-                  fill="#22c55e" 
+                  fill="#3b82f6" 
                   radius={[4, 0, 0, 4]} 
                   isAnimationActive={false}
                 />

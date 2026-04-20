@@ -14,14 +14,15 @@ export default async function handler(req, res) {
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
     // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
-        'US30': { id: ['DJIA', 'E-MINI DOW JONES', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
-        'SP500': { id: ['S&P 500', 'E-MINI S&P 500', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'NASDAQ': { id: ['NASDAQ-100', 'E-MINI NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'US30': { id: ['E-MINI DOW JONES', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
+        'SP500': { id: ['E-MINI S&P 500', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'NASDAQ': { id: ['E-MINI NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'DAX': { id: ['E-MINI DAX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'NIKKEI': { id: ['NIKKEI 225', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE'], category: 'Commodities' },
         'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
         'COPPER': { id: ['COPPER-GRADE #1', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'USOIL': { id: ['WTI', 'CRUDE OIL, LIGHT SWEET', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
+        'USOIL': { id: ['CRUDE OIL, LIGHT SWEET', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
         'UKOIL': { id: ['BRENT', 'ICE FUTURES EUROPE'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'GBPUSD': { id: ['BRITISH POUND', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
@@ -36,18 +37,23 @@ export default async function handler(req, res) {
 
     try {
         // Parallel Institutional Fetch (Deep Buffer to avoid missing report cycles)
-        const [resLegacy, resTFF, resGdp, resCpi, resFed, resNfp] = await Promise.allSettled([
+        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=2`)
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=2`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`)
         ]);
 
         let rawData = [];
         if (resTFF.status === 'fulfilled') rawData.push(...resTFF.value.data);
         if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data);
+        if (resSupp.status === 'fulfilled') rawData.push(...resSupp.value.data);
 
         const results = {};
         
@@ -62,14 +68,15 @@ export default async function handler(req, res) {
             });
 
             if (matches.length > 0) {
-                // High-Fidelity Selection: Pick the TFF or Legacy report with the most speculator volume
-                const match = matches.sort((a, b) => 
-                    (parseFloat(b.lev_money_positions_long_all || b.noncomm_positions_long_all || 0)) - 
-                    (parseFloat(a.lev_money_positions_long_all || a.noncomm_positions_long_all || 0))
-                )[0];
+                // High-Fidelity Selection: Prioritize Asset Manager volume for Institutional Parity (v17.0)
+                const match = matches.sort((a, b) => {
+                    const volA = parseFloat(a.asset_mgr_positions_long_all || a.lev_money_positions_long_all || a.noncomm_positions_long_all || 0);
+                    const volB = parseFloat(b.asset_mgr_positions_long_all || b.lev_money_positions_long_all || b.noncomm_positions_long_all || 0);
+                    return volB - volA;
+                })[0];
 
-                const long = parseFloat(match.lev_money_positions_long_all || match.noncomm_positions_long_all || match.asset_mgr_positions_long_all || 0);
-                const short = parseFloat(match.lev_money_positions_short_all || match.noncomm_positions_short_all || match.asset_mgr_positions_short_all || 0);
+                const long = parseFloat(match.asset_mgr_positions_long_all || match.lev_money_positions_long_all || match.noncomm_positions_long_all || 0);
+                const short = parseFloat(match.asset_mgr_positions_short_all || match.lev_money_positions_short_all || match.noncomm_positions_short_all || 0);
                 const total = long + short;
                 
                 if (total > 0) {
@@ -119,13 +126,21 @@ export default async function handler(req, res) {
 
         // 3. Macro Neural Matrix
         const macro = {
-            GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : 2.6,
-            CPI: resCpi.status === 'fulfilled' ? parseFloat(resCpi.value.data.observations[0]?.value) : 3.4,
-            FedRate: resFed.status === 'fulfilled' ? parseFloat(resFed.value.data.observations[0]?.value) : 5.25,
-            NFP: resNfp.status === 'fulfilled' ? (parseFloat(resNfp.value.data.observations[0].value) - parseFloat(resNfp.value.data.observations[1].value)) : 178
+            GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,
+            CPI: resCpi.status === 'fulfilled' ? parseFloat(resCpi.value.data.observations[0]?.value) : null,
+            FedRate: resFed.status === 'fulfilled' ? parseFloat(resFed.value.data.observations[0]?.value) : null,
+            NFP: resNfp.status === 'fulfilled' && resNfp.value.data.observations?.length > 1 
+                ? (parseFloat(resNfp.value.data.observations[0].value) - parseFloat(resNfp.value.data.observations[1].value)) 
+                : null
         };
 
-        res.status(200).json({ success: true, sentiment: results, macro, yields: { y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 } });
+        const yields = {
+            y2: resY2?.status === 'fulfilled' ? parseFloat(resY2.value.data.observations[0]?.value) : null,
+            y10: resY10?.status === 'fulfilled' ? parseFloat(resY10.value.data.observations[0]?.value) : null,
+            y30: resY30?.status === 'fulfilled' ? parseFloat(resY30.value.data.observations[0]?.value) : null
+        };
+
+        res.status(200).json({ success: true, sentiment: results, macro, yields });
     } catch (error) {
         console.error('[CRITICAL]: Institutional Pipeline Burst:', error.message);
         res.status(500).json({ success: false, error: 'Institutional Feed Blackout' });

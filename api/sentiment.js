@@ -15,8 +15,8 @@ export default async function handler(req, res) {
     // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
         'US30': { id: ['DOW JONES', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
-        'SP500': { id: ['S&P 500', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'NASDAQ': { id: ['NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'SP500': { id: ['S&P 500', 'CONSOLIDATED', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'NASDAQ': { id: ['NASDAQ-100', 'CONSOLIDATED', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'DAX': { id: ['DAX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'NIKKEI': { id: ['NIKKEI 225', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE INC.'], category: 'Commodities' },
@@ -35,19 +35,21 @@ export default async function handler(req, res) {
         'ETHEREUM': { id: ['ETHER', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
     };
 
+    const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
+
     try {
         // Parallel Institutional Fetch (Deep Buffer to avoid missing report cycles)
         const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/dea3-kfc2.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=2`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`)
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
         ]);
 
         let rawData = [];

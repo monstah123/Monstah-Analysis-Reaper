@@ -14,13 +14,13 @@ export default async function handler(req, res) {
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
     // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
-        'US30': { id: ['DJIA', 'DOW JONES INDUSTRIAL', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
-        'SP500': { id: ['S&P 500', 'E-MINI S&P', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'NASDAQ': { id: ['NASDAQ', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'NIKKEI': { id: ['NIKKEI', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'GOLD': { id: ['GOLD - COMMODITY EXCHANGE', 'GOLD - COM'], category: 'Commodities' },
-        'SILVER': { id: ['SILVER - COMMODITY EXCHANGE', 'SILVER - COM'], category: 'Commodities' },
-        'COPPER': { id: ['COPPER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
+        'US30': { id: ['DJIA', 'E-MINI DOW JONES', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
+        'SP500': { id: ['S&P 500', 'E-MINI S&P 500', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'NASDAQ': { id: ['NASDAQ-100', 'E-MINI NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'NIKKEI': { id: ['NIKKEI 225', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE'], category: 'Commodities' },
+        'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
+        'COPPER': { id: ['COPPER-GRADE #1', 'COMMODITY EXCHANGE'], category: 'Commodities' },
         'USOIL': { id: ['WTI', 'CRUDE OIL, LIGHT SWEET', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
         'UKOIL': { id: ['BRENT', 'ICE FUTURES EUROPE'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },

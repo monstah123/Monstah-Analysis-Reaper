@@ -10,25 +10,25 @@ export default async function handler(req, res) {
   if (!symbol) return res.status(400).json({ success: false, error: 'Symbol required' });
 
   const cftcMap = {
-    'EURUSD': ['EURO FX', 'EURO CURRENCY'],
-    'GBPUSD': ['BRITISH POUND', 'BRITISH POUND STERLING'],
-    'USDJPY': ['JAPANESE YEN'],
-    'USDCAD': ['CANADIAN DOLLAR'],
-    'AUDUSD': ['AUSTRALIAN DOLLAR'],
-    'NZDUSD': ['NEW ZEALAND DOLLAR', 'NZ DOLLAR'],
-    'USDCHF': ['SWISS FRANC'],
-    'SP500': ['S&P 500 Consolidated', 'E-MINI S&P 500', 'S&P 500 STOCK INDEX'],
-    'NASDAQ': ['NASDAQ-100 Consolidated', 'NASDAQ 100 STOCK INDEX', 'E-MINI NASDAQ 100'],
-    'US30': ['DJIA Consolidated', 'DOW JONES INDUSTRIAL AVG', 'DOW JONES INDUSTRIAL AVERAGE', 'E-MINI DOW JONES INDUSTRIAL AVERAGE'],
-    'NIKKEI': ['NIKKEI STOCK AVERAGE YEN DENOM', 'NIKKEI 225 STOCK AVERAGE'],
-    'DAX': ['DAX-40 STOCK INDEX', 'DAX-30 STOCK INDEX'],
-    'GOLD': ['GOLD'],
-    'SILVER': ['SILVER'],
-    'COPPER': ['COPPER-GRADE #1', 'COPPER- #1', 'COPPER - COMMODITY EXCHANGE'],
-    'USOIL': ['CRUDE OIL, LIGHT SWEET'],
-    'UKOIL': ['BRENT CRUDE'],
-    'BITCOIN': ['BITCOIN'],
-    'ETHEREUM': ['ETHER']
+    'EURUSD': ['EURO FX', 'CHICAGO MERCANTILE EXCHANGE'],
+    'GBPUSD': ['BRITISH POUND', 'CHICAGO MERCANTILE EXCHANGE'],
+    'USDJPY': ['JAPANESE YEN', 'CHICAGO MERCANTILE EXCHANGE'],
+    'USDCAD': ['CANADIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'],
+    'AUDUSD': ['AUSTRALIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'],
+    'NZDUSD': ['NEW ZEALAND DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'],
+    'USDCHF': ['SWISS FRANC', 'CHICAGO MERCANTILE EXCHANGE'],
+    'SP500': ['E-MINI S&P 500', 'CHICAGO MERCANTILE EXCHANGE'],
+    'NASDAQ': ['E-MINI NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'],
+    'US30': ['E-MINI DOW JONES', 'CHICAGO BOARD OF TRADE'],
+    'NIKKEI': ['NIKKEI 225', 'CHICAGO MERCANTILE EXCHANGE'],
+    'DAX': ['E-MINI DAX', 'CHICAGO MERCANTILE EXCHANGE'],
+    'GOLD': ['GOLD', 'COMMODITY EXCHANGE'],
+    'SILVER': ['SILVER', 'COMMODITY EXCHANGE'],
+    'COPPER': ['COPPER-GRADE #1', 'COMMODITY EXCHANGE'],
+    'USOIL': ['CRUDE OIL, LIGHT SWEET', 'NEW YORK MERCANTILE EXCHANGE'],
+    'UKOIL': ['BRENT', 'ICE FUTURES EUROPE'],
+    'BITCOIN': ['BITCOIN', 'CHICAGO MERCANTILE EXCHANGE'],
+    'ETHEREUM': ['ETHER', 'CHICAGO MERCANTILE EXCHANGE']
   };
 
   const cftcNames = cftcMap[symbol.toUpperCase()];
@@ -77,7 +77,13 @@ export default async function handler(req, res) {
         const cShort = parseFloat(row.comm_positions_short_all || row.comm_positions_short || row.dealer_positions_short_all || row.dealer_positions_short) || 0;
         
         const total = ncLong + ncShort;
-        const longPct = total > 0 ? (ncLong / total) * 100 : 50;
+        let longPct = total > 0 ? (ncLong / total) * 100 : 50;
+        let shortPct = 100 - longPct;
+
+        // Inversion Logic for USD-Quote pairs (Fixed Friday Pulse)
+        if (['USDJPY', 'USDCHF', 'USDCAD'].includes(symbol.toUpperCase())) {
+          [longPct, shortPct] = [shortPct, longPct];
+        }
         
         const nextDate = Object.keys(groupedByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[index + 1];
         const nextRow = nextDate ? groupedByDate[nextDate].row : null;
@@ -92,7 +98,14 @@ export default async function handler(req, res) {
           deltaLong = ncLong - nL;
           deltaShort = ncShort - nS;
           const nTotal = nL + nS;
-          if (nTotal > 0) prevLongPct = (nL / nTotal) * 100;
+          if (nTotal > 0) {
+            let pLP = (nL / nTotal) * 100;
+            let pSP = 100 - pLP;
+            if (['USDJPY', 'USDCHF', 'USDCAD'].includes(symbol.toUpperCase())) {
+              [pLP, pSP] = [pSP, pLP];
+            }
+            prevLongPct = pLP;
+          }
         }
 
         return {
@@ -104,8 +117,8 @@ export default async function handler(req, res) {
           commLong: cLong,
           commShort: cShort,
           longPct,
-          shortPct: 100 - longPct,
-          netPosition: ncLong - ncShort,
+          shortPct,
+          netPosition: longPct > 50 ? (ncLong - ncShort) : (ncShort - ncLong), // Directional Net
           deltaLong,
           deltaShort,
           netChangePct: longPct - prevLongPct

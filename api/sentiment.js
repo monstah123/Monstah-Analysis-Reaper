@@ -39,10 +39,12 @@ export default async function handler(req, res) {
 
     try {
         // Parallel Institutional Fetch (Deep Buffer to avoid missing report cycles)
-        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
+        const [resTFF, resLegacy, resSupp, resTffComb, resLegComb, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/49v7-v69p.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // TFF Combined
+            axios.get(`https://publicreporting.cftc.gov/resource/jun7-fc8e.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // Legacy Combined
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -56,6 +58,8 @@ export default async function handler(req, res) {
         if (resTFF.status === 'fulfilled') rawData.push(...resTFF.value.data.map(r => ({ ...r, _ds: 'TFF' })));
         if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data.map(r => ({ ...r, _ds: 'LEGACY' })));
         if (resSupp.status === 'fulfilled') rawData.push(...resSupp.value.data.map(r => ({ ...r, _ds: 'SUPP' })));
+        if (resTffComb.status === 'fulfilled') rawData.push(...resTffComb.value.data.map(r => ({ ...r, _ds: 'TFF_COMB' })));
+        if (resLegComb.status === 'fulfilled') rawData.push(...resLegComb.value.data.map(r => ({ ...r, _ds: 'LEG_COMB' })));
 
         const results = {};
         
@@ -95,11 +99,11 @@ export default async function handler(req, res) {
                 // Data Extraction: Targeting Non-Commercial Speculators from the Legacy Report
                 let long = 0;
                 let short = 0;
-                if (match._ds === 'LEGACY') {
+                if (match._ds === 'LEGACY' || match._ds === 'LEG_COMB') {
                     long = parseFloat(match.noncomm_positions_long_all || 0);
                     short = parseFloat(match.noncomm_positions_short_all || 0);
                 } else {
-                    // For TFF-only assets, we use 'Leveraged Money' as the speculator proxy
+                    // For TFF or TFF_COMB, we use 'Leveraged Money' as the speculator proxy
                     long = parseFloat(match.lev_money_positions_long_all || match.asset_mgr_positions_long_all || 0);
                     short = parseFloat(match.lev_money_positions_short_all || match.asset_mgr_positions_short_all || 0);
                 }

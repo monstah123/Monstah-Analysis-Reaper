@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import type { AssetData } from '../data/assetRegistry';
 import { TERMINAL_ASSETS, generateNeuralSparkline } from '../data/assetRegistry';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
-import { fetchSnatcherQuote, fetchNewsSentiment } from '../services/alphaVantage';
+import { fetchSnatcherQuote } from '../services/alphaVantage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface ApiKeys {
@@ -249,13 +249,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAssets(prevAssets => {
         return prevAssets.map((a: AssetData) => {
           const data = neuralData[a.id];
-          let rL = a.retailLong ?? 50;
-          let rS = a.retailShort ?? 50;
           let cL: number | undefined = a.cotLong ?? undefined;
           let cS: number | undefined = a.cotShort ?? undefined;
           let cPct: number | null = null;
-          let rPct: number | null = null;
-          let rP = a.retailPos || 0;
           let cI = a.cot || 0;
 
           if (data) {

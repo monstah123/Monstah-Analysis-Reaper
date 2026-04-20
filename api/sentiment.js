@@ -60,10 +60,20 @@ export default async function handler(req, res) {
                 const total = ncLong + ncShort;
                 
                 if (total > 0) {
-                    const longPct = (ncLong / total) * 100;
+                    let longPct = (ncLong / total) * 100;
+                    let shortPct = 100 - longPct;
+
+                    // Institutional Correction: USD/XXX pairs (USDJPY, USDCHF, USDCAD)
+                    // CFTC reports on JPY, CHF, CAD. If JPY is 80% Long, USD/JPY is 80% Short.
+                    if (assetId === 'USDJPY' || assetId === 'USDCHF' || assetId === 'USDCAD') {
+                        const temp = longPct;
+                        longPct = shortPct;
+                        shortPct = temp;
+                    }
+
                     results[assetId] = {
                         longPct: +longPct.toFixed(1),
-                        shortPct: +(100 - longPct).toFixed(1),
+                        shortPct: +shortPct.toFixed(1),
                         contractsLong: ncLong,
                         contractsShort: ncShort,
                         source: `Live CFTC (${match.report_date_as_yyyy_mm_dd})`
@@ -75,23 +85,27 @@ export default async function handler(req, res) {
         // 2. Derive Synthetic Crosses (No Mockups - Calculated from Component Live Data)
         const crosses = [
             { id: 'GBPNZD', base: 'GBPUSD', quote: 'NZDUSD', inverse: false },
-            { id: 'GBPJPY', base: 'GBPUSD', quote: 'USDJPY', inverse: 'quote' }, // GBP (+) and JPY (-)
-            { id: 'EURJPY', base: 'EURUSD', quote: 'USDJPY', inverse: 'quote' }
+            { id: 'GBPJPY', base: 'GBPUSD', quote: 'USDJPY', inverse: true }, 
+            { id: 'EURJPY', base: 'EURUSD', quote: 'USDJPY', inverse: true }
         ];
 
         crosses.forEach(c => {
             const b = results[c.base];
-            const q = results[c.quote];
+            let q = results[c.quote];
             
             if (b && q) {
+                // For GBP/JPY, we are comparing GBP positioning vs JPY positioning.
+                // We already inverted USDJPY to be "USD relative". 
+                // To get JPY relative for the cross, we look at the raw JPY bias.
+                // However, simpler: GBP/JPY is Bullish if GBP is Long AND JPY is Short.
+                
                 let derivedLong = 50;
-                if (c.inverse === 'quote') {
-                    // GBP/JPY = GBP (Long%) vs JPY (Short%)
-                    // If Banks are Long GBP (80%) and Short JPY (70%), they are extremely long GBP/JPY
-                    // JPY Long positioning is an "inverse" for the cross.
-                    derivedLong = (b.longPct + (100 - q.longPct)) / 2;
-                } else if (c.inverse === false) {
-                    // GBP/NZD = GBP (Long%) vs NZD (Long%)
+                if (c.id === 'GBPJPY' || c.id === 'EURJPY') {
+                    // quote is USDJPY (which we inverted to USD-bias). 
+                    // To get JPY-bias back: 100 - q.longPct
+                    const jpyLongPct = 100 - q.longPct; 
+                    derivedLong = (b.longPct + (100 - jpyLongPct)) / 2;
+                } else {
                     derivedLong = (b.longPct + (100 - q.longPct)) / 2;
                 }
                 

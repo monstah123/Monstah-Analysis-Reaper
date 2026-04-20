@@ -96,16 +96,17 @@ export default async function handler(req, res) {
                     return parseFloat(b.open_interest_all || 0) - parseFloat(a.open_interest_all || 0);
                 })[0];
 
-                // Data Extraction: Targeting Non-Commercial Speculators from the Legacy Report
+                // Data Extraction: Targeting the 'Pure Institutional' (Asset Manager) bracket
                 let long = 0;
                 let short = 0;
                 if (match._ds === 'LEGACY' || match._ds === 'LEG_COMB') {
-                    long = parseFloat(match.noncomm_positions_long_all || 0);
-                    short = parseFloat(match.noncomm_positions_short_all || 0);
+                    // Check for TFF-style fields nested in Legacy Financial reports
+                    long = parseFloat(match.asset_mgr_positions_long_all || match.noncomm_positions_long_all || 0);
+                    short = parseFloat(match.asset_mgr_positions_short_all || match.noncomm_positions_short_all || 0);
                 } else {
-                    // For TFF or TFF_COMB, we use 'Leveraged Money' as the speculator proxy
-                    long = parseFloat(match.lev_money_positions_long_all || match.asset_mgr_positions_long_all || 0);
-                    short = parseFloat(match.lev_money_positions_short_all || match.asset_mgr_positions_short_all || 0);
+                    // For TFF or TFF_COMB: Prioritize Asset Managers (Pure Institutional) over Leveraged Money
+                    long = parseFloat(match.asset_mgr_positions_long_all || match.lev_money_positions_long_all || 0);
+                    short = parseFloat(match.asset_mgr_positions_short_all || match.lev_money_positions_short_all || 0);
                 }
                 
                 const total = long + short;

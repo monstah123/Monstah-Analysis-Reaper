@@ -25,6 +25,7 @@ export interface AssetData {
   basePrice?: number;
   cotLong?: number; // spec long (k)
   cotShort?: number; // spec short (k)
+  longPct?: number; // Normalized institutional sentiment %
   retailLong?: number; // %
   retailShort?: number; // %
   snatcherActive?: boolean; // True if ReaperSnatcher successfully pulled this client-side

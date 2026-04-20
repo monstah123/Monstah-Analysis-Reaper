@@ -297,62 +297,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           } else {
             // Stage 3: Fuzzy Normalization for Institutional Feeds (DAX, Oil, Spreads)
             const fuzzyKey = a.id.toUpperCase();
-            let matchedData = null;
+            let matchedData = neuralData[fuzzyKey];
             
-            if (fuzzyKey.includes('DAX')) matchedData = neuralData['DE30'] || neuralData['GER30'];
-            if (fuzzyKey.includes('USOIL')) matchedData = neuralData['WTI'];
-            if (fuzzyKey.includes('UKOIL')) matchedData = neuralData['BRENT'];
-            if (fuzzyKey.includes('NASDAQ')) matchedData = neuralData['NASDAQ'] || neuralData['NDX'] || neuralData['QQQ'];
-            if (fuzzyKey.includes('SP500')) matchedData = neuralData['SP500'] || neuralData['SPX'] || neuralData['SPY'];
-            if (fuzzyKey.includes('US30')) matchedData = neuralData['US30'] || neuralData['DIA'] || neuralData['DOW'];
-            if (fuzzyKey.includes('COPPER')) matchedData = neuralData['HG'];
+            if (!matchedData) {
+              if (fuzzyKey.includes('DAX')) matchedData = neuralData['DE30'] || neuralData['GER30'];
+              if (fuzzyKey.includes('USOIL')) matchedData = neuralData['WTI'];
+              if (fuzzyKey.includes('UKOIL')) matchedData = neuralData['BRENT'];
+              if (fuzzyKey.includes('NASDAQ')) matchedData = neuralData['NASDAQ'] || neuralData['NDX'];
+              if (fuzzyKey.includes('SP500')) matchedData = neuralData['SP500'] || neuralData['SPX'];
+              if (fuzzyKey.includes('US30')) matchedData = neuralData['US30'] || neuralData['DOW'];
+            }
 
             if (matchedData) {
-              cL = matchedData.iLong ?? null;
-              cS = matchedData.iShort ?? null;
+              cL = matchedData.contractsLong ?? matchedData.longPct ?? null;
+              cS = matchedData.contractsShort ?? matchedData.shortPct ?? null;
+              if (matchedData.longPct !== undefined) cPct = matchedData.longPct;
             }
           }
 
-          // Strict Bias Scoring (Only if Live Data exists)
-          let cPct: number | null = null;
-          let rPct: number | null = null;
+          if (cL !== null && cS !== null && cPct === null) {
+            const total = cL + cS;
+            if (total > 0) cPct = (cL / total) * 100;
+          }
           
-          if (cL !== null && cS !== null && (cL !== 0 || cS !== 0)) cPct = (cL / (cL + cS)) * 100;
           if (rL !== null && rS !== null) rPct = (rL / (rL + rS)) * 100;
 
+          // Institutional Bias Scoring (v17.5 Calibration)
           rP = (rPct !== null) ? (rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0) : 0;
-          cI = (cPct !== null) ? (cPct >= 70 ? 2 : cPct >= 57 ? 1 : cPct <= 30 ? -2 : cPct <= 43 ? -1 : 0) : 0;
+          cI = (cPct !== null) ? (cPct >= 75 ? 2 : cPct >= 60 ? 1 : cPct <= 25 ? -2 : cPct <= 40 ? -1 : 0) : 0;
 
           const liveSignalsCount = [cPct, rPct, scores.gdp, scores.inflation].filter(s => s !== null).length;
           
-          // Dynamic Macro Alignment Engine (v30.0 - Institutional Model)
-          // 1. Calculate Base US Macro Strength Score
+          // Dynamic Macro Alignment Engine
           const usMacroScore = (scores.gdp || 0) + (scores.inflation || 0) + 
                                (scores.interestRates || 0) + (scores.employmentChange || 0);
 
-          // 2. Route Macro Impact Based on Asset Class & Currency Geography
           let macroImpact = usMacroScore;
-          if (a.id === 'EURUSD' || a.id === 'GBPUSD' || a.id === 'AUDUSD' || a.id === 'NZDUSD' || a.category === 'Crypto' || a.id === 'GOLD' || a.id === 'SILVER') {
-              // Inverse Impact: A strong US Economy (strong dollar) crushes XXX/USD pairs and precious metals
+          if (['EURUSD', 'GBPUSD', 'AUDUSD', 'NZDUSD', 'GOLD', 'SILVER'].includes(a.id) || a.category === 'Crypto') {
               macroImpact = -usMacroScore;
-          } else if (a.id === 'USDJPY' || a.id === 'USDCAD' || a.id === 'USDCHF') {
-              // Direct Impact: A strong US Economy propels USD/XXX pairs
-              macroImpact = usMacroScore;
-          } else if (a.category === 'Indices') {
-              // Complex Equities Impact: Growth is good (+), but we apply it normally (already structured in usMacroScore)
-              macroImpact = usMacroScore;
-          } else if (a.id === 'USOIL' || a.id === 'UKOIL' || a.id === 'COPPER') {
-              // Industrial Commodities: GDP growth implies demand, so direct impact
+          } else if (['USDJPY', 'USDCAD', 'USDCHF'].includes(a.id)) {
               macroImpact = usMacroScore;
           }
 
-          // Total Matrix Score (v30.5 - Institutional Weighted Model)
-          // Positioning (cI) now carries 2x Weight to ensure it leads the bias
-          const newTotals = ((cPct !== null ? cI : 0) * 2) + (rPct !== null ? rP : 0) + macroImpact;
+          const newTotals = (cI * 2) + rP + macroImpact;
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
           if (liveSignalsCount > 0) {
-            // Thresholds adjusted for 2x COT weighting (Core Shift)
             if (newTotals >= 5) dynamicBias = 'Very Bullish';
             else if (newTotals >= 1) dynamicBias = 'Bullish';
             else if (newTotals === 0) dynamicBias = 'Neutral';
@@ -364,11 +354,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ...a, ...scores,
             retailLong: rL, retailShort: rS,
             cotLong: cL, cotShort: cS,
+            longPct: cPct ?? 50,
             retailPos: rP, cot: cI,
             score: newTotals,
             bias: dynamicBias,
-            source: data?.source || a.source,
-            isSentimentDerived: data?.isSentimentDerived || false
+            source: (neuralData[a.id.toUpperCase()]?.source) || a.source,
+            isSentimentDerived: (neuralData[a.id.toUpperCase()]?.isSentimentDerived) || false
           };
         });
       });

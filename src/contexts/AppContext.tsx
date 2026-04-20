@@ -318,7 +318,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           }
 
-          if (cL !== null && cS !== null && cPct === null) {
+          if (typeof cL === 'number' && typeof cS === 'number' && cPct === null) {
             const total = cL + cS;
             if (total > 0) cPct = (cL / total) * 100;
           }

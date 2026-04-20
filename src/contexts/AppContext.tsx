@@ -273,8 +273,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const data = neuralData[a.id];
           let rL = a.retailLong ?? 50;
           let rS = a.retailShort ?? 50;
-          let cL = a.cotLong ?? null;
-          let cS = a.cotShort ?? null;
+          let cL: number | undefined = a.cotLong ?? undefined;
+          let cS: number | undefined = a.cotShort ?? undefined;
           let cPct: number | null = null;
           let rPct: number | null = null;
           let rP = a.retailPos || 0;
@@ -311,8 +311,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
 
             if (matchedData) {
-              cL = matchedData.contractsLong ?? matchedData.longPct ?? null;
-              cS = matchedData.contractsShort ?? matchedData.shortPct ?? null;
+              cL = matchedData.contractsLong ?? matchedData.longPct ?? undefined;
+              cS = matchedData.contractsShort ?? matchedData.shortPct ?? undefined;
               if (matchedData.longPct !== undefined) cPct = matchedData.longPct;
             }
           }

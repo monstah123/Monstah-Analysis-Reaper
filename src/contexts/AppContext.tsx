@@ -403,9 +403,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return pa;
       });
       
-      const missing = TERMINAL_ASSETS.filter(ma => !updated.find(pa => pa.id === ma.id));
-      if (missing.length > 0) return [...updated, ...missing];
-      return updated;
+      // De-duplication: Ensure a unique entry per ID after migration
+      const unique = updated.reduce((acc: AssetData[], current) => {
+        const x = acc.find(item => item.id === current.id);
+        if (!x) return acc.concat([current]);
+        else return acc;
+      }, []);
+      
+      const missing = TERMINAL_ASSETS.filter(ma => !unique.find(pa => pa.id === ma.id));
+      if (missing.length > 0) return [...unique, ...missing];
+      return unique;
     });
   }, [setAssets]);
 

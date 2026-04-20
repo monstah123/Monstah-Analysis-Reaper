@@ -31,8 +31,8 @@ export default async function handler(req, res) {
         'USDCAD': { id: ['CANADIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'USDCHF': { id: ['SWISS FRANC', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'NZDUSD': { id: ['NEW ZEALAND DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'BITCOIN': { id: ['BITCOIN', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' },
-        'ETHEREUM': { id: ['ETHER', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
+        'BITCOIN': { id: ['BITCOIN', 'CME', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' },
+        'ETHEREUM': { id: ['ETHER', 'CME', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
     };
 
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
@@ -59,11 +59,12 @@ export default async function handler(req, res) {
 
         const results = {};
         
-        // 1. Process Core Assets with Enhanced Matching V2
+        // 1. Process Core Assets with Enhanced Matching V3 (Fuzzy-Strict Hybrid)
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             const matches = rawData.filter(row => {
                 const rowName = (row.market_and_exchange_names || row.market_name || '').toUpperCase();
-                return config.id.every(idPart => rowName.includes(idPart.toUpperCase()));
+                return config.id.every(idPart => rowName.includes(idPart.toUpperCase())) || 
+                       ((assetId === 'BITCOIN' || assetId === 'ETHEREUM') && rowName.includes(assetId) && rowName.includes('CHICAGO'));
             });
 
             if (matches.length > 0) {
@@ -78,42 +79,36 @@ export default async function handler(req, res) {
                 const short = parseFloat(match.asset_mgr_positions_short_all || match.lev_money_positions_short_all || match.noncomm_positions_short_all || 0);
                 const total = long + short;
                 
-                if (total > 0) {
-                    let lPct = (long / total) * 100;
-                    let sPct = 100 - lPct;
+                let longPct = total > 0 ? (long / total) * 100 : 50;
+                let shortPct = 100 - longPct;
 
-                    if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
-                        [lPct, sPct] = [sPct, lPct];
-                    }
-
-                    results[assetId] = {
-                        longPct: +lPct.toFixed(1),
-                        shortPct: +sPct.toFixed(1),
-                        contractsLong: long,
-                        contractsShort: short,
-                        reportLabel: match.market_and_exchange_names,
-                        source: `Live CFTC (${match.report_date_as_yyyy_mm_dd.split('T')[0]})`
-                    };
+                // Institutional Inversion for USD-quoted pairs
+                if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
+                    [longPct, shortPct] = [shortPct, longPct];
                 }
+
+                results[assetId] = {
+                    longPct: Math.min(100, Math.max(0, +longPct.toFixed(1))),
+                    shortPct: Math.min(100, Math.max(0, +shortPct.toFixed(1))),
+                    contractsLong: long,
+                    contractsShort: short,
+                    source: `Live CFTC (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
+                };
             }
         }
 
-        // 2. Synthetic Cross Engine v16 (Zero Failure Protocol)
-        const crosses = [
+        // 2. Cross-Asset Synthesis (Synthesizing crosses from majors)
+        const CROSS_CONFIGS = [
             { id: 'GBPNZD', base: 'GBPUSD', quote: 'NZDUSD' },
             { id: 'GBPJPY', base: 'GBPUSD', quote: 'USDJPY', useJpyInversion: true },
-            { id: 'EURJPY', base: 'EURUSD', quote: 'USDJPY', useJpyInversion: true }
         ];
 
-        crosses.forEach(c => {
+        CROSS_CONFIGS.forEach(c => {
             const baseData = results[c.base];
             const quoteData = results[c.quote];
-            
             if (baseData && quoteData) {
-                // If it's a JPY cross, we use the raw JPY bias (which is the inverse of our already-inverted USDJPY)
                 const qBias = c.useJpyInversion ? (100 - quoteData.longPct) : quoteData.longPct;
                 const dLong = (baseData.longPct + (100 - qBias)) / 2;
-                
                 results[c.id] = {
                     longPct: +dLong.toFixed(1),
                     shortPct: +(100 - dLong).toFixed(1),
@@ -123,13 +118,14 @@ export default async function handler(req, res) {
             }
         });
 
-        // 3. Macro Neural Matrix
+        // 3. Macro Neural Matrix (Calibrated NFP Logic)
+        const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,
             CPI: resCpi.status === 'fulfilled' ? parseFloat(resCpi.value.data.observations[0]?.value) : null,
             FedRate: resFed.status === 'fulfilled' ? parseFloat(resFed.value.data.observations[0]?.value) : null,
-            NFP: resNfp.status === 'fulfilled' && resNfp.value.data.observations?.length > 1 
-                ? (parseFloat(resNfp.value.data.observations[0].value) - parseFloat(resNfp.value.data.observations[1].value)) 
+            NFP: nfpData.length > 1 
+                ? (parseFloat(nfpData[0].value) - parseFloat(nfpData[1].value)) * 1000
                 : null
         };
 

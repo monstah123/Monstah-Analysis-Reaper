@@ -35,7 +35,7 @@ export default async function handler(req, res) {
   if (!cftcNames) return res.status(404).json({ success: false, error: 'Symbol not mapped for COT history' });
 
   try {
-    const nameFilter = cftcNames.map(n => `market_and_exchange_names LIKE '%${n}%'`).join(' OR ');
+    const nameFilter = cftcNames.map(n => `market_and_exchange_names LIKE '%${n}%'`).join(' AND ');
     const query = `$limit=5000&$where=(${encodeURIComponent(nameFilter)})&$order=report_date_as_yyyy_mm_dd DESC`;
 
     const [res1, res2, res3] = await Promise.allSettled([

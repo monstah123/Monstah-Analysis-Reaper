@@ -243,35 +243,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         scores.employmentChange = (neuralMacro.NFP || 0) >= 280000 ? 2 : (neuralMacro.NFP || 0) >= 180000 ? 1 : 0;
       }
 
-      // 5. Gap Filling: Institutional Sentiment Hybrid (v17.0 Premium)
-      // If CFTC is missing for an asset (e.g. DAX, SOLANA), we derive it via News Sentiment Analytics.
-      const gapAssets = assets.filter((a: AssetData) => {
-        const data = neuralData[a.id];
-        const isMissing = !data;
-        const isEmpty = data && (data.contractsLong === 0 && data.contractsShort === 0);
-        return (isMissing || isEmpty) && a.ticker;
-      });
-      for (const a of gapAssets) {
-        try {
-          if (apiKeys.alphaVantage) {
-            const headlines = await fetchNewsSentiment(apiKeys.alphaVantage, a.ticker, 10);
-            if (headlines.length > 0) {
-              const avgScore = headlines.reduce((sum: number, h: any) => sum + (h.sentimentScore || 0), 0) / headlines.length;
-              // Normalize -0.35 to 0.35 scale to 0-100%
-              // A 0.3 score (bullish) becomes ~80% Long positioning
-              const longPct = Math.round(((avgScore + 0.5) / 1) * 100);
-              neuralData[a.id] = {
-                longPct: Math.min(100, Math.max(0, longPct)),
-                shortPct: 100 - Math.min(100, Math.max(0, longPct)),
-                isSentimentDerived: true,
-                source: 'News Analytics (AV)'
-              };
-            }
-          }
-        } catch (e: any) {
-          console.warn(`[Sentiment Hybrid] Failed for ${a.id}:`, e.message);
-        }
-      }
+      // 5. Institutional Purity Lockdown: Removed all retail and synthetic news fallbacks.
+      // Data authenticity is now 100% CFTC COT and Macro sourced.
 
       setAssets(prevAssets => {
         return prevAssets.map((a: AssetData) => {
@@ -294,12 +267,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (cL === null && data.longPct !== undefined) {
                cL = data.longPct;
                cS = data.shortPct;
-            }
-
-            // Retail Positioning (Official Sync)
-            if (!a.snatcherActive) {
-              rL = data.long ?? data.retailLong ?? 50;
-              rS = data.short ?? data.retailShort ?? 50;
             }
           } else {
             // Stage 3: Fuzzy Normalization for Institutional Feeds (DAX, Oil, Spreads)
@@ -328,13 +295,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (total > 0) cPct = (cL / total) * 100;
           }
           
-          if (rL !== null && rS !== null) rPct = (rL / (rL + rS)) * 100;
-
-          // Institutional Bias Scoring (v17.5 Calibration)
-          rP = (rPct !== null) ? (rPct >= 75 ? -2 : rPct <= 25 ? 2 : 0) : 0;
+          // Institutional Bias Scoring (v17.5 Calibration - PURE INSTITUTIONAL)
           cI = (cPct !== null) ? (cPct >= 75 ? 2 : cPct >= 60 ? 1 : cPct <= 25 ? -2 : cPct <= 40 ? -1 : 0) : 0;
 
-          const liveSignalsCount = [cPct, rPct, scores.gdp, scores.inflation].filter(s => s !== null).length;
+          const liveSignalsCount = [cPct, scores.gdp, scores.inflation].filter(s => s !== null).length;
           
           // Dynamic Macro Alignment Engine
           const usMacroScore = (scores.gdp || 0) + (scores.inflation || 0) + 
@@ -347,7 +311,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               macroImpact = usMacroScore;
           }
 
-          const newTotals = (cI * 2) + rP + macroImpact;
+          const newTotals = (cI * 3) + macroImpact; // Increased weight for COT (Institutional Only)
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
           if (liveSignalsCount > 0) {
@@ -360,14 +324,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           return {
             ...a, ...scores,
-            retailLong: rL, retailShort: rS,
+            retailLong: 50, retailShort: 50, // Defaulted to neutral (Purged Retail)
             cotLong: cL, cotShort: cS,
             longPct: cPct ?? 50,
-            retailPos: rP, cot: cI,
+            retailPos: 0, // Purged Retail
+            cot: cI,
             score: newTotals,
             bias: dynamicBias,
             source: (neuralData[a.id.toUpperCase()]?.source) || a.source,
-            isSentimentDerived: (neuralData[a.id.toUpperCase()]?.isSentimentDerived) || false
+            isSentimentDerived: false
           };
         });
       });

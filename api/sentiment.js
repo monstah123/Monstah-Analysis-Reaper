@@ -66,14 +66,15 @@ export default async function handler(req, res) {
                 const hasKeywords = config.id.every(idPart => rowName.includes(idPart.toUpperCase())) || 
                        ((assetId === 'BITCOIN' || assetId === 'ETHEREUM') && rowName.includes(assetId) && rowName.includes('CHICAGO'));
                 
-                // Volume Sanity Check: Ensure the row actually has reporting data
+                // FUTURES ONLY PROTOCOL: Exclude Options, Combined, and BTIC variants for 100% data authenticity.
+                const isFuturesOnly = !rowName.includes('OPTIONS') && !rowName.includes('COMBINED') && !rowName.includes('BTIC');
                 const hasVolume = parseFloat(row.open_interest_all || row.noncomm_positions_long_all || 0) > 0;
                 
-                return hasKeywords && hasVolume;
+                return hasKeywords && isFuturesOnly && hasVolume;
             });
 
             if (matches.length > 0) {
-                // Priority: 1. Recency, 2. LEGACY (as per user), 3. Volume
+                // Priority: 1. Recency, 2. LEGACY (Futures Only Specs), 3. Volume
                 const match = matches.sort((a,b) => {
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
@@ -87,19 +88,19 @@ export default async function handler(req, res) {
                     return volB - volA;
                 })[0];
 
-                // Data Extraction based on Dataset
+                // Data Extraction: Targeting Non-Commercial Speculators from the Legacy Report
                 let long = 0;
                 let short = 0;
                 if (match._ds === 'LEGACY') {
                     long = parseFloat(match.noncomm_positions_long_all || 0);
                     short = parseFloat(match.noncomm_positions_short_all || 0);
                 } else {
+                    // For TFF-only assets, we use 'Leveraged Money' as the speculator proxy
                     long = parseFloat(match.lev_money_positions_long_all || match.asset_mgr_positions_long_all || 0);
                     short = parseFloat(match.lev_money_positions_short_all || match.asset_mgr_positions_short_all || 0);
                 }
                 
                 const total = long + short;
-                
                 let longPct = total > 0 ? (long / total) * 100 : 50;
                 let shortPct = 100 - longPct;
 
@@ -109,8 +110,8 @@ export default async function handler(req, res) {
                 }
 
                 results[assetId] = {
-                    longPct: Math.min(100, Math.max(0, +longPct.toFixed(1))),
-                    shortPct: Math.min(100, Math.max(0, +shortPct.toFixed(1))),
+                    longPct: +longPct.toFixed(1),
+                    shortPct: +shortPct.toFixed(1),
                     contractsLong: long,
                     contractsShort: short,
                     source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
@@ -118,28 +119,7 @@ export default async function handler(req, res) {
             }
         }
 
-        // 2. Cross-Asset Synthesis (Synthesizing crosses from majors)
-        const CROSS_CONFIGS = [
-            { id: 'GBPNZD', base: 'GBPUSD', quote: 'NZDUSD' },
-            { id: 'GBPJPY', base: 'GBPUSD', quote: 'USDJPY', useJpyInversion: true },
-        ];
-
-        CROSS_CONFIGS.forEach(c => {
-            const baseData = results[c.base];
-            const quoteData = results[c.quote];
-            if (baseData && quoteData) {
-                const qBias = c.useJpyInversion ? (100 - quoteData.longPct) : quoteData.longPct;
-                const dLong = (baseData.longPct + (100 - qBias)) / 2;
-                results[c.id] = {
-                    longPct: +dLong.toFixed(1),
-                    shortPct: +(100 - dLong).toFixed(1),
-                    contractsLong: 0,
-                    source: `Synthetic (${c.base}/${c.quote})`
-                };
-            }
-        });
-
-        // 3. Macro Neural Matrix (Calibrated NFP Logic)
+        // 2. Macro Neural Matrix (Calibrated NFP Logic)
         const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,

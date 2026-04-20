@@ -66,26 +66,30 @@ export default async function handler(req, res) {
                 const hasKeywords = config.id.every(idPart => rowName.includes(idPart.toUpperCase())) || 
                        ((assetId === 'BITCOIN' || assetId === 'ETHEREUM') && rowName.includes(assetId) && rowName.includes('CHICAGO'));
                 
-                // FUTURES ONLY PROTOCOL: Exclude Options, Combined, and BTIC variants for 100% data authenticity.
-                const isFuturesOnly = !rowName.includes('OPTIONS') && !rowName.includes('COMBINED') && !rowName.includes('BTIC');
+                // DATA AUTHENTICITY PROTOCOL: Exclude 'BTIC' and 'TAS' variants.
+                // We now ALLOW 'COMBINED' rows to capture the full institutional footprint (72.6% EUR/USD Parity).
+                const isCleanData = !rowName.includes('BTIC') && !rowName.includes('TAS');
                 const hasVolume = parseFloat(row.open_interest_all || row.noncomm_positions_long_all || 0) > 0;
                 
-                return hasKeywords && isFuturesOnly && hasVolume;
+                return hasKeywords && isCleanData && hasVolume;
             });
 
             if (matches.length > 0) {
-                // Priority: 1. Recency, 2. LEGACY (Futures Only Specs), 3. Volume
+                // Priority: 1. Recency, 2. COMBINED (The 'Real Deal' Protocol), 3. LEGACY
                 const match = matches.sort((a,b) => {
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
+                    const nameA = (a.market_and_exchange_names || '').toUpperCase();
+                    const nameB = (b.market_and_exchange_names || '').toUpperCase();
+                    if (nameA.includes('COMBINED') && !nameB.includes('COMBINED')) return -1;
+                    if (nameB.includes('COMBINED') && !nameA.includes('COMBINED')) return 1;
+
                     if (a._ds === 'LEGACY' && b._ds !== 'LEGACY') return -1;
                     if (b._ds === 'LEGACY' && a._ds !== 'LEGACY') return 1;
                     
-                    const volA = parseFloat(a.open_interest_all || 0);
-                    const volB = parseFloat(b.open_interest_all || 0);
-                    return volB - volA;
+                    return parseFloat(b.open_interest_all || 0) - parseFloat(a.open_interest_all || 0);
                 })[0];
 
                 // Data Extraction: Targeting Non-Commercial Speculators from the Legacy Report

@@ -42,28 +42,27 @@ const Sentiment: React.FC = () => {
     return [...assets].sort((a, b) => (b.cot || 0) - (a.cot || 0));
   }, [assets]);
 
-  // Reaper 8.3 - Dual Dynamic Squad Sorting (Institutional Side)
+  // Reaper 17.0 - Institutional Parity Charting
   const cotChartData = useMemo(() => {
     if (!sortedAssets.length) return [];
     return sortedAssets
-      .filter(a => a.name) // Defensive: Ensure asset exists
+      .filter(a => a.name)
       .map(a => {
-        const total = (a.cotLong || 0) + (a.cotShort || 0);
-        let longPct = 50;
-        if (total > 0) {
-          longPct = Math.round(((a.cotLong || 0) / total) * 100);
-        }
-        const rankScore = Math.abs(longPct - 50);
+        // Use the synchronized state from AppContext (Zero-Failure Protocol)
+        const long = a.longPct ?? 50;
+        const rankScore = Math.abs(long - 50);
+        
         return {
+          id: a.id,
           name: a.name,
           cotScore: a.cot || 0,
-          long: longPct, 
-          short: 100 - longPct,
+          long: long, 
+          short: 100 - long,
           rankScore,
-          source: (a.category === 'Crypto' ? 'Binance / On-chain' : 'CFTC Gov Data')
+          source: a.source || (a.category === 'Crypto' ? 'Binance / Network' : 'Market Pulse')
         };
       })
-      .sort((a, b) => b.rankScore - a.rankScore); // Extreme First
+      .sort((a, b) => b.rankScore - a.rankScore);
   }, [sortedAssets]);
 
 

@@ -240,7 +240,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         scores.gdp = (neuralMacro.GDP || 0) >= 3 ? 2 : (neuralMacro.GDP || 0) >= 2 ? 1 : 0;
         scores.inflation = (neuralMacro.CPI || 0) >= 4.5 ? -2 : (neuralMacro.CPI || 0) >= 3.5 ? -1 : 0;
         scores.interestRates = (neuralMacro.FedRate || 0) >= 5.5 ? -1 : 0;
-        scores.employmentChange = (neuralMacro.NFP || 0) >= 250000 ? 2 : 1;
+        scores.employmentChange = (neuralMacro.NFP || 0) >= 280000 ? 2 : (neuralMacro.NFP || 0) >= 180000 ? 1 : 0;
       }
 
       setAssets(prevAssets => {
@@ -321,15 +321,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               macroImpact = usMacroScore;
           }
 
-          // Total Matrix Score (v30.0 - Execution Grade)
-          const newTotals = (cPct !== null ? cI : 0) + (rPct !== null ? rP : 0) + macroImpact;
+          // Total Matrix Score (v30.5 - Institutional Weighted Model)
+          // Positioning (cI) now carries 2x Weight to ensure it leads the bias
+          const newTotals = ((cPct !== null ? cI : 0) * 2) + (rPct !== null ? rP : 0) + macroImpact;
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
           if (liveSignalsCount > 0) {
-            if (newTotals >= 3) dynamicBias = 'Very Bullish';
+            // Thresholds adjusted for 2x COT weighting (Core Shift)
+            if (newTotals >= 5) dynamicBias = 'Very Bullish';
             else if (newTotals >= 1) dynamicBias = 'Bullish';
             else if (newTotals === 0) dynamicBias = 'Neutral';
-            else if (newTotals >= -2) dynamicBias = 'Bearish';
+            else if (newTotals >= -4) dynamicBias = 'Bearish';
             else dynamicBias = 'Very Bearish';
           }
 

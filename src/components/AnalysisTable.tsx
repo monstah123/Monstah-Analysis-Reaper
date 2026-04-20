@@ -110,28 +110,35 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
                     </span>
                     {(isBullSqueeze || isBearSqueeze) && (
                       <span className="text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm ml-1 animate-pulse" style={{ 
-                        background: isBullSqueeze ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', 
-                        color: isBullSqueeze ? '#4ade80' : '#f87171', 
-                        border: `1px solid ${isBullSqueeze ? '#22c55e' : '#ef4444'}`,
-                        boxShadow: `0 0 10px ${isBullSqueeze ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`
+                        background: isBullSqueeze ? 'rgba(59,130,246,0.2)' : 'rgba(239,68,68,0.2)', 
+                        color: isBullSqueeze ? '#3b82f6' : '#f87171', 
+                        border: `1px solid ${isBullSqueeze ? '#3b82f6' : '#ef4444'}`,
+                        boxShadow: `0 0 10px ${isBullSqueeze ? 'rgba(59,130,246,0.3)' : 'rgba(239,68,68,0.3)'}`
                       }}>
-                        {isBullSqueeze ? 'SQUEEZE' : 'TRAP'}
+                        {isBullSqueeze ? '⚡ SQUEEZE' : '⚠️ TRAP'}
                       </span>
                     )}
                   </div>
                 </td>
                 <td className="td-bias">
-                  <span className={`bias-badge ${getBiasClass(asset.bias)}`}>
+                  <span className={`bias-badge ${getBiasClass(asset.bias)}`} style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {asset.bias}
                   </span>
                 </td>
                 <td className="td-score">
-                  <span
-                    className="score-pill"
-                    style={{ '--score-color': getScoreColor(asset.score) } as React.CSSProperties}
-                  >
-                    {asset.score > 0 ? `+${asset.score}` : asset.score}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="score-pill"
+                      style={{ 
+                        '--score-color': getScoreColor(asset.score),
+                        fontWeight: 900,
+                        fontSize: '0.85rem'
+                      } as React.CSSProperties}
+                    >
+                      {asset.score > 0 ? `+${asset.score.toFixed(1)}` : asset.score.toFixed(1)}
+                    </span>
+                    {Math.abs(asset.score) >= 6 && <span style={{ fontSize: '1rem' }}>🏗️</span>}
+                  </div>
                 </td>
                 {columns.map((col) => (
                   <td key={col.key} className={`metric-cell ${col.hideMobile ? 'hide-mobile' : ''}`}>

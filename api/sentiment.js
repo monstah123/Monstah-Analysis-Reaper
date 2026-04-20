@@ -14,15 +14,15 @@ export default async function handler(req, res) {
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
     // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
-        'US30': { id: ['E-MINI DOW JONES', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
-        'SP500': { id: ['E-MINI S&P 500', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'NASDAQ': { id: ['E-MINI NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'US30': { id: ['DOW JONES', 'DJIA', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
+        'SP500': { id: ['S&P 500', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'NASDAQ': { id: ['NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'DAX': { id: ['E-MINI DAX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'NIKKEI': { id: ['NIKKEI 225', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE'], category: 'Commodities' },
         'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'COPPER': { id: ['COPPER-GRADE #1', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'USOIL': { id: ['CRUDE OIL, LIGHT SWEET', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
+        'COPPER': { id: ['COPPER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
+        'USOIL': { id: ['CRUDE OIL', 'WTI', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
         'UKOIL': { id: ['BRENT', 'ICE FUTURES EUROPE'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'GBPUSD': { id: ['BRITISH POUND', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         'AUDUSD': { id: ['AUSTRALIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'USDCAD': { id: ['CANADIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'USDCHF': { id: ['SWISS FRANC', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'NZDUSD': { id: ['NEW ZEALAND DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'NZDUSD': { id: ['NZ DOLLAR', 'NEW ZEALAND DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'BITCOIN': { id: ['BITCOIN', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' },
         'ETHEREUM': { id: ['ETHER', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
     };
@@ -59,19 +59,16 @@ export default async function handler(req, res) {
         
         // 1. Process Core Assets with Enhanced Matching V2
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
-            // Priority 1: Strict Match
-            // Priority 2: Fuzzy Match
             const matches = rawData.filter(row => {
-                const rowName = (row.market_and_exchange_names || '').toUpperCase();
-                return config.id.every(idPart => rowName.includes(idPart.toUpperCase())) && 
-                       !rowName.includes('SPREAD') && !rowName.includes('BTIC');
+                const rowName = (row.market_and_exchange_names || row.market_name || '').toUpperCase();
+                return config.id.every(idPart => rowName.includes(idPart.toUpperCase()));
             });
 
             if (matches.length > 0) {
-                // High-Fidelity Selection: Prioritize Asset Manager volume for Institutional Parity (v17.0)
-                const match = matches.sort((a, b) => {
-                    const volA = parseFloat(a.asset_mgr_positions_long_all || a.lev_money_positions_long_all || a.noncomm_positions_long_all || 0);
-                    const volB = parseFloat(b.asset_mgr_positions_long_all || b.lev_money_positions_long_all || b.noncomm_positions_long_all || 0);
+                // Sort by Volume to find the primary contract
+                const match = matches.sort((a,b) => {
+                    const volA = parseFloat(a.open_interest_all || a.lev_money_positions_long_all || 0);
+                    const volB = parseFloat(b.open_interest_all || b.lev_money_positions_long_all || 0);
                     return volB - volA;
                 })[0];
 

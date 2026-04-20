@@ -273,8 +273,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const data = neuralData[a.id];
           let rL = a.retailLong ?? 50;
           let rS = a.retailShort ?? 50;
-          let cL = a.cotLong ?? 50;
-          let cS = a.cotShort ?? 50;
+          let cL = a.cotLong ?? null;
+          let cS = a.cotShort ?? null;
+          let cPct: number | null = null;
+          let rPct: number | null = null;
           let rP = a.retailPos || 0;
           let cI = a.cot || 0;
 

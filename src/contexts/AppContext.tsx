@@ -263,13 +263,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               };
             }
           }
-        } catch (e) {
+        } catch (e: any) {
           console.warn(`[Sentiment Hybrid] Failed for ${a.id}:`, e.message);
         }
       }
 
       setAssets(prevAssets => {
-        return prevAssets.map(a => {
+        return prevAssets.map((a: AssetData) => {
           const data = neuralData[a.id];
           let rL = a.retailLong ?? 50;
           let rS = a.retailShort ?? 50;

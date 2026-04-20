@@ -15,6 +15,7 @@ const COTDeepDive: React.FC = () => {
       const total = cLong + cShort;
       
       // Data Integrity Check: If total is 0, it means the Institutional feed hasn't mapped this asset yet.
+      // We check a.isSentimentDerived because news analytics assets won't have cLong/cShort counts.
       const isSyncPending = total === 0 && !a.isSentimentDerived;
       const longPct = !isSyncPending ? Math.round((cLong / total) * 100) : 50;
       

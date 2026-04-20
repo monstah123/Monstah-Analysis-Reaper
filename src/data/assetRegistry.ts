@@ -28,6 +28,8 @@ export interface AssetData {
   retailLong?: number; // %
   retailShort?: number; // %
   snatcherActive?: boolean; // True if ReaperSnatcher successfully pulled this client-side
+  source?: string; // Institutional data source
+  isSentimentDerived?: boolean; // True if using news fallback
 }
 
 export const TERMINAL_ASSETS: AssetData[] = [

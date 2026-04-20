@@ -40,9 +40,9 @@ export default async function handler(req, res) {
     try {
         // Parallel Institutional Fetch (Deep Buffer to avoid missing report cycles)
         const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
-            axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -53,39 +53,51 @@ export default async function handler(req, res) {
         ]);
 
         let rawData = [];
-        if (resTFF.status === 'fulfilled') rawData.push(...resTFF.value.data);
-        if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data);
-        if (resSupp.status === 'fulfilled') rawData.push(...resSupp.value.data);
+        if (resTFF.status === 'fulfilled') rawData.push(...resTFF.value.data.map(r => ({ ...r, _ds: 'TFF' })));
+        if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data.map(r => ({ ...r, _ds: 'LEGACY' })));
+        if (resSupp.status === 'fulfilled') rawData.push(...resSupp.value.data.map(r => ({ ...r, _ds: 'SUPP' })));
 
         const results = {};
         
         // 1. Process Core Assets with Enhanced Matching V3 (Fuzzy-Strict Hybrid)
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             const matches = rawData.filter(row => {
-                const rowName = (row.market_and_exchange_names || row.market_name || '').toUpperCase();
+                const rowName = (row.market_and_exchange_names || row.market_name || row.contract_market_name || '').toUpperCase();
                 const hasKeywords = config.id.every(idPart => rowName.includes(idPart.toUpperCase())) || 
                        ((assetId === 'BITCOIN' || assetId === 'ETHEREUM') && rowName.includes(assetId) && rowName.includes('CHICAGO'));
                 
                 // Volume Sanity Check: Ensure the row actually has reporting data
-                const hasVolume = parseFloat(row.open_interest_all || row.lev_money_positions_long_all || row.noncomm_positions_long_all || 0) > 0;
+                const hasVolume = parseFloat(row.open_interest_all || row.noncomm_positions_long_all || 0) > 0;
                 
                 return hasKeywords && hasVolume;
             });
 
             if (matches.length > 0) {
-                // Prioritize Recency then Volume
+                // Priority: 1. Recency, 2. LEGACY (as per user), 3. Volume
                 const match = matches.sort((a,b) => {
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
+
+                    if (a._ds === 'LEGACY' && b._ds !== 'LEGACY') return -1;
+                    if (b._ds === 'LEGACY' && a._ds !== 'LEGACY') return 1;
                     
                     const volA = parseFloat(a.open_interest_all || 0);
                     const volB = parseFloat(b.open_interest_all || 0);
                     return volB - volA;
                 })[0];
 
-                const long = parseFloat(match.asset_mgr_positions_long_all || match.lev_money_positions_long_all || match.noncomm_positions_long_all || 0);
-                const short = parseFloat(match.asset_mgr_positions_short_all || match.lev_money_positions_short_all || match.noncomm_positions_short_all || 0);
+                // Data Extraction based on Dataset
+                let long = 0;
+                let short = 0;
+                if (match._ds === 'LEGACY') {
+                    long = parseFloat(match.noncomm_positions_long_all || 0);
+                    short = parseFloat(match.noncomm_positions_short_all || 0);
+                } else {
+                    long = parseFloat(match.lev_money_positions_long_all || match.asset_mgr_positions_long_all || 0);
+                    short = parseFloat(match.lev_money_positions_short_all || match.asset_mgr_positions_short_all || 0);
+                }
+                
                 const total = long + short;
                 
                 let longPct = total > 0 ? (long / total) * 100 : 50;
@@ -101,7 +113,7 @@ export default async function handler(req, res) {
                     shortPct: Math.min(100, Math.max(0, +shortPct.toFixed(1))),
                     contractsLong: long,
                     contractsShort: short,
-                    source: `Live CFTC (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
+                    source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
                 };
             }
         }

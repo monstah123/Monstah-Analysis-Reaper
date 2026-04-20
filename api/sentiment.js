@@ -63,15 +63,24 @@ export default async function handler(req, res) {
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             const matches = rawData.filter(row => {
                 const rowName = (row.market_and_exchange_names || row.market_name || '').toUpperCase();
-                return config.id.every(idPart => rowName.includes(idPart.toUpperCase())) || 
+                const hasKeywords = config.id.every(idPart => rowName.includes(idPart.toUpperCase())) || 
                        ((assetId === 'BITCOIN' || assetId === 'ETHEREUM') && rowName.includes(assetId) && rowName.includes('CHICAGO'));
+                
+                // Volume Sanity Check: Ensure the row actually has reporting data
+                const hasVolume = parseFloat(row.open_interest_all || row.lev_money_positions_long_all || row.noncomm_positions_long_all || 0) > 0;
+                
+                return hasKeywords && hasVolume;
             });
 
             if (matches.length > 0) {
-                // Sort by Volume to find the primary contract
+                // Prioritize Recency then Volume
                 const match = matches.sort((a,b) => {
-                    const volA = parseFloat(a.open_interest_all || a.lev_money_positions_long_all || 0);
-                    const volB = parseFloat(b.open_interest_all || b.lev_money_positions_long_all || 0);
+                    const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
+                    const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
+                    if (dateB !== dateA) return dateB - dateA;
+                    
+                    const volA = parseFloat(a.open_interest_all || 0);
+                    const volB = parseFloat(b.open_interest_all || 0);
                     return volB - volA;
                 })[0];
 

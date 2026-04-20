@@ -245,7 +245,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // 5. Gap Filling: Institutional Sentiment Hybrid (v17.0 Premium)
       // If CFTC is missing for an asset (e.g. DAX, SOLANA), we derive it via News Sentiment Analytics.
-      const gapAssets = assets.filter((a: AssetData) => !neuralData[a.id] && a.ticker);
+      const gapAssets = assets.filter((a: AssetData) => {
+        const data = neuralData[a.id];
+        const isMissing = !data;
+        const isEmpty = data && (data.contractsLong === 0 && data.contractsShort === 0);
+        return (isMissing || isEmpty) && a.ticker;
+      });
       for (const a of gapAssets) {
         try {
           if (apiKeys.alphaVantage) {

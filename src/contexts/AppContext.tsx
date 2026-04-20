@@ -243,6 +243,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         scores.employmentChange = (neuralMacro.NFP || 0) >= 280000 ? 2 : (neuralMacro.NFP || 0) >= 180000 ? 1 : 0;
       }
 
+      // 5. Gap Filling: Institutional Sentiment Hybrid (v17.0 Premium)
+      // If CFTC is missing for an asset (e.g. DAX, SOLANA), we derive it via News Sentiment Analytics.
+      const gapAssets = prevAssets.filter(a => !neuralData[a.id] && a.ticker);
+      for (const a of gapAssets) {
+        try {
+          if (apiKeys.alphaVantage) {
+            const headlines = await fetchNewsSentiment(apiKeys.alphaVantage, a.ticker, 10);
+            if (headlines.length > 0) {
+              const avgScore = headlines.reduce((sum, h) => sum + (h.sentimentScore || 0), 0) / headlines.length;
+              // Normalize -0.35 to 0.35 scale to 0-100%
+              // A 0.3 score (bullish) becomes ~80% Long positioning
+              const longPct = Math.round(((avgScore + 0.5) / 1) * 100);
+              neuralData[a.id] = {
+                longPct: Math.min(100, Math.max(0, longPct)),
+                shortPct: 100 - Math.min(100, Math.max(0, longPct)),
+                isSentimentDerived: true,
+                source: 'News Analytics (AV)'
+              };
+            }
+          }
+        } catch (e) {
+          console.warn(`[Sentiment Hybrid] Failed for ${a.id}:`, e.message);
+        }
+      }
+
       setAssets(prevAssets => {
         return prevAssets.map(a => {
           const data = neuralData[a.id];
@@ -341,7 +366,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             cotLong: cL, cotShort: cS,
             retailPos: rP, cot: cI,
             score: newTotals,
-            bias: dynamicBias
+            bias: dynamicBias,
+            source: data?.source || a.source,
+            isSentimentDerived: data?.isSentimentDerived || false
           };
         });
       });

@@ -73,9 +73,10 @@ export interface NewsHeadline {
   sentimentScore: number;
 }
 
-/** Fetch news sentiment via Alpha Vantage */
-export async function fetchNewsSentiment(apiKey: string, limit = 20): Promise<NewsHeadline[]> {
-  const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&limit=${limit}&apikey=${apiKey}`;
+/** Fetch news sentiment via Alpha Vantage (Ticker Specific or General) */
+export async function fetchNewsSentiment(apiKey: string, tickers?: string, limit = 20): Promise<NewsHeadline[]> {
+  const tickerQuery = tickers ? `&tickers=${tickers}` : '';
+  const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT${tickerQuery}&limit=${limit}&apikey=${apiKey}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`News Feed error ${res.status}`);
   const json = await res.json();

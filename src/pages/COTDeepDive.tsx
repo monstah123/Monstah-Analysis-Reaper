@@ -4,7 +4,7 @@ import { useApp } from '../contexts/AppContext';
 const COTDeepDive: React.FC = () => {
   const { assets, marketData } = useApp();
 
-  // Reaper 26.0 - THE MONSTAH CONVICTION ENGINE
+  // v17.0 - THE MONSTAH "IRONCLAD" ANALYTICS ENGINE
   const analysisData = useMemo(() => {
     return [...assets].map(a => {
       const live = marketData[a.id];
@@ -14,18 +14,19 @@ const COTDeepDive: React.FC = () => {
       const cShort = a.cotShort || 0;
       const total = cLong + cShort;
       
-      const longPct = total > 0 ? Math.round((cLong / total) * 100) : 50;
+      // Data Integrity Check: If total is 0, it means the Institutional feed hasn't mapped this asset yet.
+      const isSyncPending = total === 0 && !a.isSentimentDerived;
+      const longPct = !isSyncPending ? Math.round((cLong / total) * 100) : 50;
       
       // Conviction Logic: Calculate the extremity of the smart money positioning
-      const conviction = Math.min(100, Math.abs(longPct - 50) * 2.5);
+      const conviction = isSyncPending ? 0 : Math.min(100, Math.abs(longPct - 50) * 2.5);
       
       // Divergence Logic: Comparing Price vs Position
-      // If price is higher than base but net short, it's a "High Conviction Short Divergence"
-      const isShortDivergence = price > (a.basePrice || 0) && longPct < 40;
-      const isLongDivergence = price < (a.basePrice || 0) && longPct > 60;
+      const isShortDivergence = !isSyncPending && price > (a.basePrice || 0) && longPct < 40;
+      const isLongDivergence = !isSyncPending && price < (a.basePrice || 0) && longPct > 60;
       
-      let thesis = "Monitoring Institutional Flows...";
-      let thesisColor = "#71717a";
+      let thesis = isSyncPending ? "⚠️ DATA SYNC PENDING..." : "Monitoring Institutional Flows...";
+      let thesisColor = isSyncPending ? "#eab308" : "#71717a";
 
       if (isShortDivergence) {
         thesis = "🏦 BANKS ARE SELLING INTO STRENGTH. HOLD SHORT.";
@@ -45,59 +46,72 @@ const COTDeepDive: React.FC = () => {
         conviction, 
         thesis, 
         thesisColor,
-        signalClass: longPct > 60 ? 'bias-bullish' : longPct < 40 ? 'bias-bearish' : 'val-neutral'
+        isSyncPending,
+        signalClass: isSyncPending ? 'val-neutral' : longPct > 60 ? 'bias-bullish' : longPct < 40 ? 'bias-bearish' : 'val-neutral'
       };
     }).sort((a, b) => b.conviction - a.conviction);
   }, [assets, marketData]);
 
   return (
-    <div className="page-container">
-      <header className="header" style={{ padding: 0 }}>
-        <div className="header-title">
-          <h1>🏛️ Institutional Conviction Engine</h1>
-          <p>Analyzing "Smart Money" delta vs. 2026 Price Action for Stress-Free Holding Power.</p>
+    <div className="page-container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+      <header className="header" style={{ marginBottom: '2rem', padding: '0 1rem' }}>
+        <div style={{ borderLeft: '4px solid #ef4444', paddingLeft: '1.5rem' }}>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 950, letterSpacing: '-0.02em', color: '#f8fafc', marginBottom: '0.5rem' }}>
+            CONVICTION <span style={{ color: '#ef4444' }}>ENGINE</span>
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 500 }}>
+            Analyzing Institutional Bias vs. 2026 Price Action High-Probability Trades.
+          </p>
         </div>
       </header>
 
-      <div className="settings-card" style={{ padding: 0, overflow: 'hidden', marginTop: '1.5rem', border: '1px solid #1e2d48' }}>
+      <div style={{ 
+        background: '#0f172a', 
+        borderRadius: '12px', 
+        border: '1px solid #1e2d48', 
+        overflow: 'hidden',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+      }}>
         <div className="table-scroll">
           <table style={{ width: '100%', minWidth: '1000px', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#111827', borderBottom: '1px solid #1e2d48' }}>
-                <th style={{ padding: '1.25rem 1.5rem', textAlign: 'left', fontSize: '11px', color: '#71717a', textTransform: 'uppercase' }}>ASSET</th>
-                <th style={{ padding: '1.25rem 1.5rem', textAlign: 'center', fontSize: '11px', color: '#71717a', textTransform: 'uppercase' }}>MARKET PRICE</th>
-                <th style={{ padding: '1.25rem 1.5rem', textAlign: 'center', fontSize: '11px', color: '#71717a', textTransform: 'uppercase' }}>INSTITUTIONAL (COT)</th>
-                <th style={{ padding: '1.25rem 1.5rem', textAlign: 'center', fontSize: '11px', color: '#71717a', textTransform: 'uppercase' }}>CONVICTION</th>
-                <th style={{ padding: '1.25rem 1.5rem', textAlign: 'left', fontSize: '11px', color: '#71717a', textTransform: 'uppercase' }}>HOLD THESIS</th>
+              <tr style={{ background: '#111827', borderBottom: '2px solid #1e2d48' }}>
+                <th style={{ padding: '1.5rem', textAlign: 'left', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Asset Identity</th>
+                <th style={{ padding: '1.5rem', textAlign: 'center', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Market Price</th>
+                <th style={{ padding: '1.5rem', textAlign: 'center', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Institutional Sentiment</th>
+                <th style={{ padding: '1.5rem', textAlign: 'center', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Conviction</th>
+                <th style={{ padding: '1.5rem', textAlign: 'left', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Strategic Thesis</th>
               </tr>
             </thead>
             <tbody>
               {analysisData.map((a, i) => (
                 <tr key={a.id} style={{ 
-                  borderBottom: '1px solid #1e2d48', 
-                  animation: `fadeInRow 0.3s ease forwards`, 
-                  animationDelay: `${i*30}ms`, 
-                  opacity: 0,
-                  background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'
+                  borderBottom: '1px solid #1e2d48',
+                  background: i % 2 === 0 ? 'transparent' : 'rgba(30, 41, 59, 1)',
+                  transition: 'background 0.2s ease',
+                  cursor: 'pointer'
                 }}>
                   <td style={{ padding: '1.5rem' }}>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc' }}>{a.name}</div>
-                    <div style={{ fontSize: '10px', color: '#71717a', fontFamily: 'monospace' }}>{a.id}</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#f1f5f9' }}>{a.name}</div>
+                    <div style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace', letterSpacing: '0.1em' }}>{a.id}</div>
                   </td>
 
                   <td style={{ padding: '1.5rem', textAlign: 'center' }}>
-                     <div style={{ fontSize: '1rem', fontWeight: 700, color: '#94a3b8' }}>
-                        {a.price > 0 ? a.price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : 'SYNCING...'}
-                     </div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc', fontVariantNumeric: 'tabular-nums' }}>
+                       {a.price > 0 ? a.price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '---'}
+                    </div>
                   </td>
                   
                   <td style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center' }}>
-                      <div style={{ width: '140px', height: '6px', background: '#0f172a', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
-                         <div style={{ width: `${a.longPct}%`, background: '#22c55e', height: '100%' }} />
-                         <div style={{ width: `${100 - a.longPct}%`, background: '#ef4444', height: '100%' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                      <div style={{ width: '160px', height: '8px', background: '#020617', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
+                         <div style={{ width: `${a.longPct}%`, background: '#22c55e', height: '100%', transition: 'width 1s ease' }} />
+                         <div style={{ width: `${100 - a.longPct}%`, background: '#ef4444', height: '100%', transition: 'width 1s ease' }} />
                       </div>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#e2e8f0' }}>{a.longPct}% LONG / {100 - a.longPct}% SHORT</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', width: '160px', fontSize: '10px', fontWeight: 900, color: '#94a3b8' }}>
+                         <span>{a.longPct}% L</span>
+                         <span>{100 - a.longPct}% S</span>
+                      </div>
                     </div>
                   </td>
 
@@ -106,14 +120,14 @@ const COTDeepDive: React.FC = () => {
                         display: 'inline-flex', 
                         alignItems: 'center', 
                         justifyContent: 'center', 
-                        width: '45px', 
-                        height: '45px', 
+                        width: '50px', 
+                        height: '50px', 
                         borderRadius: '50%', 
-                        border: `2px solid ${a.conviction > 70 ? '#ef4444' : '#334155'}`,
-                        fontSize: '11px',
+                        border: `2px solid ${a.conviction > 80 ? '#ef4444' : a.conviction > 50 ? '#eab308' : '#334155'}`,
+                        fontSize: '0.8rem',
                         fontWeight: 900,
-                        color: a.conviction > 70 ? '#ef4444' : '#f8fafc',
-                        background: a.conviction > 70 ? 'rgba(239, 68, 68, 0.1)' : 'transparent'
+                        color: a.conviction > 80 ? '#ef4444' : a.conviction > 50 ? '#eab308' : '#f8fafc',
+                        background: a.conviction > 80 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(15, 23, 42, 0.5)'
                      }}>
                         {Math.round(a.conviction)}%
                      </div>
@@ -122,16 +136,24 @@ const COTDeepDive: React.FC = () => {
                   <td style={{ padding: '1.5rem' }}>
                       <div style={{ 
                         fontSize: '0.85rem', 
-                        fontWeight: 700, 
+                        fontWeight: 800, 
                         color: a.thesisColor,
-                        letterSpacing: '0.01em',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.6rem'
                       }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: a.thesisColor }} />
+                        <div style={{ 
+                          width: '8px', 
+                          height: '8px', 
+                          borderRadius: '50%', 
+                          background: a.thesisColor,
+                          boxShadow: `0 0 10px ${a.thesisColor}` 
+                        }} />
                         {a.thesis}
                       </div>
+                      {a.source && (
+                        <div style={{ fontSize: '9px', color: '#475569', marginTop: '0.4rem', marginLeft: '1.4rem' }}>SOURCE: {a.source.toUpperCase()}</div>
+                      )}
                   </td>
                 </tr>
               ))}
@@ -140,18 +162,36 @@ const COTDeepDive: React.FC = () => {
         </div>
       </div>
 
-      <div className="settings-card" style={{ marginTop: '2rem', background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(15, 23, 42, 0.2) 100%)', border: '1px solid #ef444444', padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: '1.5rem', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>👹 THE MONSTAH "NO-STRESS" PROTOCOL</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-              <div>
-                <h4 style={{ color: '#f8fafc', marginBottom: '0.5rem' }}>🏦 INSTITUTIONAL DIVERGENCE</h4>
-                <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: '1.5' }}>When the market pushes into new highs (Gold $4.7k+) but Smart Money (COT) is heavily distributed (Short), the conviction for a reversal is maximal. We hold through the volatility because the structural foundation is on our side.</p>
-              </div>
-              <div>
-                <h4 style={{ color: '#f8fafc', marginBottom: '0.5rem' }}>🎯 CONVICTION RATING</h4>
-                <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: '1.5' }}>Our 0-100% dial calculates the extremity of COT positioning. Anything above 75% indicates a trade that institutional traders are currently betting heavily on. We follow the size.</p>
-              </div>
-          </div>
+      <div style={{ 
+        marginTop: '3rem', 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+        gap: '1.5rem' 
+      }}>
+        <div style={{ 
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(15, 23, 42, 0.1) 100%)', 
+          border: '1px solid rgba(34, 197, 94, 0.1)', 
+          padding: '1.5rem', 
+          borderRadius: '12px' 
+        }}>
+          <h4 style={{ color: '#22c55e', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 900 }}>🏢 INSTITUTIONAL DIVERGENCE</h4>
+          <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: '1.6' }}>
+            Calculated by monitoring price velocity vs. net positioning deltas. 
+            When price makes new highs but institutional conviction drops, its a high-probability distribution sign.
+          </p>
+        </div>
+        <div style={{ 
+          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(15, 23, 42, 0.1) 100%)', 
+          border: '1px solid rgba(239, 68, 68, 0.1)', 
+          padding: '1.5rem', 
+          borderRadius: '12px' 
+        }}>
+          <h4 style={{ color: '#ef4444', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 900 }}>🎯 CONVICTION RATING</h4>
+          <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: '1.6' }}>
+            A weighted score of positioning extremity. Scores above 80% indicate that primary dealers are 
+            heavily skewed, increasing the risk/reward for trend capture.
+          </p>
+        </div>
       </div>
     </div>
   );

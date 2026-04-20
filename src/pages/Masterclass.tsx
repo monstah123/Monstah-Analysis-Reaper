@@ -79,7 +79,7 @@ const TrainingModules = [
         <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
            <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#fff' }}>The COT "Overflow" Numbers</h3>
            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
-             Look at the Net Long/Short ratio for Non-Commercials (Banks).
+             Look at the Net Long/Short ratio for Non-Commercials (Banks). While the **official reports** are released weekly, the Reaper terminal syncs these values with **up-to-the-minute price action** for real-time divergence.
            </p>
            <ul style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
               <li>✅ {'>'} 60% Net Long: Institutional ACCUMULATION (Prepare to Buy)</li>
@@ -154,6 +154,34 @@ const TrainingModules = [
         </div>
       </div>
     )
+  },
+  {
+    id: 'hybrid',
+    title: '🔱 Module 6: Hybrid Institutional Pulse',
+    subtitle: 'Live Derivation & Synthetic Intelligence (v15.0)',
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ padding: '1.5rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#f59e0b' }}>💎 100% DATA AUTHENTICITY</h3>
+           <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+             Unlike other platforms, the Reaper terminal has purged all "Placeholder" archived data. Every conviction score you see is pulled live from CFTC wires or calculated using synthetic logic.
+           </p>
+           <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.8rem', color: '#e2e8f0', marginBottom: '0.5rem' }}><strong>SYNTHETIC DERIVATION ENGINE:</strong></div>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+                For currency crosses like **GBP/NZD** or **GBP/JPY**, we compare the Institutional net positioning of each individual component leg. This provides a scientific institutional conviction score even for pairs the CFTC doesn't report directly.
+              </p>
+           </div>
+        </div>
+
+        <div style={{ padding: '1.5rem', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#22c55e' }}>THE 60-SECOND REFRESH</h3>
+           <p style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.6 }}>
+             While institutions report weekly, your Matrix Score updates **automatically every minute**. The engine constantly evaluates the static institutional foundation against the dynamic market price to flag sudden divergences.
+           </p>
+        </div>
+      </div>
+    )
   }
 ];
 
@@ -225,7 +253,7 @@ const Masterclass: React.FC = () => {
         {/* Content Area */}
         <div className="settings-card masterclass-content" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 41, 0.8)', minHeight: '600px' }}>
            <div>
-              <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Reaper Academy • v13.3</div>
+              <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Reaper Academy • v15.0</div>
               <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem', color: '#fff' }}>{TrainingModules[activeModule].title}</h2>
               <p style={{ fontSize: '1.1rem', color: '#94a3b8', fontWeight: 600 }}>{TrainingModules[activeModule].subtitle}</p>
            </div>

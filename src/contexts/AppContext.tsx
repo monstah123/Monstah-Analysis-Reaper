@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import type { AssetData } from '../data/assetRegistry';
 import { TERMINAL_ASSETS, generateNeuralSparkline } from '../data/assetRegistry';
 import { fetchCryptoPrices, fetchCryptoPriceHistory } from '../services/coinGecko';
-import { fetchSnatcherQuote } from '../services/alphaVantage';
+import { fetchSnatcherQuote, fetchNewsSentiment } from '../services/alphaVantage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface ApiKeys {
@@ -245,13 +245,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // 5. Gap Filling: Institutional Sentiment Hybrid (v17.0 Premium)
       // If CFTC is missing for an asset (e.g. DAX, SOLANA), we derive it via News Sentiment Analytics.
-      const gapAssets = prevAssets.filter(a => !neuralData[a.id] && a.ticker);
+      const gapAssets = assets.filter((a: AssetData) => !neuralData[a.id] && a.ticker);
       for (const a of gapAssets) {
         try {
           if (apiKeys.alphaVantage) {
             const headlines = await fetchNewsSentiment(apiKeys.alphaVantage, a.ticker, 10);
             if (headlines.length > 0) {
-              const avgScore = headlines.reduce((sum, h) => sum + (h.sentimentScore || 0), 0) / headlines.length;
+              const avgScore = headlines.reduce((sum: number, h: any) => sum + (h.sentimentScore || 0), 0) / headlines.length;
               // Normalize -0.35 to 0.35 scale to 0-100%
               // A 0.3 score (bullish) becomes ~80% Long positioning
               const longPct = Math.round(((avgScore + 0.5) / 1) * 100);

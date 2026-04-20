@@ -63,8 +63,18 @@ export default async function handler(req, res) {
             });
 
             if (match) {
-                const long = parseFloat(match.asset_mgr_positions_long || match.asset_mgr_positions_long_all || match.noncomm_positions_long_all || match.lev_money_positions_long) || 0;
-                const short = parseFloat(match.asset_mgr_positions_short || match.asset_mgr_positions_short_all || match.noncomm_positions_short_all || match.lev_money_positions_short) || 0;
+                // Institutional Tiering: Use Speculator positioning (Non-Commercial / Leveraged Money)
+                // Professionals do not track "Commercials" (Hedgers) for sentiment bias.
+                const long = parseFloat(
+                    match.noncomm_positions_long_all || 
+                    match.lev_money_positions_long || 
+                    match.asset_mgr_positions_long || 0
+                );
+                const short = parseFloat(
+                    match.noncomm_positions_short_all || 
+                    match.lev_money_positions_short || 
+                    match.asset_mgr_positions_short || 0
+                );
                 const total = long + short;
                 
                 if (total > 0) {
@@ -72,6 +82,8 @@ export default async function handler(req, res) {
                     let sPct = 100 - lPct;
 
                     // Directional Correction for USD-Quote Pairs
+                    // If we report on JPY futures, 'Long' = Strong JPY. 
+                    // So for USDJPY, if JPY is Long, USDJPY Bias is Bearish (Selling USD).
                     if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
                         [lPct, sPct] = [sPct, lPct]; // Invert bias to USD-basis
                     }
@@ -81,6 +93,7 @@ export default async function handler(req, res) {
                         shortPct: +sPct.toFixed(1),
                         contractsLong: long,
                         contractsShort: short,
+                        reportLabel: match.market_and_exchange_names,
                         source: `Live CFTC (${match.report_date_as_yyyy_mm_dd})`
                     };
                 }

@@ -142,6 +142,7 @@ const Sentiment: React.FC = () => {
                 <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} isAnimationActive={false} />
                 <Bar 
+                  key="bar-long"
                   dataKey="long" 
                   stackId="a" 
                   fill="#22c55e" 
@@ -149,6 +150,7 @@ const Sentiment: React.FC = () => {
                   isAnimationActive={false}
                 />
                 <Bar 
+                  key="bar-short"
                   dataKey="short" 
                   stackId="a" 
                   fill="#ef4444" 

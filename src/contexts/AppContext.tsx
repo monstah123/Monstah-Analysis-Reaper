@@ -299,15 +299,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           } else {
             // Stage 3: Fuzzy Normalization for Institutional Feeds (DAX, Oil, Spreads)
             const fuzzyKey = a.id.toUpperCase();
-            let matchedData = neuralData[fuzzyKey];
+            let matchedData = (neuralData?.sentiment) ? neuralData.sentiment[fuzzyKey] : null;
             
-            if (!matchedData) {
-              if (fuzzyKey.includes('DAX')) matchedData = neuralData['DE30'] || neuralData['GER30'];
-              if (fuzzyKey.includes('USOIL')) matchedData = neuralData['WTI'];
-              if (fuzzyKey.includes('UKOIL')) matchedData = neuralData['BRENT'];
-              if (fuzzyKey.includes('NASDAQ')) matchedData = neuralData['NASDAQ'] || neuralData['NDX'];
-              if (fuzzyKey.includes('SP500')) matchedData = neuralData['SP500'] || neuralData['SPX'];
-              if (fuzzyKey.includes('US30')) matchedData = neuralData['US30'] || neuralData['DOW'];
+            if (!matchedData && neuralData?.sentiment) {
+              const s = neuralData.sentiment;
+              if (fuzzyKey.includes('DAX')) matchedData = s['DE30'] || s['GER30'];
+              if (fuzzyKey.includes('USOIL')) matchedData = s['WTI'];
+              if (fuzzyKey.includes('UKOIL')) matchedData = s['BRENT'];
+              if (fuzzyKey.includes('NASDAQ')) matchedData = s['NASDAQ'] || s['NDX'];
+              if (fuzzyKey.includes('SP500')) matchedData = s['SP500'] || s['SPX'];
+              if (fuzzyKey.includes('US30')) matchedData = s['US30'] || s['DOW'];
             }
 
             if (matchedData) {

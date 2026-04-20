@@ -55,37 +55,29 @@ export default async function handler(req, res) {
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             // Priority 1: Strict Match
             // Priority 2: Fuzzy Match
-            const match = rawData.find(row => {
+            const matches = rawData.filter(row => {
                 const rowName = (row.market_and_exchange_names || '').toUpperCase();
-                // We need the ID to match AND the Exchange to be relevant (to avoid spread contracts)
                 return config.id.every(idPart => rowName.includes(idPart.toUpperCase())) && 
                        !rowName.includes('SPREAD') && !rowName.includes('BTIC');
             });
 
-            if (match) {
-                // Institutional Tiering: Use Speculator positioning (Non-Commercial / Leveraged Money)
-                // Professionals do not track "Commercials" (Hedgers) for sentiment bias.
-                const long = parseFloat(
-                    match.noncomm_positions_long_all || 
-                    match.lev_money_positions_long || 
-                    match.asset_mgr_positions_long || 0
-                );
-                const short = parseFloat(
-                    match.noncomm_positions_short_all || 
-                    match.lev_money_positions_short || 
-                    match.asset_mgr_positions_short || 0
-                );
+            if (matches.length > 0) {
+                // High-Fidelity Selection: Pick the TFF or Legacy report with the most speculator volume
+                const match = matches.sort((a, b) => 
+                    (parseFloat(b.lev_money_positions_long_all || b.noncomm_positions_long_all || 0)) - 
+                    (parseFloat(a.lev_money_positions_long_all || a.noncomm_positions_long_all || 0))
+                )[0];
+
+                const long = parseFloat(match.lev_money_positions_long_all || match.noncomm_positions_long_all || match.asset_mgr_positions_long_all || 0);
+                const short = parseFloat(match.lev_money_positions_short_all || match.noncomm_positions_short_all || match.asset_mgr_positions_short_all || 0);
                 const total = long + short;
                 
                 if (total > 0) {
                     let lPct = (long / total) * 100;
                     let sPct = 100 - lPct;
 
-                    // Directional Correction for USD-Quote Pairs
-                    // If we report on JPY futures, 'Long' = Strong JPY. 
-                    // So for USDJPY, if JPY is Long, USDJPY Bias is Bearish (Selling USD).
                     if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
-                        [lPct, sPct] = [sPct, lPct]; // Invert bias to USD-basis
+                        [lPct, sPct] = [sPct, lPct];
                     }
 
                     results[assetId] = {
@@ -94,7 +86,7 @@ export default async function handler(req, res) {
                         contractsLong: long,
                         contractsShort: short,
                         reportLabel: match.market_and_exchange_names,
-                        source: `Live CFTC (${match.report_date_as_yyyy_mm_dd})`
+                        source: `Live CFTC (${match.report_date_as_yyyy_mm_dd.split('T')[0]})`
                     };
                 }
             }

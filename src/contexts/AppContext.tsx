@@ -379,6 +379,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     setAssets((prev) => {
       const updated = prev.map(pa => {
+        // Migration: Force-map legacy Dow / DJIA identifiers to US30 (Global Sanitization)
+        const idUpper = pa.id.toUpperCase();
+        const nameUpper = (pa.name || '').toUpperCase();
+        if (idUpper.includes('DOW') || idUpper.includes('DJIA') || nameUpper.includes('DOW') || nameUpper.includes('DJIA')) {
+           console.log(`[Reaper Migration] Sanitizing legacy asset: ${pa.id} -> US30`);
+           pa.id = 'US30';
+           pa.name = 'US30';
+        }
+
         const baseline = TERMINAL_ASSETS.find(ma => ma.id === pa.id);
         if (baseline) {
           return { 

@@ -1,0 +1,180 @@
+[{"market_and_exchange_names":"Russell 2000 Stock Index - ICE Futures U.S."}
+,{"market_and_exchange_names":"S&P 400 MIDCAP STOCK INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"FED FUNDS - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"MSCI EMERGING MKTS MINI INDEX - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"MSCI EAFE MINI INDEX - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"SOL - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MICRO SOL - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"S&P 500 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"2 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"MSCI EM ASIA MINI NTR INDEX - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"NIKKEI STOCK AVERAGE - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"RUSSELL E-MINI - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P UTILITIES INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"EURODOLLARS-3M - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"HEDERA - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"MSCI EM INDEX - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"10 YEAR DELIVERABLE IR - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"EURO FX/JAPANESE YEN XRATE - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"BBG COMMODITY - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"2-YEAR U.S. TREASURY NOTES - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"7 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"E-MINI S&P INDUSTRIAL INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"NANO STELLAR - LMX LABS LLC"}
+,{"market_and_exchange_names":"RUSSELL 2000 MINI INDEX FUTURE - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"NANO ETHER PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"DTCC Repo-US Treasury <30 YR - NYSE LIFFE - NYPC"}
+,{"market_and_exchange_names":"NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P 500 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"EMINI RUSSELL 1000 GROWTH - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"CHAINLINK - LMX LABS LLC"}
+,{"market_and_exchange_names":"ADJUSTED INT RATE S&P 500 TOTL - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MICRO XRP - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"RUSSELL 1000 VALUE INDEX MINI - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"3-MONTH SOFR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"LITECOIN CASH - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"CARDONA - LMX LABS LLC"}
+,{"market_and_exchange_names":"NANO SOLANA - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"1K SHIB - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"HEDERA PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"POLKADOT - LMX LABS LLC"}
+,{"market_and_exchange_names":"10 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"DOW JONES INDUSTRIAL AVG- x $5 - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"DOGECOIN - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"S&P 500 ANNUAL DIVIDEND INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"LONG-TERM U.S. TREASURY BONDS - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"SOFR-3M - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"3 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"CHINESE RENMINBI-HK (CNH) - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"S&P 500 TOTAL RETURN INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P REAL ESTATE INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"UST BOND - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"CHAINLINK - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"NASDAQ MINI - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MICRO E-MINI RUSSELL 2000 INDX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"3-MO. EUROYEN TIBOR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"NANO BITCOIN PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"MICRO BITCOIN - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"BRITISH POUND - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"UST 10Y NOTE - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"RUSSEL 1000 MINI INDEX FUTURE - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"NASDAQ-100 STOCK INDEX (MINI) - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MICRO 10 YEAR YIELD - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"NANO STELLAR - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"U.S. TREASURY BONDS - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"E-MINI S&P TECHNOLOGY INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"S&P 500 QUARTERLY DIVIDEND IND - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"AVALANCHE - LMX LABS LLC"}
+,{"market_and_exchange_names":"NZ DOLLAR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P ENERGY INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P CONSUMER DISC INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"UST 2Y NOTE - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"LITECOIN CASH - LMX LABS LLC"}
+,{"market_and_exchange_names":"ONE-MONTH EURODOLLAR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"ZCASH PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"VIX FUTURES - CBOE FUTURES EXCHANGE"}
+,{"market_and_exchange_names":"MSCI EMERGING MKTS MINI INDEX - NYSE LIFFE"}
+,{"market_and_exchange_names":"E-MINI S&P HEALTH CARE INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"BITCOIN CASH PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"NANO ETHER - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"3-MONTH EURODOLLARS - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI MSCI EMERGING MARKETS - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"1K SHIB - LMX LABS LLC"}
+,{"market_and_exchange_names":"EURO FX/BRITISH POUND XRATE - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"NANO XRP - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"BLOOMBERG COMMODITY INDEX - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"E-MINI S&P MATERIALS INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"DOW JONES INDUSTRIAL AVERAGE - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"THREE-MONTH BLOOMBERG  ST BANK - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P FINANCIAL INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"SWISS FRANC - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"10-YEAR U.S. TREASURY NOTES - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"MSCI EMERGING MKTS INDEX - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"5 YEAR DELIVERABLE IR - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"BRAZILIAN REAL - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P CONSU STAPLES INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MSCI EAFE MINI INDEX - NYSE LIFFE"}
+,{"market_and_exchange_names":"NASDAQ-100 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"DOW JONES U.S. REAL ESTATE IDX - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"NIKKEI STOCK AVERAGE YEN DENOM - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MSCI EAFE  - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"EMINI RUSSELL 1000 VALUE INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"5-YEAR U.S. TREASURY NOTES - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"5 YEAR ERIS SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"BITCOIN - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"30-DAY FEDERAL FUNDS - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"2 YEAR ERIS SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"AVALANCHE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"S&P 500 Consolidated - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"SO AFRICAN RAND - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"10 YEAR DELIVERABLE IR SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"NANO XRP - LMX LABS LLC"}
+,{"market_and_exchange_names":"5 YEAR DELIVERABLE IR SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"10 YEAR ERIS SWAP  - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"ULTRA U.S. TREASURY BONDS - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"POLKADOT - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"NASDAQ-100 Consolidated - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"EURO FX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MICRO E-MINI S&P 500 INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"E-MINI S&P COMMUNICATION INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"STELLAR - LMX LABS LLC"}
+,{"market_and_exchange_names":"SUI PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"5-Year Eris Standard- Initial - ERIS FUTURES EXCHANGE"}
+,{"market_and_exchange_names":"CARDONA - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"U.S. DOLLAR INDEX - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"ONDO PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"EURO FX/BRITISH POUND - SMALL - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"1K SHIB PERP - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"NANO ETHER - LMX LABS LLC"}
+,{"market_and_exchange_names":"DOGECOIN - LMX LABS LLC"}
+,{"market_and_exchange_names":"BRITISH POUND STERLING - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"NANO SOLANA PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"Nano Bitcoin  - LMX LABS LLC"}
+,{"market_and_exchange_names":"E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"LITECOIN PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"NANO SOLANA - LMX LABS LLC"}
+,{"market_and_exchange_names":"MICRO ETHER  - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"EURO FX/JAPANESE YEN - SMALL - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"UST 5Y NOTE - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"MINI MSCI ACWI NTR INDEX  - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"1-MONTH SOFR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"ULTRA 10-YEAR U.S. T-NOTES - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"POLKADOT PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"DOGECOIN PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"ULTRA US T BOND - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"Russell 2000 Stock Index Future - Chicago Mercantile Exchange"}
+,{"market_and_exchange_names":"5 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"ULTRA UST 10Y - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"DOW JONES UBS EXCESS RETURN - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"CHAINLINK PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"DJIA Consolidated - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"USD INDEX - ICE FUTURES U.S."}
+,{"market_and_exchange_names":"MICRO E-MINI NASDAQ-100 INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"MICRO E-MINI DJIA (x$0.5) - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"INTEREST RATE SWAPS 5YR - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"E-MINI MSCI EAFE - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"BITCOIN-USD - CBOE FUTURES EXCHANGE"}
+,{"market_and_exchange_names":"XRP - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"EURO SHORT TERM RATE - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"BLOOMBERG HY CREDIT FUTURES - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"INTEREST RATE SWAPS 10YR - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"CARDONA PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"E-MINI S&P 400 STOCK INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"SOFR-1M - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"DJIA x $5 - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"RUSSELL 2000 ANNUAL DIVIDEND  - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"Nano Bitcoin  - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"MEXICAN PESO - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"ULTRA UST BOND - CHICAGO BOARD OF TRADE"}
+,{"market_and_exchange_names":"E-MINI RUSSELL 2000 INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"SOUTH AFRICAN RAND - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"ETHER CASH SETTLED - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"S&P GSCI COMMODITY INDEX - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"AVALANCHE PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"USD/CHINESE RENMINBI-OFFSHORE  - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"RUSSIAN RUBLE - CHICAGO MERCANTILE EXCHANGE"}
+,{"market_and_exchange_names":"NANO XRP PERP STYLE - COINBASE DERIVATIVES, LLC"}
+,{"market_and_exchange_names":"Russell 2000 Stock Index (Mini) - Chicago Mercantile Exchange"}]

@@ -14,15 +14,15 @@ export default async function handler(req, res) {
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
     // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
-        'US30': { id: ['DOW JONES', 'DJIA', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
+        'US30': { id: ['DOW JONES', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
         'SP500': { id: ['S&P 500', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'NASDAQ': { id: ['NASDAQ-100', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'DAX': { id: ['E-MINI DAX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
+        'DAX': { id: ['DAX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
         'NIKKEI': { id: ['NIKKEI 225', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'COPPER': { id: ['COPPER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'USOIL': { id: ['CRUDE OIL', 'WTI', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
+        'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE INC.'], category: 'Commodities' },
+        'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE INC.'], category: 'Commodities' },
+        'COPPER': { id: ['COPPER', 'COMMODITY EXCHANGE INC.'], category: 'Commodities' },
+        'USOIL': { id: ['WTI FINANCIAL CRUDE OIL', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
         'UKOIL': { id: ['BRENT', 'ICE FUTURES EUROPE'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'GBPUSD': { id: ['BRITISH POUND', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         'AUDUSD': { id: ['AUSTRALIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'USDCAD': { id: ['CANADIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'USDCHF': { id: ['SWISS FRANC', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'NZDUSD': { id: ['NZ DOLLAR', 'NEW ZEALAND DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
+        'NZDUSD': { id: ['NEW ZEALAND DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'BITCOIN': { id: ['BITCOIN', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' },
         'ETHEREUM': { id: ['ETHER', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
     };

@@ -218,7 +218,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (res.ok) {
           const json = await res.json();
           if (json.success) {
-            neuralData = json.sentiment || {};
+            neuralData = json.sentiment || json.data || {};
             neuralMacro = json.macro || null;
             neuralYields = json.yields || null;
           }

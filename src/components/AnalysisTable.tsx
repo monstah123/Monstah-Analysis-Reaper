@@ -89,12 +89,14 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
           </thead>
           <tbody>
             {assets.map((asset, index) => {
-              // Institutional Thresholds: 65% is where the pain starts for the other side
-              const iLongPct = ( (asset.cotLong || 0) / ((asset.cotLong || 0) + (asset.cotShort || 0)) ) * 100;
-              const rLongPct = ( (asset.retailLong || 0) / ((asset.retailLong || 0) + (asset.retailShort || 0)) ) * 100;
+              // Institutional Parity: Combine contracts and normalized % for robust triggering
+              const iTotal = (asset.cotLong || 0) + (asset.cotShort || 0);
+              const iLongPct = asset.longPct ?? (iTotal > 0 ? ( (asset.cotLong || 0) / iTotal ) * 100 : 50);
+              const rTotal = (asset.retailLong || 0) + (asset.retailShort || 0);
+              const rLongPct = rTotal > 0 ? ( (asset.retailLong || 0) / rTotal ) * 100 : 50;
               
-              const isBullSqueeze = iLongPct >= 65 && rLongPct <= 35;
-              const isBearSqueeze = iLongPct <= 35 && rLongPct >= 65;
+              const isBullSqueeze = iLongPct >= 64 && rLongPct <= 36;
+              const isBearSqueeze = iLongPct <= 36 && rLongPct >= 64;
               
               let rowClass = "table-row";
               if (isBullSqueeze) rowClass += " squeeze-bull";
@@ -105,11 +107,14 @@ const AnalysisTable: React.FC<AnalysisTableProps> = ({ assets, onRowClick }) => 
                 <td className="td-asset relative">
                   <div className="asset-info">
                     <span className="asset-rank">#{index + 1}</span>
-                    <span className={`asset-name ${asset.score > 0 ? 'text-pos' : asset.score < 0 ? 'text-neg' : ''}`}>
-                      {asset.name}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className={`asset-name ${asset.score > 0 ? 'text-pos' : asset.score < 0 ? 'text-neg' : ''}`} style={{ fontWeight: 800 }}>
+                        {asset.name}
+                      </span>
+                      {asset.ticker && <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.05em' }}>{asset.ticker}</span>}
+                    </div>
                     {(isBullSqueeze || isBearSqueeze) && (
-                      <span className="text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm ml-1 animate-pulse" style={{ 
+                      <span className="text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm ml-2 animate-pulse" style={{ 
                         background: isBullSqueeze ? 'rgba(59,130,246,0.2)' : 'rgba(239,68,68,0.2)', 
                         color: isBullSqueeze ? '#3b82f6' : '#f87171', 
                         border: `1px solid ${isBullSqueeze ? '#3b82f6' : '#ef4444'}`,

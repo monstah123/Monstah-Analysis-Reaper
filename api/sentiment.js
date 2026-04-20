@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         'SILVER': { id: ['SILVER - COMMODITY EXCHANGE INC.', 'SILVER - COMMODITY EXCHANGE'], category: 'Commodities' },
         'COPPER': { id: ['COPPER-GRADE #1 - COMMODITY EXCHANGE INC.', 'COPPER- #1 - COMMODITY EXCHANGE INC.', 'COPPER-Grade #1 - COMMODITY EXCHANGE'], category: 'Commodities' },
         'USOIL': { id: ['WTI FINANCIAL CRUDE OIL - NEW YORK MERCANTILE EXCHANGE', 'CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE', 'CRUDE OIL, LIGHT SWEET-WTI - ICE FUTURES EUROPE'], category: 'Commodities' },
-        'UKOIL': { id: ['BRENT LAST DAY - NEW YORK MERCANTILE EXCHANGE', 'CRUDE OIL, BRENT - NEW YORK MERCANTILE EXCHANGE', 'BRENT LAST DAY FINANCIAL - ICE FUTURES EUROPE', 'BRENT CRUDE OIL LAST DAY - NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
+        'UKOIL': { id: ['BRENT LAST DAY - NEW York MERCANTILE EXCHANGE', 'CRUDE OIL, BRENT - NEW YORK MERCANTILE EXCHANGE', 'BRENT LAST DAY FINANCIAL - ICE FUTURES EUROPE', 'BRENT CRUDE OIL LAST DAY - NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'GBPUSD': { id: ['BRITISH POUND - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
         'USDJPY': { id: ['JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
@@ -34,10 +34,10 @@ export default async function handler(req, res) {
     };
 
     try {
-        // Parallel Institutional Fetch
+        // Parallel Institutional Fetch (Legacy + TFF + Macro)
         const [resLegacy, resTFF, resGdp, resCpi, resFed, resNfp] = await Promise.allSettled([
-            axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
+            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=5000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${process.env.VITE_FRED_KEY}&file_type=json&sort_order=desc&limit=1`),
@@ -45,13 +45,13 @@ export default async function handler(req, res) {
         ]);
 
         let rawData = [];
-        // Prioritize Traders in Financial Futures (TFF) so indices hit Asset Manager columns first
         if (resTFF.status === 'fulfilled') rawData.push(...resTFF.value.data);
         if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data);
 
         const results = {};
+        
+        // 1. Process Direct Mappings
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
-            // EdgeFinder ID Lockdown: Strict Equal Search within an array of possibilities
             const match = rawData.find(row => config.id.some(acceptedId => row.market_and_exchange_names?.toUpperCase() === acceptedId.toUpperCase()));
 
             if (match) {
@@ -66,28 +66,46 @@ export default async function handler(req, res) {
                         shortPct: +(100 - longPct).toFixed(1),
                         contractsLong: ncLong,
                         contractsShort: ncShort,
-                        source: `Institutional Wire (${match.report_date_as_yyyy_mm_dd})`
+                        source: `Live CFTC (${match.report_date_as_yyyy_mm_dd})`
                     };
                 }
             }
         }
 
-        // LKG Protocol: If an asset is missing (Gov feed down), we use the verified 2026 Archived Baseline
-        const AUDITED_2026_ARCHIVE = {
-            USOIL: 83.5, COPPER: 69.2, DAX: 66.1, UKOIL: 91.8, 
-            EURUSD: 53.2, GBPUSD: 33.0, BITCOIN: 53.2, ETHEREUM: 54.7, SOLANA: 58.4 
-        };
+        // 2. Derive Synthetic Crosses (No Mockups - Calculated from Component Live Data)
+        const crosses = [
+            { id: 'GBPNZD', base: 'GBPUSD', quote: 'NZDUSD', inverse: false },
+            { id: 'GBPJPY', base: 'GBPUSD', quote: 'USDJPY', inverse: 'quote' }, // GBP (+) and JPY (-)
+            { id: 'EURJPY', base: 'EURUSD', quote: 'USDJPY', inverse: 'quote' }
+        ];
 
-        for (const [id, pulse] of Object.entries(AUDITED_2026_ARCHIVE)) {
-            if (!results[id]) {
-                results[id] = { 
-                    longPct: pulse, 
-                    shortPct: +(100 - pulse).toFixed(1), 
-                    source: 'Verified 2026 Institutional Pulse (Backup)' 
+        crosses.forEach(c => {
+            const b = results[c.base];
+            const q = results[c.quote];
+            
+            if (b && q) {
+                let derivedLong = 50;
+                if (c.inverse === 'quote') {
+                    // GBP/JPY = GBP (Long%) vs JPY (Short%)
+                    // If Banks are Long GBP (80%) and Short JPY (70%), they are extremely long GBP/JPY
+                    // JPY Long positioning is an "inverse" for the cross.
+                    derivedLong = (b.longPct + (100 - q.longPct)) / 2;
+                } else if (c.inverse === false) {
+                    // GBP/NZD = GBP (Long%) vs NZD (Long%)
+                    derivedLong = (b.longPct + (100 - q.longPct)) / 2;
+                }
+                
+                results[c.id] = {
+                    longPct: +derivedLong.toFixed(1),
+                    shortPct: +(100 - derivedLong).toFixed(1),
+                    contractsLong: 0, 
+                    contractsShort: 0,
+                    source: `Derived (Live ${c.base}/${c.quote})`
                 };
             }
-        }
+        });
 
+        // 3. Macro Matrix
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : 2.6,
             CPI: resCpi.status === 'fulfilled' ? parseFloat(resCpi.value.data.observations[0]?.value) : 3.4,
@@ -98,6 +116,6 @@ export default async function handler(req, res) {
         res.status(200).json({ success: true, sentiment: results, macro, yields: { y2: 4.52, y10: 4.18, y30: 4.35, y3m: 5.25 } });
     } catch (error) {
         console.error('[Engine Failure]:', error.message);
-        res.status(500).json({ success: false, error: 'Database Pulse Failure' });
+        res.status(500).json({ success: false, error: 'Institutional Pipeline Sync Error' });
     }
 }

@@ -119,7 +119,18 @@ export default async function handler(req, res) {
             }
         }
 
-        // 2. Macro Neural Matrix (Calibrated NFP Logic)
+        // 3. Institutional Cross-Synthesis (Pure Smart Money Pipeline)
+        const gbp = results['GBPUSD']; // British Pound specs
+        const jpy = results['USDJPY']; // Japanese Yen specs (after JPY inversion)
+        if (gbp && jpy) {
+            results['GBPJPY'] = {
+                longPct: +((gbp.longPct + jpy.longPct) / 2).toFixed(1),
+                shortPct: +((gbp.shortPct + jpy.shortPct) / 2).toFixed(1),
+                source: 'Institutional Cross (GBP/JPY)'
+            };
+        }
+
+        // 4. Macro Neural Matrix (Calibrated NFP Logic)
         const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,

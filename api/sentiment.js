@@ -29,14 +29,14 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        const fetchSet = async (id, limit = 2000) => {
+        const fetchSet = async (id, limit = 500) => {
             try {
                 const url = `https://publicreporting.cftc.gov/resource/${id}.json`;
                 const params = {
                     $limit: limit,
                     $order: 'report_date_as_yyyy_mm_dd DESC'
                 };
-                const response = await axios.get(url, { params, timeout: 35000 });
+                const response = await axios.get(url, { params, timeout: 8000 });
                 return { id, data: Array.isArray(response.data) ? response.data : [], status: 'OK' };
             } catch (e) {
                 console.error(`[CRITICAL] Dataset ${id} failed:`, e.message);
@@ -45,9 +45,9 @@ export default async function handler(req, res) {
         };
 
         const reports = await Promise.all([
-            fetchSet('udgc-27he', 2000), // TFF (Financials)
-            fetchSet('srt6-5q2f', 2000), // Legacy (Aggregate)
-            fetchSet('kh3c-gbw2', 5000)  // Disagg Physical (BRENT PRIMARY)
+            fetchSet('udgc-27he', 500), // TFF (Financials)
+            fetchSet('srt6-5q2f', 500), // Legacy (Aggregate)
+            fetchSet('kh3c-gbw2', 500)  // Disagg Physical (BRENT PRIMARY)
         ]);
 
         const rawData = [

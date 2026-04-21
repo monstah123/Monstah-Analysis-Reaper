@@ -54,14 +54,17 @@ export default async function handler(req, res) {
             }
         };
 
-        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp] = await Promise.allSettled([
+        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             fetchSet('udgc-27he'), // TFF
             fetchSet('srt6-5q2f'), // Legacy
             fetchSet('72hh-3qpy'), // Disagg
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`)
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
         ]);
 
         const tffData = resTFF.status === 'fulfilled' ? resTFF.value : [];
@@ -156,7 +159,13 @@ export default async function handler(req, res) {
                 : null
         };
 
-        res.status(200).json({ success: true, sentiment: results, macro });
+        const yields = {
+            y2: resY2?.status === 'fulfilled' ? parseFloat(resY2.value.data.observations[0]?.value) : null,
+            y10: resY10?.status === 'fulfilled' ? parseFloat(resY10.value.data.observations[0]?.value) : null,
+            y30: resY30?.status === 'fulfilled' ? parseFloat(resY30.value.data.observations[0]?.value) : null
+        };
+
+        res.status(200).json({ success: true, sentiment: results, macro, yields });
     } catch (error) {
         console.error('[CRITICAL]: Institutional Pipeline Burst:', error.message);
         res.status(200).json({ success: false, error: 'Institutional Feed Blackout' });

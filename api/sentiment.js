@@ -101,14 +101,19 @@ export default async function handler(req, res) {
                 // Data Extraction: Targeting the 'Pure Institutional' (Asset Manager) bracket
                 let long = 0;
                 let short = 0;
-                if (match._ds === 'LEGACY' || match._ds === 'LEG_COMB') {
-                    // Check for TFF-style fields nested in Legacy Financial reports
+                
+                if (match._ds === 'TFF' || match._ds === 'TFF_COMB') {
+                    // Traders in Financial Futures (TFF) - Institutional Priority
+                    long = parseFloat(match.asset_mgr_positions_long_all || match.lev_money_positions_long_all || match.noncomm_positions_long_all || 0);
+                    short = parseFloat(match.asset_mgr_positions_short_all || match.lev_money_positions_short_all || match.noncomm_positions_short_all || 0);
+                } else if (match._ds === 'LEGACY' || match._ds === 'LEG_COMB') {
+                    // Legacy Reports - Pivot to Institutional Brackets if available
                     long = parseFloat(match.asset_mgr_positions_long_all || match.noncomm_positions_long_all || 0);
                     short = parseFloat(match.asset_mgr_positions_short_all || match.noncomm_positions_short_all || 0);
                 } else {
-                    // For TFF or TFF_COMB: Prioritize Asset Managers (Pure Institutional) over Leveraged Money
-                    long = parseFloat(match.asset_mgr_positions_long_all || match.lev_money_positions_long_all || 0);
-                    short = parseFloat(match.asset_mgr_positions_short_all || match.lev_money_positions_short_all || 0);
+                    // Disaggregated / Supplemental
+                    long = parseFloat(match.managed_money_positions_long_all || match.noncomm_positions_long_all || 0);
+                    short = parseFloat(match.managed_money_positions_short_all || match.noncomm_positions_short_all || 0);
                 }
                 
                 const total = long + short;

@@ -71,7 +71,7 @@ const Technical: React.FC = () => {
                 </div>
              </div>
 
-             <div className="edge-metric" title={`Macro Volatility: ${selectedAsset?.macroVol || 'N/A'} | Yield Spread: ${selectedAsset?.yieldSpread || 'N/A'}`}>
+             <div className="edge-metric" title={`Macro Alignment: GDP ${selectedAsset?.gdp || 0}% | Inflation ${selectedAsset?.inflation || 0}%`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                    <span style={{ fontSize: '0.8rem', color: '#8b9ab8' }}>Macro Alignment (FRED/BLS)</span>
                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6' }}>{selectedAsset?.score > 5 ? 'STRONG' : 'MODERATE'}</span>

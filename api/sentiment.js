@@ -67,13 +67,12 @@ export default async function handler(req, res) {
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             const matches = rawData.filter(row => {
                 const rowName = (row.market_and_exchange_names || row.market_name || row.contract_market_name || '').toUpperCase();
-                const hasKeywords = config.id.every(idPart => rowName.includes(idPart.toUpperCase())) || 
-                       ((assetId === 'BITCOIN' || assetId === 'ETHEREUM') && rowName.includes(assetId) && rowName.includes('CHICAGO'));
+                const hasKeywords = config.id.some(idPart => rowName.includes(idPart.toUpperCase())) && 
+                                   (config.id.length < 2 || rowName.includes('CHICAGO') || rowName.includes('CME') || rowName.includes('COMMODITY') || rowName.includes('NEW YORK'));
                 
                 // DATA AUTHENTICITY PROTOCOL: Exclude 'BTIC' and 'TAS' variants.
-                // We now ALLOW 'COMBINED' rows to capture the full institutional footprint (72.6% EUR/USD Parity).
                 const isCleanData = !rowName.includes('BTIC') && !rowName.includes('TAS');
-                const hasVolume = parseFloat(row.open_interest_all || row.noncomm_positions_long_all || 0) > 0;
+                const hasVolume = parseFloat(row.open_interest_all || row.noncomm_positions_long_all || row.asset_mgr_long_all || 0) > 0;
                 
                 return hasKeywords && isCleanData && hasVolume;
             });
@@ -81,14 +80,9 @@ export default async function handler(req, res) {
             if (matches.length > 0) {
                 // Priority: 1. Institutional Tier (TFF/SUPP), 2. Recency, 3. Combined Logic
                 const match = matches.sort((a,b) => {
-                    // Tier 1: Prioritize Institutional Datasets (TFF/SUPP) over Legacy
-                    const institutionalTiers = ['TFF_COMB', 'TFF', 'SUPP'];
-                    const isAInst = institutionalTiers.includes(a._ds);
-                    const isBInst = institutionalTiers.includes(b._ds);
-                    if (isAInst && !isBInst) return -1;
-                    if (isBInst && !isAInst) return 1;
+                    const tier = (ds) => ['TFF_COMB', 'TFF', 'SUPP'].includes(ds) ? 0 : 1;
+                    if (tier(a._ds) !== tier(b._ds)) return tier(a._ds) - tier(b._ds);
 
-                    // Tier 2: Recency within the same quality tier
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
@@ -104,11 +98,9 @@ export default async function handler(req, res) {
                 // Data Extraction: Targeting the 'Pure Institutional' (Asset Manager) bracket
                 let long = 0, short = 0;
                 
-                // Helper to extract by checking various possible field names (TFF vs Legacy vs Disaggregated)
                 const getVal = (fields) => {
                     for (const f of fields) {
-                        const val = parseFloat(match[f] || 0);
-                        if (val > 0) return val;
+                        if (match[f] !== undefined) return parseFloat(match[f] || 0);
                     }
                     return 0;
                 };

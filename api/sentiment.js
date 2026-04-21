@@ -122,31 +122,56 @@ export default async function handler(req, res) {
                     return volB - volA;
                 })[0];
 
-                const getVal = (patterns, direction) => {
-                    let maxVal = 0;
-                    for (const p of patterns) {
-                        for (const key of Object.keys(match)) {
-                            const k = key.toLowerCase();
-                            if (k.includes(p) && k.includes(direction)) {
-                                if (k.includes('change') || k.includes('pct') || k.includes('spread')) continue;
-                                const val = parseInt(match[key] || 0);
-                                if (!isNaN(val) && val > maxVal) maxVal = val;
-                            }
+                const instPatterns = ['asset_mgr', 'lev_money', 'managed_money', 'm_money', 'noncomm'];
+                
+                // Find the single best institutional category based on total volume
+                let bestPrefix = '';
+                let maxVol = -1;
+                let cLong = 0;
+                let cShort = 0;
+                
+                for (const p of instPatterns) {
+                    let l = 0, s = 0;
+                    for (const key of Object.keys(match)) {
+                        const k = key.toLowerCase();
+                        if (k.includes(p) && !k.includes('change') && !k.includes('pct') && !k.includes('spread')) {
+                            const val = parseInt(match[key] || 0) || 0;
+                            if (k.includes('long')) l = val;
+                            if (k.includes('short')) s = val;
                         }
                     }
-                    return maxVal;
-                };
+                    const vol = l + s;
+                    if (vol > maxVol) {
+                        maxVol = vol;
+                        bestPrefix = p;
+                        cLong = l;
+                        cShort = s;
+                    }
+                }
 
-                const instPatterns = ['asset_mgr', 'm_money', 'managed_money', 'lev_money', 'noncomm'];
-                const long = getVal(instPatterns, 'long');
-                const short = getVal(instPatterns, 'short');
+                let long = cLong;
+                let short = cShort;
                 
-                const total = long + short;
+                let changeLong = 0;
+                let changeShort = 0;
+                for (const key of Object.keys(match)) {
+                    const k = key.toLowerCase();
+                    if (k.includes(bestPrefix) && k.includes('change')) {
+                        const val = parseFloat(match[key] || 0) || 0;
+                        if (k.includes('long')) changeLong = val;
+                        if (k.includes('short')) changeShort = val;
+                    }
+                }
+
+                let total = long + short;
                 let longPct = total > 0 ? (long / total) * 100 : 50;
                 let shortPct = 100 - longPct;
 
+                // Full Inversion for USD-Quote Pairs
                 if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
                     [longPct, shortPct] = [shortPct, longPct];
+                    [long, short] = [short, long];
+                    [changeLong, changeShort] = [changeShort, changeLong];
                 }
 
                 results[assetId] = {
@@ -154,8 +179,8 @@ export default async function handler(req, res) {
                     shortPct: +shortPct.toFixed(1),
                     contractsLong: long,
                     contractsShort: short,
-                    changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || match.change_in_asset_mgr_long || 0),
-                    changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || match.change_in_asset_mgr_short || 0),
+                    changeLong: changeLong,
+                    changeShort: changeShort,
                     source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
                 };
             }

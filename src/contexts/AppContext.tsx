@@ -264,6 +264,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                cL = data.longPct;
                cS = data.shortPct;
             }
+          } else if (a.id === 'GBPJPY') {
+            // --- GBP/JPY Neural Synthesis (Surgical Cross-Pair Derivation) ---
+            // No direct CFTC contract exists for GBP/JPY.
+            // Synthesize from verified GBP/USD (long bias) and USD/JPY (inverted) prints.
+            const gbpData = neuralData['GBPUSD'];
+            const jpyData = neuralData['USDJPY'];
+            if (gbpData || jpyData) {
+              const gbpLong = gbpData?.longPct ?? 50;
+              const jpyLong = jpyData?.longPct ?? 50;
+              // GBP/JPY = long GBP + short JPY = gbpLong + (100 - jpyLong)
+              const synthLong = (gbpLong + (100 - jpyLong)) / 2;
+              cL = synthLong;
+              cS = 100 - synthLong;
+              cPct = synthLong;
+            }
           } else {
             // Stage 3: Fuzzy Normalization for Institutional Feeds (DAX, Oil, Spreads)
             const fuzzyKey = a.id.toUpperCase();

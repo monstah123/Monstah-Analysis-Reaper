@@ -29,32 +29,29 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        const fetchSet = async (id, limit = 500) => {
+        const fetchTargeted = async (datasetId, keywords) => {
             try {
-                const url = `https://publicreporting.cftc.gov/resource/${id}.json`;
-                const params = {
-                    $limit: limit,
-                    $order: 'report_date_as_yyyy_mm_dd DESC'
-                };
-                const response = await axios.get(url, { params, timeout: 8000 });
-                return { id, data: Array.isArray(response.data) ? response.data : [], status: 'OK' };
+                const where = keywords.map(k => `upper(market_and_exchange_names) like '%25${k.toUpperCase().replace(/ /g, '%20')}%25'`).join(' or ');
+                const url = `https://publicreporting.cftc.gov/resource/${datasetId}.json?$where=${where}&$limit=100&$order=report_date_as_yyyy_mm_dd DESC`;
+                const response = await axios.get(url, { timeout: 9500 });
+                return Array.isArray(response.data) ? response.data.map(r => ({ ...r, _ds: datasetId })) : [];
             } catch (e) {
-                console.error(`[CRITICAL] Dataset ${id} failed:`, e.message);
-                return { id, data: [], status: 'FAILED' };
+                console.error(`[SODA FAILED] ${datasetId}:`, e.message);
+                return [];
             }
         };
 
-        const reports = await Promise.all([
-            fetchSet('udgc-27he', 500), // TFF (Financials)
-            fetchSet('srt6-5q2f', 500), // Legacy (Aggregate)
-            fetchSet('kh3c-gbw2', 500)  // Disagg Physical (BRENT PRIMARY)
+        // Precision Strike: Only fetch exactly what we need
+        const financialKeywords = ['DJIA', 'S&P 500', 'NASDAQ', 'EURO FX', 'BRITISH POUND', 'JAPANESE YEN', 'GOLD', 'WTI'];
+        const commodityKeywords = ['BRENT', 'CRUDE OIL'];
+
+        const [financials, legacy, physical] = await Promise.all([
+            fetchTargeted('udgc-27he', financialKeywords), // TFF
+            fetchTargeted('srt6-5q2f', financialKeywords), // Legacy
+            fetchTargeted('kh3c-gbw2', commodityKeywords)  // Disagg Physical
         ]);
 
-        const rawData = [
-            ...reports[0].data.map(r => ({ ...r, _ds: 'TFF' })),
-            ...reports[1].data.map(r => ({ ...r, _ds: 'LEGACY' })),
-            ...reports[2].data.map(r => ({ ...r, _ds: 'DISAGG_PHYS' }))
-        ];
+        const rawData = [...financials, ...legacy, ...physical];
 
         const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -70,11 +67,12 @@ export default async function handler(req, res) {
         
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             const matches = rawData.filter(row => {
-                const rowName = (row.market_and_exchange_names || row.market_name || row.contract_market_name || '').toUpperCase();
-                return config.id.some(idPart => rowName.includes(idPart.toUpperCase()));
+                const name = (row.market_and_exchange_names || row.market_name || row.contract_market_name || '').toUpperCase();
+                return config.id.some(idPart => name.includes(idPart.toUpperCase()));
             });
 
             if (matches.length > 0) {
+                // Priority Sort: 1. Date, 2. Combined Coverage, 3. Relevance
                 const match = matches.sort((a,b) => {
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
@@ -127,6 +125,7 @@ export default async function handler(req, res) {
             }
         }
 
+        // Final Synthesis for GBP/JPY Cross
         const gbp = results['GBPUSD'];
         const jpy = results['USDJPY'];
         if (gbp && jpy) {
@@ -137,13 +136,12 @@ export default async function handler(req, res) {
             };
         }
 
-        const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,
             CPI: resCpi.status === 'fulfilled' ? parseFloat(resCpi.value.data.observations[0]?.value) : null,
             FedRate: resFed.status === 'fulfilled' ? parseFloat(resFed.value.data.observations[0]?.value) : null,
-            NFP: nfpData.length > 1 
-                ? (parseFloat(nfpData[0].value) - parseFloat(nfpData[1].value)) * 1000
+            NFP: resNfp.status === 'fulfilled' && resNfp.value.data.observations.length > 1 
+                ? (parseFloat(resNfp.value.data.observations[0].value) - parseFloat(resNfp.value.data.observations[1].value)) * 1000
                 : null
         };
 
@@ -156,6 +154,6 @@ export default async function handler(req, res) {
         res.status(200).json({ success: true, sentiment: results, macro, yields });
     } catch (error) {
         console.error('[CRITICAL]: Institutional Pipeline Burst:', error.message);
-        res.status(200).json({ success: false, error: 'Institutional Feed Blackout', detail: error.message });
+        res.status(200).json({ success: false, error: 'Institutional Pipeline Burst', detail: error.message });
     }
 }

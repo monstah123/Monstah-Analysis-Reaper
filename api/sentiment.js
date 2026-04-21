@@ -72,24 +72,53 @@ export default async function handler(req, res) {
         const results = {};
         
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
-            const matches = rawData.filter(row => {
+            let matches = rawData.filter(row => {
                 const name = (row.market_and_exchange_names || row.market_name || row.contract_market_name || '').toUpperCase();
                 return config.id.some(idPart => name.includes(idPart.toUpperCase()));
             });
 
+            // --- Cross-Rate Exclusion (Surgical Filter) ---
+            // For standalone currency pairs (e.g., GBPUSD searching for 'BRITISH POUND'),
+            // exclude XRATE cross-rate contracts like 'EURO FX/BRITISH POUND XRATE'
+            // which contaminate the data with unrelated cross positioning.
+            if (config.category === 'Currency') {
+                const standalone = matches.filter(row => {
+                    const name = (row.market_and_exchange_names || '').toUpperCase();
+                    return !name.includes('XRATE') && !name.includes('X-RATE') && !name.includes('/');
+                });
+                if (standalone.length > 0) matches = standalone;
+            }
+
+            // --- Micro Contract Deprioritization ---
+            // For indices, prefer Consolidated or full-size contracts over Micro
+            // since Micro contracts often report zeros for asset_mgr positions.
+            if (config.category === 'Indices') {
+                const fullSize = matches.filter(row => {
+                    const name = (row.market_and_exchange_names || '').toUpperCase();
+                    return !name.includes('MICRO');
+                });
+                if (fullSize.length > 0) matches = fullSize;
+            }
+
             if (matches.length > 0) {
-                // Priority Sort: 1. Date, 2. Combined Coverage, 3. Relevance
+                // Priority Sort: 1. Date, 2. Combined/Consolidated, 3. Primary volume
                 const match = matches.sort((a,b) => {
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    const typeA = (a.futonly_or_combined || '').toUpperCase();
-                    const typeB = (b.futonly_or_combined || '').toUpperCase();
-                    if (typeA.includes('COMBINED') && !typeB.includes('COMBINED')) return -1;
-                    if (typeB.includes('COMBINED') && !typeA.includes('COMBINED')) return 1;
+                    // Prefer Consolidated reports (most complete data)
+                    const nameA = (a.market_and_exchange_names || '').toUpperCase();
+                    const nameB = (b.market_and_exchange_names || '').toUpperCase();
+                    const consA = nameA.includes('CONSOLIDATED') || (a.futonly_or_combined || '').toUpperCase().includes('COMBINED');
+                    const consB = nameB.includes('CONSOLIDATED') || (b.futonly_or_combined || '').toUpperCase().includes('COMBINED');
+                    if (consA && !consB) return -1;
+                    if (consB && !consA) return 1;
 
-                    return (a.market_and_exchange_names || '').length - (b.market_and_exchange_names || '').length;
+                    // Prefer higher institutional volume (asset_mgr > lev_money > noncomm)
+                    const volA = parseInt(a.asset_mgr_positions_long || 0) + parseInt(a.asset_mgr_positions_short || 0) || parseInt(a.lev_money_positions_long || 0);
+                    const volB = parseInt(b.asset_mgr_positions_long || 0) + parseInt(b.asset_mgr_positions_short || 0) || parseInt(b.lev_money_positions_long || 0);
+                    return volB - volA;
                 })[0];
 
                 const getVal = (patterns, direction) => {

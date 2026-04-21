@@ -1,20 +1,11 @@
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
 
-/**
- * Institutional Sentiment Aggregator 14.0 (EdgeFinder Pro Architecture)
- * - LKG Protocol (Last Known Good Service)
- * - Strict ID Identification (Zero Fuzzy Match)
- * - Persistent Data Anchor
- */
 export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
-    // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
-    // THE INSTITUTIONAL REGISTER (v18.0 Omega Protocol)
+    // THE INSTITUTIONAL REGISTER (v21.0 Absolute Parity)
     const ASSET_REGISTER = {
-        'US30': { id: ['DJIA', 'DOW JONES', 'DOW'], category: 'Indices' },
+        'US30': { id: ['DJIA CONSOLIDATED', 'DJIA', 'DOW JONES'], category: 'Indices' },
         'SP500': { id: ['S&P 500', 'SPX', 'E-MINI S&P'], category: 'Indices' },
         'NASDAQ': { id: ['NASDAQ', 'NDX', 'E-MINI NASDAQ'], category: 'Indices' },
         'DAX': { id: ['DAX', 'GERMANY', 'MSCI'], category: 'Indices' },
@@ -23,10 +14,10 @@ export default async function handler(req, res) {
         'SILVER': { id: ['SILVER'], category: 'Commodities' },
         'COPPER': { id: ['COPPER'], category: 'Commodities' },
         'USOIL': { id: ['WTI', 'CRUDE OIL'], category: 'Commodities' },
-        'UKOIL': { id: ['BRENT', 'ICE FUTURES EUROPE'], category: 'Commodities' },
+        'UKOIL': { id: ['BRENT CRUDE OIL', 'BRENT'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX'], category: 'Currency' },
-        'GBPUSD': { id: ['BRITISH POUND', 'STERLING'], category: 'Currency' },
-        'USDJPY': { id: ['JAPANESE YEN', 'YEN'], category: 'Currency' },
+        'GBPUSD': { id: ['BRITISH POUND'], category: 'Currency' },
+        'USDJPY': { id: ['JAPANESE YEN'], category: 'Currency' },
         'AUDUSD': { id: ['AUSTRALIAN DOLLAR'], category: 'Currency' },
         'NZDUSD': { id: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR'], category: 'Currency' },
         'USDCAD': { id: ['CANADIAN DOLLAR'], category: 'Currency' },
@@ -38,15 +29,15 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        const fetchSet = async (id) => {
+        const fetchSet = async (id, limit = 2000) => {
             try {
                 const url = `https://publicreporting.cftc.gov/resource/${id}.json`;
                 const params = {
-                    $limit: 1500,
+                    $limit: limit,
                     $order: 'report_date_as_yyyy_mm_dd DESC'
                 };
-                const res = await axios.get(url, { params, timeout: 35000 });
-                return { id, data: Array.isArray(res.data) ? res.data : [], status: 'OK' };
+                const response = await axios.get(url, { params, timeout: 35000 });
+                return { id, data: Array.isArray(response.data) ? response.data : [], status: 'OK' };
             } catch (e) {
                 console.error(`[CRITICAL] Dataset ${id} failed:`, e.message);
                 return { id, data: [], status: 'FAILED' };
@@ -54,17 +45,15 @@ export default async function handler(req, res) {
         };
 
         const reports = await Promise.all([
-            fetchSet('udgc-27he'), // TFF (Financials)
-            fetchSet('srt6-5q2f'), // Legacy (Aggregate)
-            fetchSet('72hh-3qpy'), // Disagg Supplemental
-            fetchSet('kh3c-gbw2')  // Disagg Physical (BRENT PRIMARY)
+            fetchSet('udgc-27he', 2000), // TFF (Financials)
+            fetchSet('srt6-5q2f', 2000), // Legacy (Aggregate)
+            fetchSet('kh3c-gbw2', 5000)  // Disagg Physical (BRENT PRIMARY)
         ]);
 
         const rawData = [
             ...reports[0].data.map(r => ({ ...r, _ds: 'TFF' })),
             ...reports[1].data.map(r => ({ ...r, _ds: 'LEGACY' })),
-            ...reports[2].data.map(r => ({ ...r, _ds: 'DISAGG_SUPP' })),
-            ...reports[3].data.map(r => ({ ...r, _ds: 'DISAGG_PHYS' }))
+            ...reports[2].data.map(r => ({ ...r, _ds: 'DISAGG_PHYS' }))
         ];
 
         const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
@@ -86,7 +75,6 @@ export default async function handler(req, res) {
             });
 
             if (matches.length > 0) {
-                // Priority Sort: 1. Date, 2. Combined vs FutOnly, 3. Relevance
                 const match = matches.sort((a,b) => {
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
@@ -137,16 +125,6 @@ export default async function handler(req, res) {
                     source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
                 };
             }
-        }
-
-        const gbp = results['GBPUSD'];
-        const jpy = results['USDJPY'];
-        if (gbp && jpy) {
-            results['GBPJPY'] = {
-                longPct: +((gbp.longPct + jpy.longPct) / 2).toFixed(1),
-                shortPct: +((gbp.shortPct + jpy.shortPct) / 2).toFixed(1),
-                source: 'Institutional Cross Synthesis'
-            };
         }
 
         const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];

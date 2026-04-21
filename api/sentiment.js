@@ -127,6 +127,16 @@ export default async function handler(req, res) {
             }
         }
 
+        const gbp = results['GBPUSD'];
+        const jpy = results['USDJPY'];
+        if (gbp && jpy) {
+            results['GBPJPY'] = {
+                longPct: +((gbp.longPct + jpy.longPct) / 2).toFixed(1),
+                shortPct: +((gbp.shortPct + jpy.shortPct) / 2).toFixed(1),
+                source: 'Institutional Cross Synthesis'
+            };
+        }
+
         const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,

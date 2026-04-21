@@ -78,7 +78,7 @@ const DEFAULT_KEYS: ApiKeys = {
   deepseekKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '',
 };
 
-const CACHE_TTL = 1 * 60 * 1000; // 1 minute (Institutional Frequency)
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes (Institutional Sentinel Frequency)
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [apiKeysRaw, setApiKeysRaw] = useLocalStorage<ApiKeys>('mar_api_keys', DEFAULT_KEYS);

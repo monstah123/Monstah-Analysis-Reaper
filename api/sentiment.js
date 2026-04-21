@@ -12,10 +12,9 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
-    // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
-        'US30': { id: ['DJIA', 'CBOT'], category: 'Indices' },
-        'SP500': { id: ['S&P 500'], category: 'Indices' },
+        'US30': { id: ['DJIA', 'DOW JONES'], category: 'Indices' },
+        'SP500': { id: ['S&P 500', 'SPX'], category: 'Indices' },
         'NASDAQ': { id: ['NASDAQ', 'NDX'], category: 'Indices' },
         'DAX': { id: ['DAX'], category: 'Indices' },
         'NIKKEI': { id: ['NIKKEI'], category: 'Indices' },
@@ -28,7 +27,7 @@ export default async function handler(req, res) {
         'GBPUSD': { id: ['BRITISH POUND'], category: 'Currency' },
         'USDJPY': { id: ['JAPANESE YEN'], category: 'Currency' },
         'AUDUSD': { id: ['AUSTRALIAN DOLLAR'], category: 'Currency' },
-        'NZDUSD': { id: ['NEW ZEALAND DOLLAR'], category: 'Currency' },
+        'NZDUSD': { id: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR'], category: 'Currency' },
         'USDCAD': { id: ['CANADIAN DOLLAR'], category: 'Currency' },
         'USDCHF': { id: ['SWISS FRANC'], category: 'Currency' },
         'BITCOIN': { id: ['BITCOIN'], category: 'Crypto' },
@@ -38,15 +37,18 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        // Parallel Institutional Fetch (Deep Buffer to avoid missing report cycles)
-        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp] = await Promise.allSettled([
-            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // TFF (Financial)
-            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // Legacy
-            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // Disaggregated
+        // Parallel Institutional Fetch (Master 2026 Consolidated Protocol)
+        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
+            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`), // TFF All
+            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`), // Legacy All
+            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`), // Disaggregated (Physical)
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`)
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
         ]);
 
         let rawData = [];
@@ -56,34 +58,35 @@ export default async function handler(req, res) {
 
         const results = {};
         
-        // 1. Process Core Assets with Enhanced Matching V3 (Fuzzy-Strict Hybrid)
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             const matches = rawData.filter(row => {
                 const rowName = (row.market_and_exchange_names || row.market_name || row.contract_market_name || '').toUpperCase();
-                // Lenient Keyword Match: Target the Asset first.
                 return config.id.some(idPart => rowName.includes(idPart.toUpperCase()));
             });
 
             if (matches.length > 0) {
                 const match = matches.sort((a,b) => {
+                    // 1. Freshest Data Priority
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    // Length-based priority: Prioritize shorter names ('EURO FX' vs 'EURO FX/JPY')
-                    const nameA = (a.market_and_exchange_names || '').length;
-                    const nameB = (b.market_and_exchange_names || '').length;
-                    return nameA - nameB;
+                    // 2. Pure Match Priority (Avoid crosses like EUR/GBP)
+                    const lenA = (a.market_and_exchange_names || '').length;
+                    const lenB = (b.market_and_exchange_names || '').length;
+                    return lenA - lenB;
                 })[0];
 
                 const getVal = (fields) => {
                     for (const f of fields) {
-                        if (match[f] !== undefined) return parseFloat(match[f] || 0);
+                        if (match[f] !== undefined && match[f] !== null && match[f] !== '') {
+                            return parseInt(match[f]);
+                        }
                     }
                     return 0;
                 };
 
-                // Smart Money Pipeline: Asset Manager -> Managed Money -> Leveraged Money -> Legacy
+                // Institutional Brackets (Ranked by Fidelity)
                 const longFields = [
                     'asset_mgr_positions_long', 'asset_mgr_positions_long_all', 'asset_mgr_long_all',
                     'managed_money_positions_long_all', 'm_money_positions_long_all', 'managed_money_long_all',
@@ -104,7 +107,7 @@ export default async function handler(req, res) {
                 let longPct = total > 0 ? (long / total) * 100 : 50;
                 let shortPct = 100 - longPct;
 
-                // Institutional Inversion for USD-quoted pairs
+                // Institutional Inversion Protocol (USD-Lead Pairs)
                 if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
                     [longPct, shortPct] = [shortPct, longPct];
                 }
@@ -114,25 +117,25 @@ export default async function handler(req, res) {
                     shortPct: +shortPct.toFixed(1),
                     contractsLong: long,
                     contractsShort: short,
-                    changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || 0),
-                    changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || 0),
+                    changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || match.change_in_asset_mgr_long || 0),
+                    changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || match.change_in_asset_mgr_short || 0),
                     source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
                 };
             }
         }
 
-        // 3. Institutional Cross-Synthesis (Pure Smart Money Pipeline)
-        const gbp = results['GBPUSD']; // British Pound specs
-        const jpy = results['USDJPY']; // Japanese Yen specs (after JPY inversion)
+        // 3. Cross-Synthesis Protocol (GBP/JPY)
+        const gbp = results['GBPUSD'];
+        const jpy = results['USDJPY'];
         if (gbp && jpy) {
             results['GBPJPY'] = {
                 longPct: +((gbp.longPct + jpy.longPct) / 2).toFixed(1),
                 shortPct: +((gbp.shortPct + jpy.shortPct) / 2).toFixed(1),
-                source: 'Institutional Cross (GBP/JPY)'
+                source: 'Institutional Cross Synthesis'
             };
         }
 
-        // 4. Macro Neural Matrix (Calibrated NFP Logic)
+        // 4. Macro Intelligence Matrix
         const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,
@@ -152,6 +155,6 @@ export default async function handler(req, res) {
         res.status(200).json({ success: true, sentiment: results, macro, yields });
     } catch (error) {
         console.error('[CRITICAL]: Institutional Pipeline Burst:', error.message);
-        res.status(500).json({ success: false, error: 'Institutional Feed Blackout' });
+        res.status(200).json({ success: false, error: 'Institutional Feed Blackout' });
     }
 }

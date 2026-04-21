@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     try {
         const fetchTargeted = async (datasetId, keywords) => {
             try {
-                const where = keywords.map(k => `upper(market_and_exchange_names) like '%25${k.toUpperCase().replace(/ /g, '%20')}%25'`).join(' or ');
+                const where = keywords.map(k => `upper(market_and_exchange_names) like '%25${k.toUpperCase().replace(/ /g, '%20').replace(/&/g, '%26')}%25'`).join(' or ');
                 const url = `https://publicreporting.cftc.gov/resource/${datasetId}.json?$where=${where}&$limit=100&$order=report_date_as_yyyy_mm_dd DESC`;
                 const response = await axios.get(url, { timeout: 9500 });
                 return Array.isArray(response.data) ? response.data.map(r => ({ ...r, _ds: datasetId })) : [];

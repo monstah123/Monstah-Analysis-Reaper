@@ -58,14 +58,15 @@ export default async function handler(req, res) {
 
         const rawData = [...financials, ...legacy, ...physical];
 
-        const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
+        const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30, resY3M] = await Promise.allSettled([
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS3MO&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
         ]);
 
         const results = {};
@@ -153,7 +154,8 @@ export default async function handler(req, res) {
         const yields = {
             y2: resY2?.status === 'fulfilled' ? parseFloat(resY2.value.data.observations[0]?.value) : null,
             y10: resY10?.status === 'fulfilled' ? parseFloat(resY10.value.data.observations[0]?.value) : null,
-            y30: resY30?.status === 'fulfilled' ? parseFloat(resY30.value.data.observations[0]?.value) : null
+            y30: resY30?.status === 'fulfilled' ? parseFloat(resY30.value.data.observations[0]?.value) : null,
+            y3m: resY3M?.status === 'fulfilled' ? parseFloat(resY3M.value.data.observations[0]?.value) : null
         };
 
         res.status(200).json({ success: true, sentiment: results, macro, yields });

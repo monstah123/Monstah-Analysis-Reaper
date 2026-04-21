@@ -65,54 +65,32 @@ export default async function handler(req, res) {
         for (const [assetId, config] of Object.entries(ASSET_REGISTER)) {
             const matches = rawData.filter(row => {
                 const rowName = (row.market_and_exchange_names || row.market_name || row.contract_market_name || '').toUpperCase();
-                const hasKeywords = config.id.some(idPart => rowName.includes(idPart.toUpperCase())) && 
-                                   (config.id.length < 2 || rowName.includes('CHICAGO') || rowName.includes('CME') || rowName.includes('COMMODITY') || rowName.includes('NEW YORK'));
-                
-                // DATA AUTHENTICITY PROTOCOL: Exclude 'BTIC' and 'TAS' variants.
-                const isCleanData = !rowName.includes('BTIC') && !rowName.includes('TAS');
-                const hasVolume = parseFloat(row.open_interest_all || row.noncomm_positions_long_all || row.asset_mgr_long_all || 0) > 0;
-                
-                return hasKeywords && isCleanData && hasVolume;
+                // Lenient Keyword Match: Target the Asset first.
+                return config.id.some(idPart => rowName.includes(idPart.toUpperCase()));
             });
 
             if (matches.length > 0) {
-                // Priority: 1. Institutional Tier (TFF/SUPP), 2. Recency, 3. Combined Logic
                 const match = matches.sort((a,b) => {
-                    const tier = (ds) => ['TFF_COMB', 'TFF', 'SUPP'].includes(ds) ? 0 : 1;
+                    const tier = (ds) => ['TFF_COMB', 'TFF', 'SUPP_COMB', 'SUPP'].includes(ds) ? 0 : 1;
                     if (tier(a._ds) !== tier(b._ds)) return tier(a._ds) - tier(b._ds);
 
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    const pMap = { 'TFF_COMB': 0, 'SUPP': 1, 'TFF': 2, 'LEG_COMB': 3, 'LEGACY': 4 };
-                    const pA = pMap[a._ds] ?? 10;
-                    const pB = pMap[b._ds] ?? 10;
-                    if (pA !== pB) return pA - pB;
-                    
-                    return parseFloat(b.open_interest_all || 0) - parseFloat(a.open_interest_all || 0);
+                    return (a._ds.includes('COMB')) ? -1 : 1;
                 })[0];
 
-                // Data Extraction: Targeting the 'Pure Institutional' (Asset Manager) bracket
-                let long = 0, short = 0;
-                
                 const getVal = (fields) => {
                     for (const f of fields) {
-                        if (match[f] !== undefined) return parseFloat(match[f] || 0);
+                        const val = parseFloat(match[f] || 0);
+                        if (!isNaN(val) && match[f] !== undefined) return val;
                     }
                     return 0;
                 };
 
-                if (match._ds === 'TFF' || match._ds === 'TFF_COMB') {
-                    long = getVal(['asset_mgr_long_all', 'asset_mgr_positions_long_all', 'lev_money_long_all', 'lev_money_positions_long_all', 'noncomm_positions_long_all']);
-                    short = getVal(['asset_mgr_short_all', 'asset_mgr_positions_short_all', 'lev_money_short_all', 'lev_money_positions_short_all', 'noncomm_positions_short_all']);
-                } else if (match._ds === 'LEGACY' || match._ds === 'LEG_COMB') {
-                    long = getVal(['noncomm_positions_long_all', 'asset_mgr_positions_long_all']);
-                    short = getVal(['noncomm_positions_short_all', 'asset_mgr_positions_short_all']);
-                } else {
-                    long = getVal(['managed_money_positions_long_all', 'noncomm_positions_long_all']);
-                    short = getVal(['managed_money_positions_short_all', 'noncomm_positions_short_all']);
-                }
+                let long = getVal(['asset_mgr_long_all', 'asset_mgr_positions_long_all', 'managed_money_positions_long_all', 'noncomm_positions_long_all', 'lev_money_positions_long_all']);
+                let short = getVal(['asset_mgr_short_all', 'asset_mgr_positions_short_all', 'managed_money_positions_short_all', 'noncomm_positions_short_all', 'lev_money_positions_short_all']);
                 
                 const total = long + short;
                 let longPct = total > 0 ? (long / total) * 100 : 50;

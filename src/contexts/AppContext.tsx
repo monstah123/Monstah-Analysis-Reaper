@@ -214,7 +214,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let neuralMacro: any = null;
       let neuralYields: any = null;
       try {
-        const res = await fetch(`/api/sentiment?_t=${Date.now()}`);
+        const res = await fetch('/api/sentiment');
         if (res.ok) {
           const json = await res.json();
           if (json.success) {
@@ -240,7 +240,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         scores.gdp = (neuralMacro.GDP || 0) >= 3 ? 2 : (neuralMacro.GDP || 0) >= 2 ? 1 : 0;
         scores.inflation = (neuralMacro.CPI || 0) >= 4.5 ? -2 : (neuralMacro.CPI || 0) >= 3.5 ? -1 : 0;
         scores.interestRates = (neuralMacro.FedRate || 0) >= 5.5 ? -1 : 0;
-        scores.employmentChange = (neuralMacro.NFP || 0) >= 280000 ? 2 : (neuralMacro.NFP || 0) >= 180000 ? 1 : 0;
+        scores.employmentChange = (neuralMacro.NFP || 0) >= 280 ? 2 : (neuralMacro.NFP || 0) >= 180 ? 1 : 0;
       }
 
       // 5. Institutional Purity Lockdown: Removed all retail and synthetic news fallbacks.

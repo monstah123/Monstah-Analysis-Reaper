@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 export default async function handler(req, res) {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    // Optimized for Institutional Cadence (Weekly COT / Monthly Macro)
+    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
 
     // THE INSTITUTIONAL REGISTER (v21.0 Absolute Parity)
     const ASSET_REGISTER = {
@@ -62,10 +63,10 @@ export default async function handler(req, res) {
         const rawData = [...financials, ...legacy, ...physical, ...disaggAll, ...disaggFut];
 
         const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30, resY3M] = await Promise.allSettled([
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=13`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -219,11 +220,15 @@ export default async function handler(req, res) {
         }
 
         const macro = {
-            GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,
-            CPI: resCpi.status === 'fulfilled' ? parseFloat(resCpi.value.data.observations[0]?.value) : null,
+            GDP: resGdp.status === 'fulfilled' && resGdp.value.data.observations.length > 1
+                ? +((Math.pow(parseFloat(resGdp.value.data.observations[0].value) / parseFloat(resGdp.value.data.observations[1].value), 4) - 1) * 100).toFixed(2)
+                : null,
+            CPI: resCpi.status === 'fulfilled' && resCpi.value.data.observations.length > 12
+                ? +((parseFloat(resCpi.value.data.observations[0].value) / parseFloat(resCpi.value.data.observations[12].value) - 1) * 100).toFixed(2)
+                : null,
             FedRate: resFed.status === 'fulfilled' ? parseFloat(resFed.value.data.observations[0]?.value) : null,
             NFP: resNfp.status === 'fulfilled' && resNfp.value.data.observations.length > 1 
-                ? (parseFloat(resNfp.value.data.observations[0].value) - parseFloat(resNfp.value.data.observations[1].value)) * 1000
+                ? parseFloat(resNfp.value.data.observations[0].value) - parseFloat(resNfp.value.data.observations[1].value)
                 : null
         };
 

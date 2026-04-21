@@ -157,8 +157,8 @@ export default async function handler(req, res) {
                         const k = key.toLowerCase();
                         if (k.includes(p) && !k.includes('change') && !k.includes('pct') && !k.includes('spread') && !k.includes('traders') && !k.includes('_old') && !k.includes('_other')) {
                             const val = parseInt(match[key] || 0) || 0;
-                            if (k.includes('long')) l = val;
-                            if (k.includes('short')) s = val;
+                            if (k.includes('long') && l === 0) l = val;
+                            if (k.includes('short') && s === 0) s = val;
                         }
                     }
                     const vol = l + s;
@@ -179,8 +179,8 @@ export default async function handler(req, res) {
                     const k = key.toLowerCase();
                     if (k.includes(bestPrefix) && k.includes('change')) {
                         const val = parseFloat(match[key] || 0) || 0;
-                        if (k.includes('long')) changeLong = val;
-                        if (k.includes('short')) changeShort = val;
+                        if (k.includes('long') && changeLong === 0) changeLong = val;
+                        if (k.includes('short') && changeShort === 0) changeShort = val;
                     }
                 }
 

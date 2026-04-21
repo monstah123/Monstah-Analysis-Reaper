@@ -134,7 +134,7 @@ export default async function handler(req, res) {
                     let l = 0, s = 0;
                     for (const key of Object.keys(match)) {
                         const k = key.toLowerCase();
-                        if (k.includes(p) && !k.includes('change') && !k.includes('pct') && !k.includes('spread')) {
+                        if (k.includes(p) && !k.includes('change') && !k.includes('pct') && !k.includes('spread') && !k.includes('traders') && !k.includes('_old') && !k.includes('_other')) {
                             const val = parseInt(match[key] || 0) || 0;
                             if (k.includes('long')) l = val;
                             if (k.includes('short')) s = val;

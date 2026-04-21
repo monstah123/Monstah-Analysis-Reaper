@@ -122,15 +122,7 @@ export default async function handler(req, res) {
                     const weightB = weightMap[b._ds] || 0;
                     if (weightB !== weightA) return weightB - weightA;
 
-                    // Prefer Consolidated reports
-                    const nameA = (a.market_and_exchange_names || '').toUpperCase();
-                    const nameB = (b.market_and_exchange_names || '').toUpperCase();
-                    const consA = nameA.includes('CONSOLIDATED') || (a.futonly_or_combined || '').toUpperCase().includes('COMBINED');
-                    const consB = nameB.includes('CONSOLIDATED') || (b.futonly_or_combined || '').toUpperCase().includes('COMBINED');
-                    if (consA && !consB) return -1;
-                    if (consB && !consA) return 1;
-
-                    // Prefer higher institutional volume
+                    // Prefer higher institutional volume (Primary Qualifier)
                     const getVol = (r) => {
                         return (parseInt(r.asset_mgr_positions_long || 0) + parseInt(r.asset_mgr_positions_short || 0)) ||
                                (parseInt(r.lev_money_positions_long || 0) + parseInt(r.lev_money_positions_short || 0)) ||
@@ -140,7 +132,15 @@ export default async function handler(req, res) {
                     };
                     const volA = getVol(a);
                     const volB = getVol(b);
-                    return volB - volA;
+                    if (volB !== volA) return volB - volA;
+
+                    // Tie-breaker: Prefer Consolidated reports
+                    const nameA = (a.market_and_exchange_names || '').toUpperCase();
+                    const nameB = (b.market_and_exchange_names || '').toUpperCase();
+                    const consA = nameA.includes('CONSOLIDATED') || (a.futonly_or_combined || '').toUpperCase().includes('COMBINED');
+                    const consB = nameB.includes('CONSOLIDATED') || (b.futonly_or_combined || '').toUpperCase().includes('COMBINED');
+                    if (consA && !consB) return -1;
+                    if (consB && !consA) return 1;
                 })[0];
 
                 const instPatterns = ['asset_mgr', 'lev_money', 'managed_money', 'm_money', 'noncomm', 'other_rept'];

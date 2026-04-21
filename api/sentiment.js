@@ -14,12 +14,16 @@ export default async function handler(req, res) {
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
     // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
-        'US30': { id: ['DJIA', 'DOW JONES', 'CBOT'], category: 'Indices' },
-        'SP500': { id: ['S&P 500', 'CHICAGO MERCANTILE'], category: 'Indices' },
-        'NASDAQ': { id: ['NASDAQ', 'NDX', 'CHICAGO MERCANTILE'], category: 'Indices' },
-        'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
-        'USOIL': { id: ['WTI', 'CRUDE OIL', 'NEW YORK MERCANTILE'], category: 'Commodities' },
+        'US30': { id: ['DJIA', 'CBOT'], category: 'Indices' },
+        'SP500': { id: ['S&P 500'], category: 'Indices' },
+        'NASDAQ': { id: ['NASDAQ', 'NDX'], category: 'Indices' },
+        'DAX': { id: ['DAX'], category: 'Indices' },
+        'NIKKEI': { id: ['NIKKEI'], category: 'Indices' },
+        'GOLD': { id: ['GOLD'], category: 'Commodities' },
+        'SILVER': { id: ['SILVER'], category: 'Commodities' },
+        'COPPER': { id: ['COPPER'], category: 'Commodities' },
+        'USOIL': { id: ['WTI', 'CRUDE OIL'], category: 'Commodities' },
+        'UKOIL': { id: ['BRENT'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX'], category: 'Currency' },
         'GBPUSD': { id: ['BRITISH POUND'], category: 'Currency' },
         'USDJPY': { id: ['JAPANESE YEN'], category: 'Currency' },
@@ -35,29 +39,20 @@ export default async function handler(req, res) {
 
     try {
         // Parallel Institutional Fetch (Deep Buffer to avoid missing report cycles)
-        const [resTFF, resLegacy, resSupp, resTffComb, resLegComb, resDisComb, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
-            axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/927n-8qpw.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), 
-            axios.get(`https://publicreporting.cftc.gov/resource/jun7-fc8e.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), 
-            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), 
+        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp] = await Promise.allSettled([
+            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // TFF (Financial)
+            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // Legacy
+            axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // Disaggregated
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=12`)
         ]);
 
         let rawData = [];
         if (resTFF.status === 'fulfilled' && Array.isArray(resTFF.value.data)) rawData.push(...resTFF.value.data.map(r => ({ ...r, _ds: 'TFF' })));
         if (resLegacy.status === 'fulfilled' && Array.isArray(resLegacy.value.data)) rawData.push(...resLegacy.value.data.map(r => ({ ...r, _ds: 'LEGACY' })));
-        if (resSupp.status === 'fulfilled' && Array.isArray(resSupp.value.data)) rawData.push(...resSupp.value.data.map(r => ({ ...r, _ds: 'SUPP' })));
-        if (resTffComb.status === 'fulfilled' && Array.isArray(resTffComb.value.data)) rawData.push(...resTffComb.value.data.map(r => ({ ...r, _ds: 'TFF_COMB' })));
-        if (resLegComb.status === 'fulfilled' && Array.isArray(resLegComb.value.data)) rawData.push(...resLegComb.value.data.map(r => ({ ...r, _ds: 'LEG_COMB' })));
-        if (resDisComb.status === 'fulfilled' && Array.isArray(resDisComb.value.data)) rawData.push(...resDisComb.value.data.map(r => ({ ...r, _ds: 'SUPP_COMB' })));
+        if (resSupp.status === 'fulfilled' && Array.isArray(resSupp.value.data)) rawData.push(...resSupp.value.data.map(r => ({ ...r, _ds: 'DISAGG' })));
 
         const results = {};
         
@@ -71,26 +66,39 @@ export default async function handler(req, res) {
 
             if (matches.length > 0) {
                 const match = matches.sort((a,b) => {
-                    const tier = (ds) => ['TFF_COMB', 'TFF', 'SUPP_COMB', 'SUPP'].includes(ds) ? 0 : 1;
-                    if (tier(a._ds) !== tier(b._ds)) return tier(a._ds) - tier(b._ds);
-
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    return (a._ds.includes('COMB')) ? -1 : 1;
+                    // Length-based priority: Prioritize shorter names ('EURO FX' vs 'EURO FX/JPY')
+                    const nameA = (a.market_and_exchange_names || '').length;
+                    const nameB = (b.market_and_exchange_names || '').length;
+                    return nameA - nameB;
                 })[0];
 
                 const getVal = (fields) => {
                     for (const f of fields) {
-                        const val = parseFloat(match[f] || 0);
-                        if (!isNaN(val) && match[f] !== undefined) return val;
+                        if (match[f] !== undefined) return parseFloat(match[f] || 0);
                     }
                     return 0;
                 };
 
-                let long = getVal(['asset_mgr_long_all', 'asset_mgr_positions_long_all', 'managed_money_positions_long_all', 'noncomm_positions_long_all', 'lev_money_positions_long_all']);
-                let short = getVal(['asset_mgr_short_all', 'asset_mgr_positions_short_all', 'managed_money_positions_short_all', 'noncomm_positions_short_all', 'lev_money_positions_short_all']);
+                // Smart Money Pipeline: Asset Manager -> Managed Money -> Leveraged Money -> Legacy
+                const longFields = [
+                    'asset_mgr_positions_long', 'asset_mgr_positions_long_all', 'asset_mgr_long_all',
+                    'managed_money_positions_long_all', 'm_money_positions_long_all', 'managed_money_long_all',
+                    'lev_money_positions_long', 'lev_money_positions_long_all', 'lev_money_long_all',
+                    'noncomm_positions_long_all', 'noncomm_long_all'
+                ];
+                const shortFields = [
+                    'asset_mgr_positions_short', 'asset_mgr_positions_short_all', 'asset_mgr_short_all',
+                    'managed_money_positions_short_all', 'm_money_positions_short_all', 'managed_money_short_all',
+                    'lev_money_positions_short', 'lev_money_positions_short_all', 'lev_money_short_all',
+                    'noncomm_positions_short_all', 'noncomm_short_all'
+                ];
+
+                let long = getVal(longFields);
+                let short = getVal(shortFields);
                 
                 const total = long + short;
                 let longPct = total > 0 ? (long / total) * 100 : 50;

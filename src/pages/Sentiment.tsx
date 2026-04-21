@@ -149,7 +149,7 @@ const Sentiment: React.FC = () => {
                   radius={[4, 0, 0, 4]} 
                   isAnimationActive={false}
                 >
-                  <LabelList dataKey="long" position="insideLeft" formatter={(v: any) => v > 10 ? `${v.toFixed(1)}%` : ''} style={{ fill: '#fff', fontSize: '11px', fontWeight: 900 }} />
+                  <LabelList dataKey="long" position="insideLeft" formatter={(v: any) => (typeof v === 'number' && !isNaN(v) && v > 10) ? `${v.toFixed(1)}%` : ''} style={{ fill: '#fff', fontSize: '11px', fontWeight: 900 }} />
                 </Bar>
                 <Bar 
                   key="bar-short"
@@ -159,7 +159,7 @@ const Sentiment: React.FC = () => {
                   radius={[0, 4, 4, 0]} 
                   isAnimationActive={false}
                 >
-                  <LabelList dataKey="short" position="insideRight" formatter={(v: any) => v > 10 ? `${v.toFixed(1)}%` : ''} style={{ fill: '#fff', fontSize: '11px', fontWeight: 900 }} />
+                  <LabelList dataKey="short" position="insideRight" formatter={(v: any) => (typeof v === 'number' && !isNaN(v) && v > 10) ? `${v.toFixed(1)}%` : ''} style={{ fill: '#fff', fontSize: '11px', fontWeight: 900 }} />
                 </Bar>
               </BarChart>
           </div>

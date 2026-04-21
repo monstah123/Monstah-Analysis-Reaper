@@ -79,19 +79,21 @@ export default async function handler(req, res) {
             });
 
             if (matches.length > 0) {
-                // Priority: 1. Recency, 2. COMBINED (The 'Real Deal' Protocol), 3. LEGACY
+                // Priority: 1. Recency, 2. TFF_COMB (The 'Real Deal' Protocol), 3. LEG_COMB, 4. TFF, 5. LEGACY
                 const match = matches.sort((a,b) => {
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
+                    const pMap = { 'TFF_COMB': 0, 'LEG_COMB': 1, 'TFF': 2, 'LEGACY': 3, 'SUPP': 4 };
+                    const pA = pMap[a._ds] ?? 10;
+                    const pB = pMap[b._ds] ?? 10;
+                    if (pA !== pB) return pA - pB;
+
                     const nameA = (a.market_and_exchange_names || '').toUpperCase();
                     const nameB = (b.market_and_exchange_names || '').toUpperCase();
                     if (nameA.includes('COMBINED') && !nameB.includes('COMBINED')) return -1;
                     if (nameB.includes('COMBINED') && !nameA.includes('COMBINED')) return 1;
-
-                    if (a._ds === 'LEGACY' && b._ds !== 'LEGACY') return -1;
-                    if (b._ds === 'LEGACY' && a._ds !== 'LEGACY') return 1;
                     
                     return parseFloat(b.open_interest_all || 0) - parseFloat(a.open_interest_all || 0);
                 })[0];

@@ -51,13 +51,15 @@ export default async function handler(req, res) {
         const commodityKeywords = ['BRENT', 'CRUDE OIL', 'WTI'];
         const allKeywords = [...financialKeywords, ...commodityKeywords];
 
-        const [financials, legacy, physical] = await Promise.all([
+        const [financials, legacy, physical, disaggAll, disaggFut] = await Promise.all([
             fetchTargeted('udgc-27he', financialKeywords), // TFF (Financial Futures)
-            fetchTargeted('srt6-5q2f', allKeywords),       // Legacy (includes noncomm for oil)
-            fetchTargeted('kh3c-gbw2', commodityKeywords)  // Disagg Physical (fallback)
+            fetchTargeted('srt6-5q2f', allKeywords),       // Legacy (speculator flow)
+            fetchTargeted('kh3c-gbw2', commodityKeywords),  // Disagg Physical (BRENT/WTI)
+            fetchTargeted('rxbv-e226', allKeywords),       // Disaggregated All (Mixed Flow)
+            fetchTargeted('72hh-3qpy', allKeywords)        // Disaggregated Futures Only (Pure Flow)
         ]);
 
-        const rawData = [...financials, ...legacy, ...physical];
+        const rawData = [...financials, ...legacy, ...physical, ...disaggAll, ...disaggFut];
 
         const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30, resY3M] = await Promise.allSettled([
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -108,7 +110,19 @@ export default async function handler(req, res) {
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    // Prefer Consolidated reports (most complete data)
+                    // Dataset Priority Strike: Prefer modern Disaggregated or TFF reports over Legacy
+                    const weightMap = {
+                        '72hh-3qpy': 100, // Disagg Fut Only (High Fidelity)
+                        'udgc-27he': 95,  // TFF (Financial Node)
+                        'rxbv-e226': 90,  // Disagg All
+                        'kh3c-gbw2': 80,  // Disagg Physical
+                        'srt6-5q2f': 50   // Legacy (Fallback)
+                    };
+                    const weightA = weightMap[a._ds] || 0;
+                    const weightB = weightMap[b._ds] || 0;
+                    if (weightB !== weightA) return weightB - weightA;
+
+                    // Prefer Consolidated reports
                     const nameA = (a.market_and_exchange_names || '').toUpperCase();
                     const nameB = (b.market_and_exchange_names || '').toUpperCase();
                     const consA = nameA.includes('CONSOLIDATED') || (a.futonly_or_combined || '').toUpperCase().includes('COMBINED');
@@ -116,9 +130,9 @@ export default async function handler(req, res) {
                     if (consA && !consB) return -1;
                     if (consB && !consA) return 1;
 
-                    // Prefer higher institutional volume (asset_mgr > lev_money > noncomm)
-                    const volA = parseInt(a.asset_mgr_positions_long || 0) + parseInt(a.asset_mgr_positions_short || 0) || parseInt(a.lev_money_positions_long || 0);
-                    const volB = parseInt(b.asset_mgr_positions_long || 0) + parseInt(b.asset_mgr_positions_short || 0) || parseInt(b.lev_money_positions_long || 0);
+                    // Prefer higher institutional volume
+                    const volA = parseInt(a.asset_mgr_positions_long || 0) + parseInt(a.asset_mgr_positions_short || 0) || parseInt(a.lev_money_positions_long || 0) || parseInt(a.noncomm_positions_long_all || 0);
+                    const volB = parseInt(b.asset_mgr_positions_long || 0) + parseInt(b.asset_mgr_positions_short || 0) || parseInt(b.lev_money_positions_long || 0) || parseInt(b.noncomm_positions_long_all || 0);
                     return volB - volA;
                 })[0];
 

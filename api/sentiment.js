@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         'US30': { id: ['DJIA', 'DOW JONES'], category: 'Indices' },
         'SP500': { id: ['S&P 500', 'SPX'], category: 'Indices' },
         'NASDAQ': { id: ['NASDAQ', 'NDX'], category: 'Indices' },
-        'DAX': { id: ['DAX'], category: 'Indices' },
+        'DAX': { id: ['DAX', 'GERMANY', 'MSCI'], category: 'Indices' },
         'NIKKEI': { id: ['NIKKEI'], category: 'Indices' },
         'GOLD': { id: ['GOLD'], category: 'Commodities' },
         'SILVER': { id: ['SILVER'], category: 'Commodities' },

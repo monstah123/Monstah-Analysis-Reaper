@@ -125,14 +125,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSqueezeAlerts([]);
   }, [setSqueezeAlerts]);
 
-  const apiKeys: ApiKeys = {
+  const apiKeys = React.useMemo(() => ({
     alphaVantage: apiKeysRaw.alphaVantage || DEFAULT_KEYS.alphaVantage,
     fred: apiKeysRaw.fred || DEFAULT_KEYS.fred,
     aiBaseUrl: apiKeysRaw.aiBaseUrl || DEFAULT_KEYS.aiBaseUrl,
     aiModel: apiKeysRaw.aiModel || DEFAULT_KEYS.aiModel,
     openaiKey: apiKeysRaw.openaiKey || DEFAULT_KEYS.openaiKey,
     deepseekKey: apiKeysRaw.deepseekKey || DEFAULT_KEYS.deepseekKey,
-  };
+  }), [apiKeysRaw]);
 
   const setApiKeys = useCallback((partial: Partial<ApiKeys>) => {
     setApiKeysRaw((prev) => ({ ...prev, ...partial }));

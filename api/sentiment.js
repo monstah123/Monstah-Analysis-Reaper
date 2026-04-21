@@ -12,11 +12,11 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
-    // THE INSTITUTIONAL REGISTER (v17.0 Ironclad Protocol)
+    // THE INSTITUTIONAL REGISTER (v18.0 Omega Protocol)
     const ASSET_REGISTER = {
-        'US30': { id: ['DJIA', 'DOW JONES'], category: 'Indices' },
-        'SP500': { id: ['S&P 500', 'SPX'], category: 'Indices' },
-        'NASDAQ': { id: ['NASDAQ', 'NDX'], category: 'Indices' },
+        'US30': { id: ['DJIA', 'DOW JONES', 'DOW'], category: 'Indices' },
+        'SP500': { id: ['S&P 500', 'SPX', 'E-MINI S&P'], category: 'Indices' },
+        'NASDAQ': { id: ['NASDAQ', 'NDX', 'E-MINI NASDAQ'], category: 'Indices' },
         'DAX': { id: ['DAX', 'GERMANY', 'MSCI'], category: 'Indices' },
         'NIKKEI': { id: ['NIKKEI'], category: 'Indices' },
         'GOLD': { id: ['GOLD'], category: 'Commodities' },
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         'USOIL': { id: ['WTI', 'CRUDE OIL'], category: 'Commodities' },
         'UKOIL': { id: ['BRENT', 'ICE FUTURES EUROPE'], category: 'Commodities' },
         'EURUSD': { id: ['EURO FX'], category: 'Currency' },
-        'GBPUSD': { id: ['BRITISH POUND'], category: 'Currency' },
+        'GBPUSD': { id: ['BRITISH POUND', 'STERLING'], category: 'Currency' },
         'USDJPY': { id: ['JAPANESE YEN', 'YEN'], category: 'Currency' },
         'AUDUSD': { id: ['AUSTRALIAN DOLLAR'], category: 'Currency' },
         'NZDUSD': { id: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR'], category: 'Currency' },
@@ -38,26 +38,34 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        // Master Consolidated Infrastructure (2026 Protocol)
         const fetchSet = async (id) => {
             try {
                 const url = `https://publicreporting.cftc.gov/resource/${id}.json`;
                 const params = {
-                    $limit: 10000,
+                    $limit: 2000,
                     $order: 'report_date_as_yyyy_mm_dd DESC'
                 };
-                const res = await axios.get(url, { params, timeout: 10000 });
-                return Array.isArray(res.data) ? res.data : [];
+                const res = await axios.get(url, { params, timeout: 30000 });
+                return { id, data: Array.isArray(res.data) ? res.data : [], status: 'OK' };
             } catch (e) {
-                console.error(`[Pipeline Warning] Dataset ${id} unreachable:`, e.message);
-                return [];
+                console.error(`[CRITICAL] Dataset ${id} failed:`, e.message);
+                return { id, data: [], status: 'FAILED' };
             }
         };
 
-        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
+        const reports = await Promise.all([
             fetchSet('udgc-27he'), // TFF
             fetchSet('srt6-5q2f'), // Legacy
-            fetchSet('72hh-3qpy'), // Disagg
+            fetchSet('72hh-3qpy')  // Disagg
+        ]);
+
+        const rawData = [
+            ...reports[0].data.map(r => ({ ...r, _ds: 'TFF' })),
+            ...reports[1].data.map(r => ({ ...r, _ds: 'LEGACY' })),
+            ...reports[2].data.map(r => ({ ...r, _ds: 'DISAGG' }))
+        ];
+
+        const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -66,16 +74,6 @@ export default async function handler(req, res) {
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
         ]);
-
-        const tffData = resTFF.status === 'fulfilled' ? resTFF.value : [];
-        const legacyData = resLegacy.status === 'fulfilled' ? resLegacy.value : [];
-        const disaggData = resSupp.status === 'fulfilled' ? resSupp.value : [];
-
-        const rawData = [
-            ...tffData.map(r => ({ ...r, _ds: 'TFF' })),
-            ...legacyData.map(r => ({ ...r, _ds: 'LEGACY' })),
-            ...disaggData.map(r => ({ ...r, _ds: 'DISAGG' }))
-        ];
 
         const results = {};
         
@@ -86,32 +84,37 @@ export default async function handler(req, res) {
             });
 
             if (matches.length > 0) {
-                // Sort by Date, then by name length (purity)
                 const match = matches.sort((a,b) => {
+                    // 1. Date Priority (Newest First)
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
+                    // 2. Type Priority (Combined contains Options + Futures, much higher fidelity)
+                    const typeA = (a.futonly_or_combined || '').toUpperCase();
+                    const typeB = (b.futonly_or_combined || '').toUpperCase();
+                    if (typeA.includes('COMBINED') && !typeB.includes('COMBINED')) return -1;
+                    if (typeB.includes('COMBINED') && !typeA.includes('COMBINED')) return 1;
+
+                    // 3. Name Length (Purity)
                     const lenA = (a.market_and_exchange_names || a.market_name || '').length;
                     const lenB = (b.market_and_exchange_names || b.market_name || '').length;
                     return lenA - lenB;
                 })[0];
 
                 const getVal = (patterns, direction) => {
-                    let total = 0;
+                    let maxVal = 0;
                     for (const p of patterns) {
                         for (const key of Object.keys(match)) {
-                            // Match key for direction, ensure it's not a change or pct field unless fallback
-                            if (key.toLowerCase().includes(p.toLowerCase()) && 
-                                key.toLowerCase().includes(direction.toLowerCase()) &&
-                                !key.toLowerCase().includes('change') &&
-                                !key.toLowerCase().includes('pct')) {
+                            const k = key.toLowerCase();
+                            if (k.includes(p.toLowerCase()) && k.includes(direction.toLowerCase())) {
+                                if (k.includes('change') || k.includes('pct') || k.includes('spread')) continue;
                                 const val = parseInt(match[key] || 0);
-                                if (!isNaN(val) && val > total) total = val; 
+                                if (!isNaN(val) && val > maxVal) maxVal = val;
                             }
                         }
                     }
-                    return total;
+                    return maxVal;
                 };
 
                 const instPatterns = ['asset_mgr', 'm_money', 'managed_money', 'lev_money', 'noncomm'];
@@ -119,23 +122,24 @@ export default async function handler(req, res) {
                 const short = getVal(instPatterns, 'short');
                 
                 const total = long + short;
-                let longPct = total > 0 ? (long / total) * 100 : 50;
-                let shortPct = 100 - longPct;
+                let longPct = total > 0 ? (long / total) * 100 : ((long === 0 && short === 0) ? null : 50);
+                let shortPct = longPct !== null ? 100 - longPct : null;
 
-                // Invert for USD-base pairs where we track the counter-currency
-                if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
+                if (longPct !== null && ['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
                     [longPct, shortPct] = [shortPct, longPct];
                 }
 
-                results[assetId] = {
-                    longPct: +longPct.toFixed(1),
-                    shortPct: +shortPct.toFixed(1),
-                    contractsLong: long,
-                    contractsShort: short,
-                    changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || match.change_in_asset_mgr_long || 0),
-                    changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || match.change_in_asset_mgr_short || 0),
-                    source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
-                };
+                if (longPct !== null) {
+                    results[assetId] = {
+                        longPct: +longPct.toFixed(1),
+                        shortPct: +shortPct.toFixed(1),
+                        contractsLong: long,
+                        contractsShort: short,
+                        changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || match.change_in_asset_mgr_long || 0),
+                        changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || match.change_in_asset_mgr_short || 0),
+                        source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
+                    };
+                }
             }
         }
 
@@ -165,9 +169,9 @@ export default async function handler(req, res) {
             y30: resY30?.status === 'fulfilled' ? parseFloat(resY30.value.data.observations[0]?.value) : null
         };
 
-        res.status(200).json({ success: true, sentiment: results, macro, yields });
+        res.status(200).json({ success: true, sentiment: results, macro, yields, status: reports.map(r => ({ id: r.id, status: r.status })) });
     } catch (error) {
         console.error('[CRITICAL]: Institutional Pipeline Burst:', error.message);
-        res.status(200).json({ success: false, error: 'Institutional Feed Blackout' });
+        res.status(200).json({ success: false, error: 'Institutional Feed Blackout', detail: error.message });
     }
 }

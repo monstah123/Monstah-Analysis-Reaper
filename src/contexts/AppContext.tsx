@@ -291,8 +291,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (total > 0) cPct = (cL / total) * 100;
           }
           
-          // Institutional Bias Scoring (v17.5 Calibration - PURE INSTITUTIONAL)
-          cI = (cPct !== null) ? (cPct >= 75 ? 2 : cPct >= 60 ? 1 : cPct <= 25 ? -2 : cPct <= 40 ? -1 : 0) : 0;
+          // Institutional Bias Scoring (v18.0 Ironclad Precision)
+          // 1. Absolute Thresholds (Highly Sensitive for Institutional Parity)
+          let baseCI = 0;
+          if (cPct !== null) {
+            if (cPct >= 70) baseCI = 2;
+            else if (cPct >= 52) baseCI = 1;
+            else if (cPct <= 30) baseCI = -2;
+            else if (cPct <= 48) baseCI = -1;
+          }
+
+          // 2. Momentum Booster: Capturing the 'Real Deal' Flow (Zero-Ghost Protocol)
+          let momentumBoost = 0;
+          const changeLong = data?.changeLong || 0;
+          const changeShort = data?.changeShort || 0;
+          if (changeLong > changeShort + 5000) momentumBoost = 1;
+          if (changeShort > changeLong + 5000) momentumBoost = -1;
+
+          cI = baseCI + momentumBoost;
+          // Clamp to +/- 2
+          if (cI > 2) cI = 2;
+          if (cI < -2) cI = -2;
 
           const liveSignalsCount = [cPct, scores.gdp, scores.inflation].filter(s => s !== null).length;
           
@@ -307,7 +326,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               macroImpact = usMacroScore;
           }
 
-          const newTotals = (cI * 3) + macroImpact; // Increased weight for COT (Institutional Only)
+          const newTotals = (cI * 3) + macroImpact; // Institutional COT Weight: 3x
           
           let dynamicBias: 'Very Bullish' | 'Bullish' | 'Neutral' | 'Bearish' | 'Very Bearish' = 'Neutral';
           if (liveSignalsCount > 0) {

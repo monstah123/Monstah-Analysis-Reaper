@@ -125,6 +125,8 @@ export default async function handler(req, res) {
                     shortPct: +shortPct.toFixed(1),
                     contractsLong: long,
                     contractsShort: short,
+                    changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || 0),
+                    changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || 0),
                     source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
                 };
             }

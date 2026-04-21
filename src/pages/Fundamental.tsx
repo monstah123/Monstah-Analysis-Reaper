@@ -65,7 +65,7 @@ const Fundamental: React.FC = () => {
               <div className="stat-body">
                 <span className="stat-label">{p.label}</span>
                 <span className="stat-value" style={{ color: p.val === null ? '#3f3f46' : status.color }}>
-                  {p.val === null ? 'SYNC...' : `${p.val > 0 && p.label !== 'Inflation (CPI)' ? '+' : ''}${p.val}${p.unit}`}
+                  {p.val === null ? 'SYNC...' : `${p.val > 0 && (p.label === 'US Real GDP' || p.label === 'Non-Farm Payrolls') ? '+' : ''}${p.val}${p.unit}`}
                 </span>
                 <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 700, color: status.color }}>
                   {status.text}

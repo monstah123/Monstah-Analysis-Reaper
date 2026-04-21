@@ -37,14 +37,13 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        // Targeted Institutional Groups (Optimized for SODA API)
-        const tffQuery = `market_and_exchange_names LIKE '%DJIA%' OR market_and_exchange_names LIKE '%S&P 500%' OR market_and_exchange_names LIKE '%NASDAQ%' OR market_and_exchange_names LIKE '%NIKKEI%' OR market_and_exchange_names LIKE '%EURO FX%' OR market_and_exchange_names LIKE '%BRITISH POUND%' OR market_and_exchange_names LIKE '%JAPANESE YEN%' OR market_and_exchange_names LIKE '%AUSTRALIAN DOLLAR%' OR market_and_exchange_names LIKE '%NEW ZEALAND DOLLAR%' OR market_and_exchange_names LIKE '%CANADIAN DOLLAR%' OR market_and_exchange_names LIKE '%SWISS FRANC%' OR market_and_exchange_names LIKE '%BITCOIN%' OR market_and_exchange_names LIKE '%ETHER%' OR market_and_exchange_names LIKE '%DAX%'`;
-        const disaggQuery = `market_and_exchange_names LIKE '%GOLD%' OR market_and_exchange_names LIKE '%SILVER%' OR market_and_exchange_names LIKE '%COPPER%' OR market_and_exchange_names LIKE '%CRUDE OIL%' OR market_and_exchange_names LIKE '%WTI%' OR market_and_exchange_names LIKE '%BRENT%'`;
-
+        // Institutional Temporal Matrix (Master 2026 Sync)
+        const recentDate = '2026-01-01T00:00:00.000';
+        
         const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
-            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$where=${encodeURIComponent(tffQuery)}&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`),
-            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$where=${encodeURIComponent(tffQuery)}&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`),
-            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$where=${encodeURIComponent(disaggQuery)}&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`),
+            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$where=report_date_as_yyyy_mm_dd >= '${recentDate}'&$order=report_date_as_yyyy_mm_dd DESC&$limit=5000`),
+            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$where=report_date_as_yyyy_mm_dd >= '${recentDate}'&$order=report_date_as_yyyy_mm_dd DESC&$limit=5000`),
+            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$where=report_date_as_yyyy_mm_dd >= '${recentDate}'&$order=report_date_as_yyyy_mm_dd DESC&$limit=5000`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),

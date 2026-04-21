@@ -102,21 +102,26 @@ export default async function handler(req, res) {
                 })[0];
 
                 // Data Extraction: Targeting the 'Pure Institutional' (Asset Manager) bracket
-                let long = 0;
-                let short = 0;
+                let long = 0, short = 0;
                 
+                // Helper to extract by checking various possible field names (TFF vs Legacy vs Disaggregated)
+                const getVal = (fields) => {
+                    for (const f of fields) {
+                        const val = parseFloat(match[f] || 0);
+                        if (val > 0) return val;
+                    }
+                    return 0;
+                };
+
                 if (match._ds === 'TFF' || match._ds === 'TFF_COMB') {
-                    // Traders in Financial Futures (TFF) - Institutional Priority
-                    long = parseFloat(match.asset_mgr_positions_long_all || match.lev_money_positions_long_all || match.noncomm_positions_long_all || 0);
-                    short = parseFloat(match.asset_mgr_positions_short_all || match.lev_money_positions_short_all || match.noncomm_positions_short_all || 0);
+                    long = getVal(['asset_mgr_long_all', 'asset_mgr_positions_long_all', 'lev_money_long_all', 'lev_money_positions_long_all', 'noncomm_positions_long_all']);
+                    short = getVal(['asset_mgr_short_all', 'asset_mgr_positions_short_all', 'lev_money_short_all', 'lev_money_positions_short_all', 'noncomm_positions_short_all']);
                 } else if (match._ds === 'LEGACY' || match._ds === 'LEG_COMB') {
-                    // Legacy Reports - Pivot to Institutional Brackets if available
-                    long = parseFloat(match.asset_mgr_positions_long_all || match.noncomm_positions_long_all || 0);
-                    short = parseFloat(match.asset_mgr_positions_short_all || match.noncomm_positions_short_all || 0);
+                    long = getVal(['noncomm_positions_long_all', 'asset_mgr_positions_long_all']);
+                    short = getVal(['noncomm_positions_short_all', 'asset_mgr_positions_short_all']);
                 } else {
-                    // Disaggregated / Supplemental
-                    long = parseFloat(match.managed_money_positions_long_all || match.noncomm_positions_long_all || 0);
-                    short = parseFloat(match.managed_money_positions_short_all || match.noncomm_positions_short_all || 0);
+                    long = getVal(['managed_money_positions_long_all', 'noncomm_positions_long_all']);
+                    short = getVal(['managed_money_positions_short_all', 'noncomm_positions_short_all']);
                 }
                 
                 const total = long + short;

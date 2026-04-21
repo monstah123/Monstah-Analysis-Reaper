@@ -39,12 +39,13 @@ export default async function handler(req, res) {
 
     try {
         // Parallel Institutional Fetch (Deep Buffer to avoid missing report cycles)
-        const [resTFF, resLegacy, resSupp, resTffComb, resLegComb, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
+        const [resTFF, resLegacy, resSupp, resTffComb, resLegComb, resDisComb, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             axios.get(`https://publicreporting.cftc.gov/resource/6dca-aqww.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
             axios.get(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`),
-            axios.get(`https://publicreporting.cftc.gov/resource/49v7-v69p.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // TFF Combined
-            axios.get(`https://publicreporting.cftc.gov/resource/jun7-fc8e.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), // Legacy Combined
+            axios.get(`https://publicreporting.cftc.gov/resource/927n-8qpw.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), 
+            axios.get(`https://publicreporting.cftc.gov/resource/jun7-fc8e.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), 
+            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$limit=2000&$order=report_date_as_yyyy_mm_dd DESC`), 
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -55,9 +56,12 @@ export default async function handler(req, res) {
         ]);
 
         let rawData = [];
-        if (resTFF.status === 'fulfilled') rawData.push(...resTFF.value.data.map(r => ({ ...r, _ds: 'TFF' })));
-        if (resLegacy.status === 'fulfilled') rawData.push(...resLegacy.value.data.map(r => ({ ...r, _ds: 'LEGACY' })));
-        if (resSupp.status === 'fulfilled') rawData.push(...resSupp.value.data.map(r => ({ ...r, _ds: 'SUPP' })));
+        if (resTFF.status === 'fulfilled' && Array.isArray(resTFF.value.data)) rawData.push(...resTFF.value.data.map(r => ({ ...r, _ds: 'TFF' })));
+        if (resLegacy.status === 'fulfilled' && Array.isArray(resLegacy.value.data)) rawData.push(...resLegacy.value.data.map(r => ({ ...r, _ds: 'LEGACY' })));
+        if (resSupp.status === 'fulfilled' && Array.isArray(resSupp.value.data)) rawData.push(...resSupp.value.data.map(r => ({ ...r, _ds: 'SUPP' })));
+        if (resTffComb.status === 'fulfilled' && Array.isArray(resTffComb.value.data)) rawData.push(...resTffComb.value.data.map(r => ({ ...r, _ds: 'TFF_COMB' })));
+        if (resLegComb.status === 'fulfilled' && Array.isArray(resLegComb.value.data)) rawData.push(...resLegComb.value.data.map(r => ({ ...r, _ds: 'LEG_COMB' })));
+        if (resDisComb.status === 'fulfilled' && Array.isArray(resDisComb.value.data)) rawData.push(...resDisComb.value.data.map(r => ({ ...r, _ds: 'SUPP_COMB' })));
         if (resTffComb.status === 'fulfilled') rawData.push(...resTffComb.value.data.map(r => ({ ...r, _ds: 'TFF_COMB' })));
         if (resLegComb.status === 'fulfilled') rawData.push(...resLegComb.value.data.map(r => ({ ...r, _ds: 'LEG_COMB' })));
 

@@ -61,17 +61,17 @@ const Technical: React.FC = () => {
           <p className="settings-hint">Institutional confluence profile based on current matrix variables.</p>
           
           <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-             <div className="edge-metric">
+             <div className="edge-metric" title={`Institutional Print: ${selectedAsset?.cotLong?.toLocaleString() || 0} Long / ${selectedAsset?.cotShort?.toLocaleString() || 0} Short`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                    <span style={{ fontSize: '0.8rem', color: '#8b9ab8' }}>Institutional Bias (COT)</span>
-                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: selectedAsset?.score >= 0 ? '#4ade80' : '#f87171' }}>{selectedAsset?.score >= 0 ? 'ACCUMULATION' : 'DISTRIBUTION'}</span>
+                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: selectedAsset?.cot >= 0 ? '#4ade80' : '#f87171' }}>{selectedAsset?.cot >= 0 ? 'ACCUMULATION' : 'DISTRIBUTION'}</span>
                 </div>
                 <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
-                   <div style={{ width: `${Math.min(100, Math.abs(selectedAsset?.score * 10))}%`, height: '100%', background: selectedAsset?.score >= 0 ? '#22c55e' : '#ef4444', borderRadius: '4px' }} />
+                   <div style={{ width: `${Math.min(100, (selectedAsset?.longPct || 50))}%`, height: '100%', background: selectedAsset?.cot >= 0 ? '#22c55e' : '#ef4444', borderRadius: '4px' }} />
                 </div>
              </div>
 
-             <div className="edge-metric">
+             <div className="edge-metric" title={`Macro Volatility: ${selectedAsset?.macroVol || 'N/A'} | Yield Spread: ${selectedAsset?.yieldSpread || 'N/A'}`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                    <span style={{ fontSize: '0.8rem', color: '#8b9ab8' }}>Macro Alignment (FRED/BLS)</span>
                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6' }}>{selectedAsset?.score > 5 ? 'STRONG' : 'MODERATE'}</span>

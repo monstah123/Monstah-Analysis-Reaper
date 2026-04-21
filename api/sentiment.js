@@ -14,25 +14,21 @@ export default async function handler(req, res) {
     // THE INSTITUTIONAL REGISTER (v16.0 Ironclad Protocol)
     // Using strict identifiers + fuzzy fallbacks for 100% CFTC parity.
     const ASSET_REGISTER = {
-        'US30': { id: ['DOW JONES', 'CHICAGO BOARD OF TRADE'], category: 'Indices' },
-        'SP500': { id: ['S&P 500', 'CONSOLIDATED', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'NASDAQ': { id: ['NASDAQ-100', 'CONSOLIDATED', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'DAX': { id: ['DAX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'NIKKEI': { id: ['NIKKEI 225', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Indices' },
-        'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE INC.'], category: 'Commodities' },
-        'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE INC.'], category: 'Commodities' },
-        'COPPER': { id: ['COPPER', 'COMMODITY EXCHANGE INC.'], category: 'Commodities' },
-        'USOIL': { id: ['WTI FINANCIAL CRUDE OIL', 'NEW YORK MERCANTILE EXCHANGE'], category: 'Commodities' },
-        'UKOIL': { id: ['BRENT', 'ICE FUTURES EUROPE'], category: 'Commodities' },
-        'EURUSD': { id: ['EURO FX', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'GBPUSD': { id: ['BRITISH POUND', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'USDJPY': { id: ['JAPANESE YEN', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'AUDUSD': { id: ['AUSTRALIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'USDCAD': { id: ['CANADIAN DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'USDCHF': { id: ['SWISS FRANC', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'NZDUSD': { id: ['NEW ZEALAND DOLLAR', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Currency' },
-        'BITCOIN': { id: ['BITCOIN', 'CME', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' },
-        'ETHEREUM': { id: ['ETHER', 'CME', 'CHICAGO MERCANTILE EXCHANGE'], category: 'Crypto' }
+        'US30': { id: ['DJIA', 'DOW JONES', 'CBOT'], category: 'Indices' },
+        'SP500': { id: ['S&P 500', 'CHICAGO MERCANTILE'], category: 'Indices' },
+        'NASDAQ': { id: ['NASDAQ', 'NDX', 'CHICAGO MERCANTILE'], category: 'Indices' },
+        'GOLD': { id: ['GOLD', 'COMMODITY EXCHANGE'], category: 'Commodities' },
+        'SILVER': { id: ['SILVER', 'COMMODITY EXCHANGE'], category: 'Commodities' },
+        'USOIL': { id: ['WTI', 'CRUDE OIL', 'NEW YORK MERCANTILE'], category: 'Commodities' },
+        'EURUSD': { id: ['EURO FX'], category: 'Currency' },
+        'GBPUSD': { id: ['BRITISH POUND'], category: 'Currency' },
+        'USDJPY': { id: ['JAPANESE YEN'], category: 'Currency' },
+        'AUDUSD': { id: ['AUSTRALIAN DOLLAR'], category: 'Currency' },
+        'NZDUSD': { id: ['NEW ZEALAND DOLLAR'], category: 'Currency' },
+        'USDCAD': { id: ['CANADIAN DOLLAR'], category: 'Currency' },
+        'USDCHF': { id: ['SWISS FRANC'], category: 'Currency' },
+        'BITCOIN': { id: ['BITCOIN'], category: 'Crypto' },
+        'ETHEREUM': { id: ['ETHER'], category: 'Crypto' }
     };
 
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
@@ -62,8 +58,6 @@ export default async function handler(req, res) {
         if (resTffComb.status === 'fulfilled' && Array.isArray(resTffComb.value.data)) rawData.push(...resTffComb.value.data.map(r => ({ ...r, _ds: 'TFF_COMB' })));
         if (resLegComb.status === 'fulfilled' && Array.isArray(resLegComb.value.data)) rawData.push(...resLegComb.value.data.map(r => ({ ...r, _ds: 'LEG_COMB' })));
         if (resDisComb.status === 'fulfilled' && Array.isArray(resDisComb.value.data)) rawData.push(...resDisComb.value.data.map(r => ({ ...r, _ds: 'SUPP_COMB' })));
-        if (resTffComb.status === 'fulfilled') rawData.push(...resTffComb.value.data.map(r => ({ ...r, _ds: 'TFF_COMB' })));
-        if (resLegComb.status === 'fulfilled') rawData.push(...resLegComb.value.data.map(r => ({ ...r, _ds: 'LEG_COMB' })));
 
         const results = {};
         

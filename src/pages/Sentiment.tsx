@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, LabelList } from 'recharts';
 import MyfxbookWidget from '../components/MyfxbookWidget';
 import COTHistory from '../components/COTHistory';
 import SqueezeRadar from '../components/SqueezeRadar';
@@ -148,7 +148,9 @@ const Sentiment: React.FC = () => {
                   fill="#3b82f6" 
                   radius={[4, 0, 0, 4]} 
                   isAnimationActive={false}
-                />
+                >
+                  <LabelList dataKey="long" position="insideLeft" formatter={(v: number) => v > 10 ? `${v.toFixed(1)}%` : ''} style={{ fill: '#fff', fontSize: '11px', fontWeight: 900 }} />
+                </Bar>
                 <Bar 
                   key="bar-short"
                   dataKey="short" 
@@ -156,7 +158,9 @@ const Sentiment: React.FC = () => {
                   fill="#ef4444" 
                   radius={[0, 4, 4, 0]} 
                   isAnimationActive={false}
-                />
+                >
+                  <LabelList dataKey="short" position="insideRight" formatter={(v: number) => v > 10 ? `${v.toFixed(1)}%` : ''} style={{ fill: '#fff', fontSize: '11px', fontWeight: 900 }} />
+                </Bar>
               </BarChart>
           </div>
         ) : (

@@ -41,9 +41,14 @@ export default async function handler(req, res) {
             }
         };
 
-        // Precision Strike: Only fetch exactly what we need
-        const financialKeywords = ['DJIA', 'S&P 500', 'NASDAQ', 'EURO FX', 'BRITISH POUND', 'JAPANESE YEN', 'GOLD', 'WTI'];
-        const commodityKeywords = ['BRENT', 'CRUDE OIL'];
+        // Precision Strike: Full Registry Coverage
+        const financialKeywords = [
+            'DJIA', 'S&P 500', 'NASDAQ', 'DAX', 'NIKKEI', 
+            'EURO FX', 'BRITISH POUND', 'JAPANESE YEN', 
+            'AUSTRALIAN DOLLAR', 'NEW ZEALAND DOLLAR', 'CANADIAN DOLLAR', 'SWISS FRANC',
+            'GOLD', 'SILVER', 'COPPER', 'BITCOIN', 'ETHER'
+        ];
+        const commodityKeywords = ['BRENT', 'CRUDE OIL', 'WTI'];
 
         const [financials, legacy, physical] = await Promise.all([
             fetchTargeted('udgc-27he', financialKeywords), // TFF

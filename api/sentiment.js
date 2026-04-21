@@ -37,11 +37,14 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        // Parallel Institutional Fetch (Master 2026 Consolidated Protocol)
+        // Targeted Institutional Groups (Optimized for SODA API)
+        const tffQuery = `market_and_exchange_names LIKE '%DJIA%' OR market_and_exchange_names LIKE '%S&P 500%' OR market_and_exchange_names LIKE '%NASDAQ%' OR market_and_exchange_names LIKE '%NIKKEI%' OR market_and_exchange_names LIKE '%EURO FX%' OR market_and_exchange_names LIKE '%BRITISH POUND%' OR market_and_exchange_names LIKE '%JAPANESE YEN%' OR market_and_exchange_names LIKE '%AUSTRALIAN DOLLAR%' OR market_and_exchange_names LIKE '%NEW ZEALAND DOLLAR%' OR market_and_exchange_names LIKE '%CANADIAN DOLLAR%' OR market_and_exchange_names LIKE '%SWISS FRANC%' OR market_and_exchange_names LIKE '%BITCOIN%' OR market_and_exchange_names LIKE '%ETHER%' OR market_and_exchange_names LIKE '%DAX%'`;
+        const disaggQuery = `market_and_exchange_names LIKE '%GOLD%' OR market_and_exchange_names LIKE '%SILVER%' OR market_and_exchange_names LIKE '%COPPER%' OR market_and_exchange_names LIKE '%CRUDE OIL%' OR market_and_exchange_names LIKE '%WTI%' OR market_and_exchange_names LIKE '%BRENT%'`;
+
         const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
-            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`), // TFF All
-            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`), // Legacy All
-            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$limit=3000&$order=report_date_as_yyyy_mm_dd DESC`), // Disaggregated (Physical)
+            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$where=${encodeURIComponent(tffQuery)}&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`),
+            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$where=${encodeURIComponent(tffQuery)}&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`),
+            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$where=${encodeURIComponent(disaggQuery)}&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -66,12 +69,10 @@ export default async function handler(req, res) {
 
             if (matches.length > 0) {
                 const match = matches.sort((a,b) => {
-                    // 1. Freshest Data Priority
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    // 2. Pure Match Priority (Avoid crosses like EUR/GBP)
                     const lenA = (a.market_and_exchange_names || '').length;
                     const lenB = (b.market_and_exchange_names || '').length;
                     return lenA - lenB;
@@ -86,7 +87,6 @@ export default async function handler(req, res) {
                     return 0;
                 };
 
-                // Institutional Brackets (Ranked by Fidelity)
                 const longFields = [
                     'asset_mgr_positions_long', 'asset_mgr_positions_long_all', 'asset_mgr_long_all',
                     'managed_money_positions_long_all', 'm_money_positions_long_all', 'managed_money_long_all',
@@ -107,7 +107,6 @@ export default async function handler(req, res) {
                 let longPct = total > 0 ? (long / total) * 100 : 50;
                 let shortPct = 100 - longPct;
 
-                // Institutional Inversion Protocol (USD-Lead Pairs)
                 if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
                     [longPct, shortPct] = [shortPct, longPct];
                 }
@@ -124,7 +123,6 @@ export default async function handler(req, res) {
             }
         }
 
-        // 3. Cross-Synthesis Protocol (GBP/JPY)
         const gbp = results['GBPUSD'];
         const jpy = results['USDJPY'];
         if (gbp && jpy) {
@@ -135,7 +133,6 @@ export default async function handler(req, res) {
             };
         }
 
-        // 4. Macro Intelligence Matrix
         const nfpData = resNfp.status === 'fulfilled' ? resNfp.value.data.observations : [];
         const macro = {
             GDP: resGdp.status === 'fulfilled' ? parseFloat(resGdp.value.data.observations[0]?.value) : null,

@@ -42,10 +42,10 @@ export default async function handler(req, res) {
             try {
                 const url = `https://publicreporting.cftc.gov/resource/${id}.json`;
                 const params = {
-                    $limit: 2000,
+                    $limit: 1500,
                     $order: 'report_date_as_yyyy_mm_dd DESC'
                 };
-                const res = await axios.get(url, { params, timeout: 30000 });
+                const res = await axios.get(url, { params, timeout: 35000 });
                 return { id, data: Array.isArray(res.data) ? res.data : [], status: 'OK' };
             } catch (e) {
                 console.error(`[CRITICAL] Dataset ${id} failed:`, e.message);
@@ -54,15 +54,17 @@ export default async function handler(req, res) {
         };
 
         const reports = await Promise.all([
-            fetchSet('udgc-27he'), // TFF
-            fetchSet('srt6-5q2f'), // Legacy
-            fetchSet('72hh-3qpy')  // Disagg
+            fetchSet('udgc-27he'), // TFF (Financials)
+            fetchSet('srt6-5q2f'), // Legacy (Aggregate)
+            fetchSet('72hh-3qpy'), // Disagg Supplemental
+            fetchSet('kh3c-gbw2')  // Disagg Physical (BRENT PRIMARY)
         ]);
 
         const rawData = [
             ...reports[0].data.map(r => ({ ...r, _ds: 'TFF' })),
             ...reports[1].data.map(r => ({ ...r, _ds: 'LEGACY' })),
-            ...reports[2].data.map(r => ({ ...r, _ds: 'DISAGG' }))
+            ...reports[2].data.map(r => ({ ...r, _ds: 'DISAGG_SUPP' })),
+            ...reports[3].data.map(r => ({ ...r, _ds: 'DISAGG_PHYS' }))
         ];
 
         const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
@@ -84,22 +86,18 @@ export default async function handler(req, res) {
             });
 
             if (matches.length > 0) {
+                // Priority Sort: 1. Date, 2. Combined vs FutOnly, 3. Relevance
                 const match = matches.sort((a,b) => {
-                    // 1. Date Priority (Newest First)
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    // 2. Type Priority (Combined contains Options + Futures, much higher fidelity)
                     const typeA = (a.futonly_or_combined || '').toUpperCase();
                     const typeB = (b.futonly_or_combined || '').toUpperCase();
                     if (typeA.includes('COMBINED') && !typeB.includes('COMBINED')) return -1;
                     if (typeB.includes('COMBINED') && !typeA.includes('COMBINED')) return 1;
 
-                    // 3. Name Length (Purity)
-                    const lenA = (a.market_and_exchange_names || a.market_name || '').length;
-                    const lenB = (b.market_and_exchange_names || b.market_name || '').length;
-                    return lenA - lenB;
+                    return (a.market_and_exchange_names || '').length - (b.market_and_exchange_names || '').length;
                 })[0];
 
                 const getVal = (patterns, direction) => {
@@ -107,7 +105,7 @@ export default async function handler(req, res) {
                     for (const p of patterns) {
                         for (const key of Object.keys(match)) {
                             const k = key.toLowerCase();
-                            if (k.includes(p.toLowerCase()) && k.includes(direction.toLowerCase())) {
+                            if (k.includes(p) && k.includes(direction)) {
                                 if (k.includes('change') || k.includes('pct') || k.includes('spread')) continue;
                                 const val = parseInt(match[key] || 0);
                                 if (!isNaN(val) && val > maxVal) maxVal = val;
@@ -122,24 +120,22 @@ export default async function handler(req, res) {
                 const short = getVal(instPatterns, 'short');
                 
                 const total = long + short;
-                let longPct = total > 0 ? (long / total) * 100 : ((long === 0 && short === 0) ? null : 50);
-                let shortPct = longPct !== null ? 100 - longPct : null;
+                let longPct = total > 0 ? (long / total) * 100 : 50;
+                let shortPct = 100 - longPct;
 
-                if (longPct !== null && ['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
+                if (['USDJPY', 'USDCHF', 'USDCAD'].includes(assetId)) {
                     [longPct, shortPct] = [shortPct, longPct];
                 }
 
-                if (longPct !== null) {
-                    results[assetId] = {
-                        longPct: +longPct.toFixed(1),
-                        shortPct: +shortPct.toFixed(1),
-                        contractsLong: long,
-                        contractsShort: short,
-                        changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || match.change_in_asset_mgr_long || 0),
-                        changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || match.change_in_asset_mgr_short || 0),
-                        source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
-                    };
-                }
+                results[assetId] = {
+                    longPct: +longPct.toFixed(1),
+                    shortPct: +shortPct.toFixed(1),
+                    contractsLong: long,
+                    contractsShort: short,
+                    changeLong: parseFloat(match.change_in_noncomm_long_all || match.change_in_lev_money_long_all || match.change_in_asset_mgr_long || 0),
+                    changeShort: parseFloat(match.change_in_noncomm_short_all || match.change_in_lev_money_short_all || match.change_in_asset_mgr_short || 0),
+                    source: `CFTC ${match._ds} (${match.report_date_as_yyyy_mm_dd?.split('T')[0] || 'Recent'})`
+                };
             }
         }
 
@@ -169,7 +165,7 @@ export default async function handler(req, res) {
             y30: resY30?.status === 'fulfilled' ? parseFloat(resY30.value.data.observations[0]?.value) : null
         };
 
-        res.status(200).json({ success: true, sentiment: results, macro, yields, status: reports.map(r => ({ id: r.id, status: r.status })) });
+        res.status(200).json({ success: true, sentiment: results, macro, yields });
     } catch (error) {
         console.error('[CRITICAL]: Institutional Pipeline Burst:', error.message);
         res.status(200).json({ success: false, error: 'Institutional Feed Blackout', detail: error.message });

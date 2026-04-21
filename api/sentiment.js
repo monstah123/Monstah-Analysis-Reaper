@@ -131,12 +131,19 @@ export default async function handler(req, res) {
                     if (consB && !consA) return 1;
 
                     // Prefer higher institutional volume
-                    const volA = parseInt(a.asset_mgr_positions_long || 0) + parseInt(a.asset_mgr_positions_short || 0) || parseInt(a.lev_money_positions_long || 0) || parseInt(a.noncomm_positions_long_all || 0);
-                    const volB = parseInt(b.asset_mgr_positions_long || 0) + parseInt(b.asset_mgr_positions_short || 0) || parseInt(b.lev_money_positions_long || 0) || parseInt(b.noncomm_positions_long_all || 0);
+                    const getVol = (r) => {
+                        return (parseInt(r.asset_mgr_positions_long || 0) + parseInt(r.asset_mgr_positions_short || 0)) ||
+                               (parseInt(r.lev_money_positions_long || 0) + parseInt(r.lev_money_positions_short || 0)) ||
+                               (parseInt(r.m_money_positions_long_all || 0) + parseInt(r.m_money_positions_short_all || 0)) ||
+                               (parseInt(r.noncomm_positions_long_all || 0) + parseInt(r.noncomm_positions_short_all || 0)) ||
+                               (parseInt(r.other_rept_positions_long || 0) + parseInt(r.other_rept_positions_short || 0)) || 0;
+                    };
+                    const volA = getVol(a);
+                    const volB = getVol(b);
                     return volB - volA;
                 })[0];
 
-                const instPatterns = ['asset_mgr', 'lev_money', 'managed_money', 'm_money', 'noncomm'];
+                const instPatterns = ['asset_mgr', 'lev_money', 'managed_money', 'm_money', 'noncomm', 'other_rept'];
                 
                 // Find the single best institutional category based on total volume
                 let bestPrefix = '';

@@ -277,26 +277,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               if (fuzzyKey.includes('NASDAQ')) matchedData = s['NASDAQ'] || s['NDX'];
               if (fuzzyKey.includes('SP500')) matchedData = s['SP500'] || s['SPX'];
               if (fuzzyKey.includes('US30')) matchedData = s['US30'] || s['DOW'];
-              
-              // Synthesis Bridge (v19.0 Cross-Pair Processor)
-              if (!matchedData && fuzzyKey.length === 6) {
-                 const base = fuzzyKey.substring(0,3);
-                 const quote = fuzzyKey.substring(3,6);
-                 const baseData = s[base + 'USD'] || s[base];
-                 const quoteData = s[quote + 'USD'] || s[quote];
-                 
-                 if (baseData || quoteData) {
-                    const bL = baseData?.longPct ?? 50;
-                    const qL = quoteData?.longPct ?? 50;
-                    // Logic: Base Strength - Quote Strength (Synthesized institutional flow)
-                    const synthLong = (bL + (100 - qL)) / 2; 
-                    matchedData = { 
-                      longPct: synthLong, 
-                      shortPct: 100 - synthLong,
-                      changeLong: (baseData?.changeLong || 0) - (quoteData?.changeShort || 0),
-                      source: 'Reaper Neural Synthesis (Derived)'
-                    };
-                 }
+              // Neural Synthesis Bridge v22.0 - Cross-Pair Intelligence (Derived Soul)
+              if (!matchedData && fuzzyKey.length === 6 && neuralData?.sentiment) {
+                  const s = neuralData.sentiment;
+                  const base = fuzzyKey.substring(0,3);
+                  const quote = fuzzyKey.substring(3,6);
+                  
+                  const getPulse = (ccy: string) => {
+                      const direct = s[ccy + 'USD'] || s[ccy];
+                      if (direct) return direct.longPct;
+                      const inverted = s['USD' + ccy];
+                      if (inverted) return 100 - inverted.longPct;
+                      return null;
+                  };
+
+                  const bL = getPulse(base);
+                  const qL = getPulse(quote);
+
+                  if (bL !== null || qL !== null) {
+                      const synthLong = ((bL ?? 50) + (100 - (qL ?? 50))) / 2;
+                      matchedData = { 
+                          longPct: synthLong, 
+                          shortPct: 100 - synthLong,
+                          source: 'Neural Synthesis'
+                      };
+                  }
               }
             }
 

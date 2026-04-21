@@ -79,21 +79,24 @@ export default async function handler(req, res) {
             });
 
             if (matches.length > 0) {
-                // Priority: 1. Recency, 2. TFF_COMB (The 'Real Deal' Protocol), 3. LEG_COMB, 4. TFF, 5. LEGACY
+                // Priority: 1. Institutional Tier (TFF/SUPP), 2. Recency, 3. Combined Logic
                 const match = matches.sort((a,b) => {
+                    // Tier 1: Prioritize Institutional Datasets (TFF/SUPP) over Legacy
+                    const institutionalTiers = ['TFF_COMB', 'TFF', 'SUPP'];
+                    const isAInst = institutionalTiers.includes(a._ds);
+                    const isBInst = institutionalTiers.includes(b._ds);
+                    if (isAInst && !isBInst) return -1;
+                    if (isBInst && !isAInst) return 1;
+
+                    // Tier 2: Recency within the same quality tier
                     const dateA = new Date(a.report_date_as_yyyy_mm_dd).getTime();
                     const dateB = new Date(b.report_date_as_yyyy_mm_dd).getTime();
                     if (dateB !== dateA) return dateB - dateA;
 
-                    const pMap = { 'TFF_COMB': 0, 'LEG_COMB': 1, 'TFF': 2, 'LEGACY': 3, 'SUPP': 4 };
+                    const pMap = { 'TFF_COMB': 0, 'SUPP': 1, 'TFF': 2, 'LEG_COMB': 3, 'LEGACY': 4 };
                     const pA = pMap[a._ds] ?? 10;
                     const pB = pMap[b._ds] ?? 10;
                     if (pA !== pB) return pA - pB;
-
-                    const nameA = (a.market_and_exchange_names || '').toUpperCase();
-                    const nameB = (b.market_and_exchange_names || '').toUpperCase();
-                    if (nameA.includes('COMBINED') && !nameB.includes('COMBINED')) return -1;
-                    if (nameB.includes('COMBINED') && !nameA.includes('COMBINED')) return 1;
                     
                     return parseFloat(b.open_interest_all || 0) - parseFloat(a.open_interest_all || 0);
                 })[0];

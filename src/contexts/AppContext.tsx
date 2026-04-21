@@ -363,6 +363,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             else dynamicBias = 'Very Bearish';
           }
 
+          const freshMarket = updates[a.id] || marketData[a.id];
+          const priceTrend = freshMarket?.change24h || 0;
+          let calculatedTrend = 0;
+          if (priceTrend >= 0.5) calculatedTrend = 2; // Strong Rally
+          else if (priceTrend >= 0.1) calculatedTrend = 1; // Bullish Momentum
+          else if (priceTrend <= -0.5) calculatedTrend = -2; // Strong Dump
+          else if (priceTrend <= -0.1) calculatedTrend = -1; // Bearish Pressure
+
           return {
             ...a, ...scores,
             retailLong: 50, retailShort: 50, // Defaulted to neutral (Purged Retail)
@@ -372,6 +380,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             cot: cI,
             score: newTotals,
             bias: dynamicBias,
+            trend: calculatedTrend,
             source: (neuralData[a.id.toUpperCase()]?.source) || a.source,
             isSentimentDerived: false
           };

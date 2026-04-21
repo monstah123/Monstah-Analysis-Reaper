@@ -37,13 +37,26 @@ export default async function handler(req, res) {
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
 
     try {
-        // Institutional Temporal Matrix (Master 2026 Sync)
-        const recentDate = '2026-01-01T00:00:00.000';
-        
-        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
-            axios.get(`https://publicreporting.cftc.gov/resource/udgc-27he.json?$where=report_date_as_yyyy_mm_dd >= '${recentDate}'&$order=report_date_as_yyyy_mm_dd DESC&$limit=5000`),
-            axios.get(`https://publicreporting.cftc.gov/resource/srt6-5q2f.json?$where=report_date_as_yyyy_mm_dd >= '${recentDate}'&$order=report_date_as_yyyy_mm_dd DESC&$limit=5000`),
-            axios.get(`https://publicreporting.cftc.gov/resource/72hh-3qpy.json?$where=report_date_as_yyyy_mm_dd >= '${recentDate}'&$order=report_date_as_yyyy_mm_dd DESC&$limit=5000`),
+        // Master Consolidated Infrastructure (2026 Protocol)
+        const fetchSet = async (id) => {
+            try {
+                const url = `https://publicreporting.cftc.gov/resource/${id}.json`;
+                const params = {
+                    $limit: 10000,
+                    $order: 'report_date_as_yyyy_mm_dd DESC'
+                };
+                const res = await axios.get(url, { params });
+                return Array.isArray(res.data) ? res.data : [];
+            } catch (e) {
+                console.error(`[Pipeline Error] Fetch failed for ${id}:`, e.message);
+                return [];
+            }
+        };
+
+        const [tffData, legacyData, disaggData, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.all([
+            fetchSet('udgc-27he'), // TFF
+            fetchSet('srt6-5q2f'), // Legacy
+            fetchSet('72hh-3qpy'), // Disagg
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -53,10 +66,11 @@ export default async function handler(req, res) {
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
         ]);
 
-        let rawData = [];
-        if (resTFF.status === 'fulfilled' && Array.isArray(resTFF.value.data)) rawData.push(...resTFF.value.data.map(r => ({ ...r, _ds: 'TFF' })));
-        if (resLegacy.status === 'fulfilled' && Array.isArray(resLegacy.value.data)) rawData.push(...resLegacy.value.data.map(r => ({ ...r, _ds: 'LEGACY' })));
-        if (resSupp.status === 'fulfilled' && Array.isArray(resSupp.value.data)) rawData.push(...resSupp.value.data.map(r => ({ ...r, _ds: 'DISAGG' })));
+        const rawData = [
+            ...tffData.map(r => ({ ...r, _ds: 'TFF' })),
+            ...legacyData.map(r => ({ ...r, _ds: 'LEGACY' })),
+            ...disaggData.map(r => ({ ...r, _ds: 'DISAGG' }))
+        ];
 
         const results = {};
         
@@ -77,30 +91,37 @@ export default async function handler(req, res) {
                     return lenA - lenB;
                 })[0];
 
-                const getVal = (fields) => {
-                    for (const f of fields) {
-                        if (match[f] !== undefined && match[f] !== null && match[f] !== '') {
-                            return parseInt(match[f]);
+                // Greedy Extraction: Prioritize Asset Manager > Managed Money > Lev Money > Non-Comm
+                const getVal = (patterns) => {
+                    for (const p of patterns) {
+                        for (const key of Object.keys(match)) {
+                            if (key.includes(p) && (key.includes('_long') || key.includes('_short'))) {
+                                // Double check if it's the right direction
+                                if (patterns === longPatterns && (key.includes('_short'))) continue;
+                                if (patterns === shortPatterns && (key.includes('_long'))) continue;
+                                return parseInt(match[key] || 0);
+                            }
                         }
                     }
                     return 0;
                 };
 
-                const longFields = [
-                    'asset_mgr_positions_long', 'asset_mgr_positions_long_all', 'asset_mgr_long_all',
-                    'managed_money_positions_long_all', 'm_money_positions_long_all', 'managed_money_long_all',
-                    'lev_money_positions_long', 'lev_money_positions_long_all', 'lev_money_long_all',
-                    'noncomm_positions_long_all', 'noncomm_long_all'
-                ];
-                const shortFields = [
-                    'asset_mgr_positions_short', 'asset_mgr_positions_short_all', 'asset_mgr_short_all',
-                    'managed_money_positions_short_all', 'm_money_positions_short_all', 'managed_money_short_all',
-                    'lev_money_positions_short', 'lev_money_positions_short_all', 'lev_money_short_all',
-                    'noncomm_positions_short_all', 'noncomm_short_all'
-                ];
+                const longPatterns = ['asset_mgr', 'm_money', 'managed_money', 'lev_money', 'noncomm'];
+                const shortPatterns = ['asset_mgr', 'm_money', 'managed_money', 'lev_money', 'noncomm'];
 
-                let long = getVal(longFields);
-                let short = getVal(shortFields);
+                const long = getVal(longPatterns);
+                // Special check for short patterns to avoid using long keys
+                const getShortVal = (patterns) => {
+                    for (const p of patterns) {
+                        for (const key of Object.keys(match)) {
+                            if (key.includes(p) && (key.includes('_short'))) {
+                                return parseInt(match[key] || 0);
+                            }
+                        }
+                    }
+                    return 0;
+                };
+                const short = getShortVal(shortPatterns);
                 
                 const total = long + short;
                 let longPct = total > 0 ? (long / total) * 100 : 50;

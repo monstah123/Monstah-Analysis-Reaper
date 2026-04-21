@@ -267,14 +267,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           } else if (a.id === 'GBPJPY') {
             // --- GBP/JPY Neural Synthesis (Surgical Cross-Pair Derivation) ---
             // No direct CFTC contract exists for GBP/JPY.
-            // Synthesize from verified GBP/USD (long bias) and USD/JPY (inverted) prints.
-            const gbpData = neuralData['GBPUSD'];
-            const jpyData = neuralData['USDJPY'];
-            if (gbpData || jpyData) {
-              const gbpLong = gbpData?.longPct ?? 50;
-              const jpyLong = jpyData?.longPct ?? 50;
-              // GBP/JPY = long GBP + short JPY = gbpLong + (100 - jpyLong)
-              const synthLong = (gbpLong + (100 - jpyLong)) / 2;
+            // Synthesize from verified GBP/USD and USD/JPY institutional prints.
+            // Fallback to stored asset state when API cycle misses financial datasets.
+            const gbpNeural = neuralData['GBPUSD'];
+            const jpyNeural = neuralData['USDJPY'];
+            const gbpAsset = prevAssets.find(x => x.id === 'GBPUSD');
+            const jpyAsset = prevAssets.find(x => x.id === 'USDJPY');
+            const gbpLong = gbpNeural?.longPct ?? gbpAsset?.longPct ?? 50;
+            const jpyLong = jpyNeural?.longPct ?? jpyAsset?.longPct ?? 50;
+            // USDJPY longPct is already inverted by the API, so average directly
+            if (gbpLong !== 50 || jpyLong !== 50) {
+              const synthLong = (gbpLong + jpyLong) / 2;
               cL = synthLong;
               cS = 100 - synthLong;
               cPct = synthLong;

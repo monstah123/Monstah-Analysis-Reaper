@@ -49,11 +49,12 @@ export default async function handler(req, res) {
             'GOLD', 'SILVER', 'COPPER', 'BITCOIN', 'ETHER'
         ];
         const commodityKeywords = ['BRENT', 'CRUDE OIL', 'WTI'];
+        const allKeywords = [...financialKeywords, ...commodityKeywords];
 
         const [financials, legacy, physical] = await Promise.all([
-            fetchTargeted('udgc-27he', financialKeywords), // TFF
-            fetchTargeted('srt6-5q2f', financialKeywords), // Legacy
-            fetchTargeted('kh3c-gbw2', commodityKeywords)  // Disagg Physical
+            fetchTargeted('udgc-27he', financialKeywords), // TFF (Financial Futures)
+            fetchTargeted('srt6-5q2f', allKeywords),       // Legacy (includes noncomm for oil)
+            fetchTargeted('kh3c-gbw2', commodityKeywords)  // Disagg Physical (fallback)
         ]);
 
         const rawData = [...financials, ...legacy, ...physical];

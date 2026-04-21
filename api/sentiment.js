@@ -45,15 +45,15 @@ export default async function handler(req, res) {
                     $limit: 10000,
                     $order: 'report_date_as_yyyy_mm_dd DESC'
                 };
-                const res = await axios.get(url, { params });
+                const res = await axios.get(url, { params, timeout: 8000 });
                 return Array.isArray(res.data) ? res.data : [];
             } catch (e) {
-                console.error(`[Pipeline Error] Fetch failed for ${id}:`, e.message);
+                console.error(`[Pipeline Warning] Dataset ${id} unreachable:`, e.message);
                 return [];
             }
         };
 
-        const [tffData, legacyData, disaggData, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.all([
+        const [resTFF, resLegacy, resSupp, resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30] = await Promise.allSettled([
             fetchSet('udgc-27he'), // TFF
             fetchSet('srt6-5q2f'), // Legacy
             fetchSet('72hh-3qpy'), // Disagg
@@ -65,6 +65,10 @@ export default async function handler(req, res) {
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS30&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`)
         ]);
+
+        const tffData = resTFF.status === 'fulfilled' ? resTFF.value : [];
+        const legacyData = resLegacy.status === 'fulfilled' ? resLegacy.value : [];
+        const disaggData = resSupp.status === 'fulfilled' ? resSupp.value : [];
 
         const rawData = [
             ...tffData.map(r => ({ ...r, _ds: 'TFF' })),
@@ -91,14 +95,10 @@ export default async function handler(req, res) {
                     return lenA - lenB;
                 })[0];
 
-                // Greedy Extraction: Prioritize Asset Manager > Managed Money > Lev Money > Non-Comm
-                const getVal = (patterns) => {
+                const getVal = (patterns, direction) => {
                     for (const p of patterns) {
                         for (const key of Object.keys(match)) {
-                            if (key.includes(p) && (key.includes('_long') || key.includes('_short'))) {
-                                // Double check if it's the right direction
-                                if (patterns === longPatterns && (key.includes('_short'))) continue;
-                                if (patterns === shortPatterns && (key.includes('_long'))) continue;
+                            if (key.includes(p) && key.includes(`_${direction}`)) {
                                 return parseInt(match[key] || 0);
                             }
                         }
@@ -109,19 +109,8 @@ export default async function handler(req, res) {
                 const longPatterns = ['asset_mgr', 'm_money', 'managed_money', 'lev_money', 'noncomm'];
                 const shortPatterns = ['asset_mgr', 'm_money', 'managed_money', 'lev_money', 'noncomm'];
 
-                const long = getVal(longPatterns);
-                // Special check for short patterns to avoid using long keys
-                const getShortVal = (patterns) => {
-                    for (const p of patterns) {
-                        for (const key of Object.keys(match)) {
-                            if (key.includes(p) && (key.includes('_short'))) {
-                                return parseInt(match[key] || 0);
-                            }
-                        }
-                    }
-                    return 0;
-                };
-                const short = getShortVal(shortPatterns);
+                const long = getVal(longPatterns, 'long');
+                const short = getVal(shortPatterns, 'short');
                 
                 const total = long + short;
                 let longPct = total > 0 ? (long / total) * 100 : 50;

@@ -222,6 +222,46 @@ const TrainingModules = [
         </div>
       </div>
     )
+  },
+  {
+    id: 'heatmap',
+    title: '🌡️ Module 8: US Economic Heatmap',
+    subtitle: 'Tracking the Institutional Pulse of the US Dollar',
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ padding: '1.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#3b82f6' }}>🏛️ THE FRED INTELLIGENCE ENGINE</h3>
+           <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+             The **Economic Heatmap** is the terminal's macro brain. It pulls live, raw data directly from the Federal Reserve Economic Data (FRED) database, ensuring 100% authenticity without any "ghost" data or manual entries.
+           </p>
+           <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '0.5rem' }}><strong>CORE MACRO DRIVERS:</strong></div>
+              <ul style={{ fontSize: '0.8rem', color: '#94a3b8', paddingLeft: '1.2rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                 <li><strong style={{ color: '#60a5fa' }}>CPI/PCE:</strong> Inflation metrics. Higher inflation = Hawkish Fed = Bullish USD.</li>
+                 <li><strong style={{ color: '#fbbf24' }}>NFP/CLAIMS:</strong> Labor market health. Strong jobs = Resilient economy = Bullish USD.</li>
+                 <li><strong style={{ color: '#ef4444' }}>UNRATE:</strong> Unemployment. Rising unemployment = Economic decay = Bearish USD.</li>
+              </ul>
+           </div>
+        </div>
+
+        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', borderLeft: '4px solid #8b5cf6' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#8b5cf6' }}>THE BIAS VECTOR GAUGES</h3>
+           <p style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.6 }}>
+             At the bottom of the heatmap, you'll find the **USD** and **Stocks** Bias Vectors. These are not just visual flair—they are mathematical syntheses of every macro indicator in the table.
+           </p>
+           <div className="masterclass-inner-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ background: 'rgba(139, 92, 246, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                 <strong style={{ color: '#8b5cf6', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>THE SWEEP LOGIC</strong>
+                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>Gauges start at 50% (Neutral). A sweep to the <strong>Right (Blue)</strong> indicates institutional macro strength. A sweep to the <strong>Left (Red)</strong> indicates macro decay.</p>
+              </div>
+              <div style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                 <strong style={{ color: '#f59e0b', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>TRADING CONFLUENCE</strong>
+                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>When the USD Gauge is {'>'} 70% and the COT Matrix flags a "Long Squeeze," you have high-conviction institutional alignment.</p>
+              </div>
+           </div>
+        </div>
+      </div>
+    )
   }
 ];
 

@@ -182,6 +182,46 @@ const TrainingModules = [
         </div>
       </div>
     )
+  },
+  {
+    id: 'performance',
+    title: '📊 Module 7: 1-Day Relative Performance',
+    subtitle: 'Identifying Global Strength & Weakness',
+    content: (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{ padding: '1.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#3b82f6' }}>⚡ THE CURRENCY POWER GRID</h3>
+           <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+             The **Relative Performance [USD]** chart on the dashboard is your bird's eye view of the entire FX market. It measures how every major currency is performing against the US Dollar over a rolling 24-hour period.
+           </p>
+           <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '0.5rem' }}><strong>HOW TO READ THE BARS:</strong></div>
+              <ul style={{ fontSize: '0.8rem', color: '#94a3b8', paddingLeft: '1.2rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                 <li><strong style={{ color: '#22c55e' }}>GREEN BARS (Above 0%):</strong> Currencies currently stronger than the USD.</li>
+                 <li><strong style={{ color: '#ef4444' }}>RED BARS (Below 0%):</strong> Currencies currently weaker than the USD.</li>
+                 <li><strong style={{ color: '#3b82f6' }}>BLUE BAR (USD):</strong> The fixed 0% baseline benchmark.</li>
+              </ul>
+           </div>
+        </div>
+
+        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#10b981' }}>EXECUTION STRATEGY</h3>
+           <p style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.6 }}>
+             Professional traders use this to find the "Path of Least Resistance."
+           </p>
+           <div className="masterclass-inner-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                 <strong style={{ color: '#10b981', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>THE POWER PLAY</strong>
+                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>Buy the <strong>Strongest</strong> (Far Left) and Sell the <strong>Weakest</strong> (Far Right). This pairs the highest momentum against the highest decay.</p>
+              </div>
+              <div style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                 <strong style={{ color: '#f59e0b', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem' }}>THE REVERSAL</strong>
+                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>If a currency is {'>'} 1.5% away from 0, it is overextended. Look for the "Reaper Squeeze" to flag a potential snap-back trade.</p>
+              </div>
+           </div>
+        </div>
+      </div>
+    )
   }
 ];
 

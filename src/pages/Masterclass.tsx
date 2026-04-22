@@ -711,9 +711,19 @@ const Masterclass: React.FC = () => {
   const { setActiveView } = useApp();
   const [activeModule, setActiveModule] = useState<number>(0);
   const [mobileShowContent, setMobileShowContent] = useState<boolean>(false);
+  const contentTopRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll to top of content whenever module changes
+  React.useEffect(() => {
+    if (contentTopRef.current) {
+      contentTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeModule, mobileShowContent]);
 
   return (
-    <div className="page-container" style={{ paddingBottom: '5rem' }}>
+    <div ref={contentTopRef} className="page-container" style={{ paddingBottom: '5rem' }}>
       <header className="header" style={{ marginBottom: '2rem' }}>
         <div className="header-title">
           <h1>🎓 Institutional Masterclass</h1>

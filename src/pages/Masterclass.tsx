@@ -493,7 +493,7 @@ const TrainingModules = [
              {[
                { col: 'Actual', color: '#22c55e', desc: 'The number just released. Compare against Forecast immediately.' },
                { col: 'Forecast', color: '#3b82f6', desc: 'Market consensus expectation. This is already "priced in."' },
-               { col: 'Previous', color: '#94a3b8', desc: 'Last period's print. Useful to judge trend direction of the economic series.' },
+               { col: 'Previous', color: '#94a3b8', desc: "Last period's print. Useful to judge trend direction of the economic series." },
              ].map(c => (
                <div key={c.col} style={{ display: 'flex', gap: '1rem', padding: '0.6rem 0.75rem', background: 'rgba(0,0,0,0.15)', borderRadius: '6px' }}>
                  <strong style={{ color: c.color, minWidth: '80px', fontSize: '0.8rem' }}>{c.col}</strong>

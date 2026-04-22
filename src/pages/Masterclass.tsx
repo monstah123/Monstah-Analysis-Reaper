@@ -710,6 +710,7 @@ const TrainingModules = [
 const Masterclass: React.FC = () => {
   const { setActiveView } = useApp();
   const [activeModule, setActiveModule] = useState<number>(0);
+  const [mobileShowContent, setMobileShowContent] = useState<boolean>(false);
 
   return (
     <div className="page-container" style={{ paddingBottom: '5rem' }}>
@@ -744,25 +745,69 @@ const Masterclass: React.FC = () => {
           .masterclass-header {
             margin-bottom: 0.75rem !important;
           }
+          .masterclass-nav-panel {
+            display: block;
+          }
+          .masterclass-nav-panel.hidden-mobile {
+            display: none;
+          }
+          .masterclass-content-panel {
+            display: none;
+          }
+          .masterclass-content-panel.visible-mobile {
+            display: flex;
+          }
+        }
+        @media (min-width: 769px) {
+          .masterclass-nav-panel,
+          .masterclass-content-panel {
+            display: block;
+          }
+          .masterclass-content-panel {
+            display: flex;
+          }
+        }
+        .module-nav-item:hover {
+          background: rgba(99, 102, 241, 0.1) !important;
+          border-color: rgba(99, 102, 241, 0.4) !important;
+        }
+        .module-nav-item:hover h3 {
+          color: #fff !important;
+        }
+        .back-btn {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .back-btn {
+            display: flex;
+          }
         }
       `}</style>
       <div className="masterclass-layout">
         {/* Navigation */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className={`masterclass-nav-panel${mobileShowContent ? ' hidden-mobile' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {TrainingModules.map((m, idx) => (
             <div 
               key={m.id}
-              onClick={() => setActiveModule(idx)}
+              className="module-nav-item"
+              onClick={() => {
+                setActiveModule(idx);
+                setMobileShowContent(true);
+              }}
               style={{
                 padding: '1.25rem',
                 background: activeModule === idx ? 'rgba(99, 102, 241, 0.15)' : 'rgba(30, 41, 59, 0.4)',
                 border: activeModule === idx ? '1px solid #6366f1' : '1px solid rgba(255,255,255,0.05)',
                 borderRadius: '12px',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
               }}
             >
               <h3 style={{ fontSize: '0.9rem', color: activeModule === idx ? '#fff' : '#94a3b8', margin: 0 }}>{m.title}</h3>
+              <span style={{ fontSize: '0.75rem', color: '#6366f1', opacity: 0.7 }}>›</span>
             </div>
           ))}
           
@@ -773,7 +818,28 @@ const Masterclass: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="settings-card masterclass-content" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 41, 0.8)', minHeight: '600px' }}>
+        <div className={`settings-card masterclass-content masterclass-content-panel${mobileShowContent ? ' visible-mobile' : ''}`} style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 41, 0.8)', minHeight: '600px' }}>
+           {/* Back button — mobile only */}
+           <button
+             className="back-btn"
+             onClick={() => setMobileShowContent(false)}
+             style={{
+               alignItems: 'center',
+               gap: '0.5rem',
+               background: 'rgba(99, 102, 241, 0.1)',
+               border: '1px solid rgba(99, 102, 241, 0.3)',
+               borderRadius: '10px',
+               color: '#818cf8',
+               fontSize: '0.8rem',
+               fontWeight: 800,
+               padding: '0.6rem 1rem',
+               cursor: 'pointer',
+               alignSelf: 'flex-start',
+               letterSpacing: '0.05em'
+             }}
+           >
+             ← All Modules
+           </button>
            <div>
               <div style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Reaper Academy • v15.0</div>
               <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem', color: '#fff' }}>{TrainingModules[activeModule].title}</h2>
@@ -788,14 +854,20 @@ const Masterclass: React.FC = () => {
               <button 
                 className="btn btn-secondary" 
                 disabled={activeModule === 0}
-                onClick={() => setActiveModule((prev: number) => prev - 1)}
+                onClick={() => {
+                 setActiveModule((prev: number) => prev - 1);
+                 setMobileShowContent(true);
+               }}
               >
                 Previous Module
               </button>
               {activeModule < TrainingModules.length - 1 ? (
                 <button 
                   className="btn btn-primary" 
-                  onClick={() => setActiveModule((prev: number) => prev + 1)}
+                  onClick={() => {
+                    setActiveModule((prev: number) => prev + 1);
+                    setMobileShowContent(true);
+                  }}
                   style={{ minWidth: '150px' }}
                 >
                   Continue →

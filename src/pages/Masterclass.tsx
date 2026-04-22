@@ -711,15 +711,19 @@ const Masterclass: React.FC = () => {
   const { setActiveView } = useApp();
   const [activeModule, setActiveModule] = useState<number>(0);
   const [mobileShowContent, setMobileShowContent] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
   const contentTopRef = React.useRef<HTMLDivElement>(null);
 
-  // Scroll to top of content whenever module changes
+  // Track mobile breakpoint
   React.useEffect(() => {
-    if (contentTopRef.current) {
-      contentTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Scroll to top whenever module changes or content panel opens
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeModule, mobileShowContent]);
 
   return (
@@ -794,8 +798,15 @@ const Masterclass: React.FC = () => {
         }
       `}</style>
       <div className="masterclass-layout">
-        {/* Navigation */}
-        <div className={`masterclass-nav-panel${mobileShowContent ? ' hidden-mobile' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Navigation — hidden on mobile when viewing content */}
+        <div
+          className="masterclass-nav-panel"
+          style={{
+            display: isMobile && mobileShowContent ? 'none' : 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}
+        >
           {TrainingModules.map((m, idx) => (
             <div 
               key={m.id}
@@ -827,8 +838,18 @@ const Masterclass: React.FC = () => {
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className={`settings-card masterclass-content masterclass-content-panel${mobileShowContent ? ' visible-mobile' : ''}`} style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', background: 'rgba(15, 23, 41, 0.8)', minHeight: '600px' }}>
+        {/* Content Area — hidden on mobile until module is tapped */}
+        <div
+          className="settings-card masterclass-content"
+          style={{
+            padding: '2.5rem',
+            display: isMobile && !mobileShowContent ? 'none' : 'flex',
+            flexDirection: 'column',
+            gap: '2rem',
+            background: 'rgba(15, 23, 41, 0.8)',
+            minHeight: '600px'
+          }}
+        >
            {/* Back button — mobile only */}
            <button
              className="back-btn"

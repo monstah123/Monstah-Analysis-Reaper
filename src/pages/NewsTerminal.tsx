@@ -17,7 +17,7 @@ const NewsTerminal: React.FC = () => {
       label: 'Schwab Network',
       icon: '📺',
       desc: 'Live markets, expert analysis, 24/7',
-      url: 'https://www.youtube.com/embed/8BNuc5DYG0M?si=slb2DoU0WHH80ZlE&autoplay=1&mute=1&rel=0&modestbranding=1',
+      url: 'https://www.youtube.com/embed/I9pAAFtdPv0?si=1XqDh7dmJ_HQ46oM&autoplay=1&mute=1&rel=0&modestbranding=1',
       type: 'youtube',
     },
     bloomberg: {

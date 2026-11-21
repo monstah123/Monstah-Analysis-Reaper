@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 
         const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30, resY3M] = await Promise.allSettled([
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=20`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2&units=pch`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -242,8 +242,8 @@ export default async function handler(req, res) {
             GDP: resGdp.status === 'fulfilled' && gdpObs.length > 1
                 ? +((Math.pow(parseFloat(gdpObs[0].value) / parseFloat(gdpObs[1].value), 4) - 1) * 100).toFixed(2)
                 : null,
-            CPI: resCpi.status === 'fulfilled' && cpiObs.length > 12
-                ? +((parseFloat(cpiObs[0].value) / parseFloat(cpiObs[12].value) - 1) * 100).toFixed(2)
+            CPI: resCpi.status === 'fulfilled' && cpiObs.length > 0
+                ? +parseFloat(cpiObs[0].value).toFixed(2)
                 : null,
             FedRate: resFed.status === 'fulfilled' && fedObs.length > 0 ? parseFloat(fedObs[0].value) : null,
             NFP: resNfp.status === 'fulfilled' && nfpObs.length > 1 

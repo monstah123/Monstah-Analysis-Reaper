@@ -15,11 +15,11 @@ const Fundamental: React.FC = () => {
       if (val >= 0) return { text: 'Slowdown', color: '#f59e0b' };
       return { text: 'Contraction', color: '#ef4444' };
     }
-    if (label === 'Inflation (CPI)') {
-      if (val >= 3.5) return { text: 'Hot', color: '#ef4444' };
-      if (val >= 2.5) return { text: 'Sticky', color: '#f59e0b' };
-      if (val >= 1.8) return { text: 'Target', color: '#22c55e' };
-      return { text: 'Disinflationary', color: '#3b82f6' };
+    if (label === 'Inflation (CPI MoM)') {
+      if (val >= 0.5) return { text: 'Hot', color: '#ef4444' };
+      if (val >= 0.3) return { text: 'Elevated', color: '#f59e0b' };
+      if (val >= 0.1) return { text: 'Moderate', color: '#22c55e' };
+      return { text: 'Soft', color: '#3b82f6' };
     }
     if (label === 'Fed Funds Rate') {
       if (val >= 5.0) return { text: 'Restrictive', color: '#ef4444' };
@@ -42,7 +42,7 @@ const Fundamental: React.FC = () => {
 
   const pillars = [
     { label: 'US Real GDP', val: macroData?.GDP ?? null, unit: '%', icon: '🏛️' },
-    { label: 'Inflation (CPI)', val: macroData?.CPI ?? null, unit: '%', icon: '⛽' },
+    { label: 'Inflation (CPI MoM)', val: macroData?.CPI ?? null, unit: '%', icon: '⛽' },
     { label: 'Fed Funds Rate', val: macroData?.FedRate ?? null, unit: '%', icon: '♟️' },
     { label: 'Non-Farm Payrolls', val: macroData?.NFP ?? null, unit: 'k', icon: '👷' },
   ];
@@ -65,7 +65,11 @@ const Fundamental: React.FC = () => {
               <div className="stat-body">
                 <span className="stat-label">{p.label}</span>
                 <span className="stat-value" style={{ color: p.val === null ? '#3f3f46' : status.color }}>
-                  {p.val === null ? 'SYNC...' : `${p.val > 0 && (p.label === 'US Real GDP' || p.label === 'Non-Farm Payrolls') ? '+' : ''}${p.val}${p.unit}`}
+                  {p.val === null
+                    ? 'SYNC...'
+                    : p.label === 'Inflation (CPI MoM)'
+                      ? `${p.val > 0 ? '+' : ''}${p.val.toFixed(1)}${p.unit}`
+                      : `${p.val > 0 && (p.label === 'US Real GDP' || p.label === 'Non-Farm Payrolls') ? '+' : ''}${p.val}${p.unit}`}
                 </span>
                 <span className="stat-sub" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 700, color: status.color }}>
                   {status.text}

@@ -261,7 +261,9 @@ async function getMacro() {
         GDP: gdpRes.status === 'fulfilled' && gdpObs.length > 1
             ? +((Math.pow(parseFloat(gdpObs[0].value) / parseFloat(gdpObs[1].value), 4) - 1) * 100).toFixed(2)
             : null,
-        CPI: cpiRes.status === 'fulfilled' && cpiObs.length > 0 ? parseFloat(cpiObs[0].value) : null,
+        CPI: cpiRes.status === 'fulfilled' && cpiObs.length > 0
+            ? +parseFloat(cpiObs[0].value).toFixed(2)
+            : null,
         FedRate: fedRes.status === 'fulfilled' && fedObs.length > 0 ? parseFloat(fedObs[0].value) : null,
         NFP: nfpRes.status === 'fulfilled' && nfpObs.length > 1 ? parseFloat(nfpObs[0].value) - parseFloat(nfpObs[1].value) : null,
         yields: {

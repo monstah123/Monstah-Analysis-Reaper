@@ -24,7 +24,9 @@ export default async function handler(req, res) {
         'USDCAD': { id: ['CANADIAN DOLLAR'], category: 'Currency' },
         'USDCHF': { id: ['SWISS FRANC'], category: 'Currency' },
         'BITCOIN': { id: ['BITCOIN'], category: 'Crypto' },
-        'ETHEREUM': { id: ['ETHER', 'ETHEREUM'], category: 'Crypto' }
+        'ETHEREUM': { id: ['ETHER', 'ETHEREUM'], category: 'Crypto' },
+        'EURUSD': { id: ['EURO FX'], category: 'Currency' },
+        'SOLANA': { id: ['SOL - ', 'SOLANA'], category: 'Crypto' }
     };
 
     const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY || '';
@@ -64,7 +66,7 @@ export default async function handler(req, res) {
 
         const [resGdp, resCpi, resFed, resNfp, resY2, resY10, resY30, resY3M] = await Promise.allSettled([
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
-            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=13`),
+            axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${fredKey}&file_type=json&sort_order=desc&limit=20`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=PAYEMS&api_key=${fredKey}&file_type=json&sort_order=desc&limit=2`),
             axios.get(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`),
@@ -219,16 +221,33 @@ export default async function handler(req, res) {
             };
         }
 
+        const nzd = results['NZDUSD'];
+        if (gbp && nzd) {
+            const synthLong = +((gbp.longPct + nzd.longPct) / 2).toFixed(1);
+            results['GBPNZD'] = {
+                longPct: synthLong,
+                shortPct: +(100 - synthLong).toFixed(1),
+                source: 'Institutional Cross Synthesis'
+            };
+        }
+
+        const filterValid = (obs) => (obs || []).filter(o => o.value !== '.' && o.value !== null && o.value !== undefined);
+
+        const gdpObs = filterValid(resGdp.value?.data?.observations);
+        const cpiObs = filterValid(resCpi.value?.data?.observations);
+        const nfpObs = filterValid(resNfp.value?.data?.observations);
+        const fedObs = filterValid(resFed.value?.data?.observations);
+
         const macro = {
-            GDP: resGdp.status === 'fulfilled' && resGdp.value.data.observations.length > 1
-                ? +((Math.pow(parseFloat(resGdp.value.data.observations[0].value) / parseFloat(resGdp.value.data.observations[1].value), 4) - 1) * 100).toFixed(2)
+            GDP: resGdp.status === 'fulfilled' && gdpObs.length > 1
+                ? +((Math.pow(parseFloat(gdpObs[0].value) / parseFloat(gdpObs[1].value), 4) - 1) * 100).toFixed(2)
                 : null,
-            CPI: resCpi.status === 'fulfilled' && resCpi.value.data.observations.length > 12
-                ? +((parseFloat(resCpi.value.data.observations[0].value) / parseFloat(resCpi.value.data.observations[12].value) - 1) * 100).toFixed(2)
+            CPI: resCpi.status === 'fulfilled' && cpiObs.length > 12
+                ? +((parseFloat(cpiObs[0].value) / parseFloat(cpiObs[12].value) - 1) * 100).toFixed(2)
                 : null,
-            FedRate: resFed.status === 'fulfilled' ? parseFloat(resFed.value.data.observations[0]?.value) : null,
-            NFP: resNfp.status === 'fulfilled' && resNfp.value.data.observations.length > 1 
-                ? parseFloat(resNfp.value.data.observations[0].value) - parseFloat(resNfp.value.data.observations[1].value)
+            FedRate: resFed.status === 'fulfilled' && fedObs.length > 0 ? parseFloat(fedObs[0].value) : null,
+            NFP: resNfp.status === 'fulfilled' && nfpObs.length > 1 
+                ? parseFloat(nfpObs[0].value) - parseFloat(nfpObs[1].value)
                 : null
         };
 

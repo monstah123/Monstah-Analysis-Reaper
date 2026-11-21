@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     const { model, messages, stream, baseUrl: clientBaseUrl } = req.body;
     
     // Auth Priority: Header Key > Env DeepSeek > Env OpenAI
-    const activeKey = req.headers['x-api-key'] || process.env.VITE_OPENAI_KEY || process.env.VITE_DEEPSEEK_API_KEY;
+    const activeKey = req.headers['x-api-key'] || process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY;
     const activeBase = clientBaseUrl || 'https://api.openai.com/v1';
 
     if (!activeKey) {

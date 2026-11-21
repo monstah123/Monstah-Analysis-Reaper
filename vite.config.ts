@@ -5,9 +5,22 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: 'localhost',
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'https://monstah-analysis-reaper.vercel.app',
+        target: 'http://localhost:4318',
+        changeOrigin: true,
+      }
+    }
+  },
+  preview: {
+    host: 'localhost',
+    strictPort: true,
+    port: 4178,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4318',
         changeOrigin: true,
       }
     }

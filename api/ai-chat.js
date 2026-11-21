@@ -145,7 +145,7 @@ async function fetchLiveCOT() {
 
 // ─── LIVE MACRO FETCHER ───────────────────────────────────────────────────────
 async function fetchLiveMacro() {
-  const fredKey = process.env.FRED_KEY || 'a511ff61c8ca4177e733079ebec436d3';
+  const fredKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY;
 
   const getFred = async (series, units = 'lin') => {
     const url =
@@ -239,7 +239,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const { messages } = req.body;
-  const apiKey = process.env.VITE_DEEPSEEK_API_KEY || process.env.DEEPSEEK_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   const baseUrl = 'https://api.deepseek.com/v1';
 
   if (!apiKey) {

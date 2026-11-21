@@ -16,8 +16,10 @@ const COTDeepDive: React.FC = () => {
       
       // Data Integrity Check: If total is 0, it means the Institutional feed hasn't mapped this asset yet.
       // We check a.isSentimentDerived because news analytics assets won't have cLong/cShort counts.
-      const isSyncPending = total === 0 && !a.isSentimentDerived;
-      const longPct = !isSyncPending ? Math.round((cLong / total) * 100) : 50;
+      const hasLiveSentiment = typeof a.longPct === 'number' && (a.source !== undefined || total > 0);
+      const isSyncPending = !hasLiveSentiment && !a.isSentimentDerived;
+      const ratioPct = total > 0 ? (cLong / total) * 100 : 50;
+      const longPct = isSyncPending ? 50 : Math.round(a.source ? (a.longPct ?? ratioPct) : ratioPct);
       
       // Conviction Logic: Calculate the extremity of the smart money positioning
       const conviction = isSyncPending ? 0 : Math.min(100, Math.abs(longPct - 50) * 2.5);

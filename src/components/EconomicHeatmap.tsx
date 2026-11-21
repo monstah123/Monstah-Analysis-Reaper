@@ -7,7 +7,7 @@ import { useApp } from '../contexts/AppContext';
 const MACRO_INDICATORS = [
   { id: 'GDP', name: 'GDP Growth QoQ', seriesId: 'A191RL1Q225SBEA', units: 'lin', format: '%', usdPositive: true, stocksPositive: true },
   { id: 'RETAIL', name: 'Retail Sales MoM', seriesId: 'RSAFS', units: 'pch', format: '%', usdPositive: true, stocksPositive: true },
-  { id: 'CPI', name: 'CPI YoY', seriesId: 'CPIAUCSL', units: 'pc1', format: '%', usdPositive: true, stocksPositive: false },
+  { id: 'CPI', name: 'CPI MoM', seriesId: 'CPIAUCSL', units: 'pch', format: '%', usdPositive: true, stocksPositive: false },
   { id: 'PPI', name: 'PPI YoY', seriesId: 'PPIACO', units: 'pc1', format: '%', usdPositive: true, stocksPositive: false },
   { id: 'PCE', name: 'PCE YoY', seriesId: 'PCEPI', units: 'pc1', format: '%', usdPositive: true, stocksPositive: false },
   { id: 'WAGES', name: 'Wage Growth YoY', seriesId: 'CES0500000003', units: 'pc1', format: '%', usdPositive: true, stocksPositive: false },

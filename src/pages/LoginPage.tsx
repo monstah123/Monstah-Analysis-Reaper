@@ -2,7 +2,9 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
-  const { signInWithGoogle, loading } = useAuth();
+  const { signInWithGoogle, loading, signInError } = useAuth();
+
+  console.log('[LoginPage] Rendering, loading:', loading);
 
   return (
     <div className="login-page">
@@ -59,6 +61,8 @@ const LoginPage: React.FC = () => {
           </svg>
           {loading ? 'Connecting…' : 'Continue with Google'}
         </button>
+
+        {signInError && <p className="login-error" role="alert">{signInError}</p>}
 
         <p className="login-terms">
           By signing in, you agree to our Terms of Service. Your data is stored securely and never sold.

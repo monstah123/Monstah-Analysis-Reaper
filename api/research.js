@@ -23,8 +23,8 @@ export default async function handler(req, res) {
     let finalAnswer = "Analyzing raw institutional data...";
 
     // 2. Intelligent Extraction to determine Institutional Bias & Summary
-    const aiKey = req.headers['x-api-key'] || process.env.VITE_OPENAI_KEY || process.env.VITE_DEEPSEEK_API_KEY;
-    const isDeepSeek = !req.headers['x-api-key'] && !process.env.VITE_OPENAI_KEY;
+    const aiKey = req.headers['x-api-key'] || process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY;
+    const isDeepSeek = !req.headers['x-api-key'] && Boolean(process.env.DEEPSEEK_API_KEY) && !process.env.OPENAI_API_KEY;
     const aiUrl = isDeepSeek ? 'https://api.deepseek.com/chat/completions' : 'https://api.openai.com/v1/chat/completions';
 
     if (aiKey && rawText) {

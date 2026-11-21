@@ -19,8 +19,16 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app  = initializeApp(firebaseConfig);
+console.log('[Firebase] Config:', { ...firebaseConfig, apiKey: firebaseConfig.apiKey?.slice(0, 10) + '...' });
 
-export const auth     = getAuth(app);
-export const db       = getFirestore(app);
+if (!firebaseConfig.apiKey) {
+  console.error('[Firebase] Missing API key - check .env.local');
+}
+
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 export const provider = new GoogleAuthProvider();
+
+console.log('[Firebase] Initialized:', app.name, 'projectId:', app.options.projectId);

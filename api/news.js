@@ -18,6 +18,28 @@ function decodeEntities(text) {
     .replace(/&nbsp;/g, ' ');
 }
 
+function classifyHeadline(title) {
+  const text = title.toLowerCase();
+  const bullishTerms = [
+    'bullish', 'positive', 'rise', 'rises', 'rising', 'gain', 'gains', 'surge',
+    'surges', 'jump', 'jumps', 'strong', 'growth', 'rally', 'rallying',
+    'rebound', 'recover', 'recovery', 'record high', 'beats', 'beat estimates',
+    'outlook raised', 'rate cut', 'easing', 'stimulus', 'boost', 'advance', 'soar', 'soars'
+  ];
+  const bearishTerms = [
+    'bearish', 'negative', 'fall', 'falls', 'falling', 'down', 'drop', 'drops',
+    'plunge', 'plunges', 'loss', 'losses', 'weak', 'weakness', 'crisis', 'crash',
+    'selloff', 'sell-off', 'decline', 'declines', 'recession', 'tariff', 'tariffs',
+    'rate hike', 'cut forecast', 'downgrade', 'downgrades', 'slump', 'slumps',
+    'warning', 'warns', 'tumble', 'tumbles'
+  ];
+  const bullishScore = bullishTerms.filter(term => text.includes(term)).length;
+  const bearishScore = bearishTerms.filter(term => text.includes(term)).length;
+  if (bullishScore > bearishScore) return 'Bullish';
+  if (bearishScore > bullishScore) return 'Bearish';
+  return 'Neutral';
+}
+
 export default async function handler(req, res) {
   try {
     // Queries
@@ -53,9 +75,7 @@ export default async function handler(req, res) {
             source: source.trim(),
             timestamp: new Date(pubDate).getTime(),
             time: new Date(pubDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            sentiment: cleanTitle.match(/Bullish|Positive|Up|Rise|Gain|Strong|Growth|Rally/i) ? 'Bullish' : 
-                       cleanTitle.match(/Bearish|Negative|Down|Fall|Loss|Weak|Crisis|Crash/i) ? 'Bearish' : 
-                       'Neutral'
+            sentiment: classifyHeadline(cleanTitle)
           };
         });
         combinedNews.push(...news);
@@ -78,9 +98,7 @@ export default async function handler(req, res) {
           source: 'Investing.com',
           timestamp: new Date(pubDate).getTime(),
           time: new Date(pubDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          sentiment: cleanTitle.match(/Bullish|Positive|Up|Rise|Gain|Strong|Growth|Rally/i) ? 'Bullish' : 
-                     cleanTitle.match(/Bearish|Negative|Down|Fall|Loss|Weak|Crisis|Crash/i) ? 'Bearish' : 
-                     'Neutral'
+          sentiment: classifyHeadline(cleanTitle)
         };
       });
       combinedNews.push(...news);
@@ -97,6 +115,7 @@ export default async function handler(req, res) {
         if (!acc.find(item => item.title === curr.title)) acc.push(curr);
         return acc;
       }, [])
+      .filter(item => Number.isFinite(item.timestamp) && Date.now() - item.timestamp <= 36 * 60 * 60 * 1000)
       .slice(0, 18);
 
     return res.status(200).json({ success: true, news: finalNews });

@@ -232,6 +232,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (neuralMacro) {
         setMacroData(neuralMacro);
+      }
+
+      if (Object.keys(neuralData).length > 0 || neuralMacro) {
         setDataSyncStatus(prev => ({ ...prev, institutional: true }));
       }
 

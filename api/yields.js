@@ -7,7 +7,7 @@ import axios from 'axios';
  * Requires VITE_FRED_KEY.
  */
 export default async function handler(req, res) {
-  const apiKey = process.env.VITE_FRED_KEY;
+  const apiKey = process.env.FRED_KEY || process.env.VITE_FRED_KEY;
   
   if (!apiKey) {
     return res.status(200).json({ success: false, error: 'FRED Key Missing' });

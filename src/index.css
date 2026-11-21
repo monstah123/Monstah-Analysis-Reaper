@@ -37,6 +37,9 @@ body { font-family: var(--font-main); background: var(--bg-darker); color: var(-
 h1, h2, h3, h4 { font-family: var(--font-heading); }
 button { cursor: pointer; font-family: inherit; }
 
+/* DEBUG: Visible root indicator */
+#root { outline: 3px solid lime; min-height: 100vh; }
+
 /* ─── Layout ─────────────────────────────────────────── */
 .app-container { display: flex; min-height: 100vh; width: 100%; overflow: hidden; }
 .app-body { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
@@ -633,6 +636,18 @@ tr:hover td { background: rgba(255,255,255,0.025); }
   cursor: not-allowed;
 }
 .google-icon { width: 20px; height: 20px; flex-shrink: 0; }
+
+.login-error {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: var(--radius-md);
+  background: rgba(127, 29, 29, 0.2);
+  color: #fca5a5;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: left;
+}
 
 .login-terms {
   font-size: 0.72rem;

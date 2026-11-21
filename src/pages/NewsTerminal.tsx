@@ -17,7 +17,7 @@ const NewsTerminal: React.FC = () => {
       label: 'Schwab Network',
       icon: '📺',
       desc: 'Live markets, expert analysis, 24/7',
-      url: 'https://www.youtube.com/embed/I9pAAFtdPv0?si=1XqDh7dmJ_HQ46oM&autoplay=1&mute=1&rel=0&modestbranding=1',
+      url: 'https://www.youtube.com/embed/Sj1NLE3MRI8?autoplay=1&mute=1&rel=0&modestbranding=1',
       type: 'youtube',
     },
     bloomberg: {
@@ -46,11 +46,28 @@ const NewsTerminal: React.FC = () => {
   const fetchNews = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/news?t=${Date.now()}`);
-      if (!res.ok) throw new Error('Institutional Feed Offline');
+      let res: Response | null = null;
+
+      try {
+        res = await fetch(`/api/news?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' }
+        });
+      } catch {
+        res = null;
+      }
+
+      if (!res?.ok) {
+        res = await fetch(`http://localhost:4317/api/news?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' }
+        }).catch(() => null);
+      }
+
+      if (!res?.ok) throw new Error('Institutional Feed Offline');
       const data = await res.json();
       
-      if (data.success && data.news) {
+      if (data.success && Array.isArray(data.news) && data.news.length > 0) {
         const mapped = data.news.map((item: any, index: number) => ({
           id: `live-${index}-${Date.now()}`,
           title: item.title,
@@ -63,6 +80,8 @@ const NewsTerminal: React.FC = () => {
         }));
         setHeadlines(mapped);
         setError(null);
+      } else {
+        throw new Error(data.error || 'Institutional Feed Offline');
       }
     } catch (e) {
       console.error('Terminal Sync Failure:', e);
@@ -151,18 +170,29 @@ const NewsTerminal: React.FC = () => {
 
   // Use real sentiment data to determine global mood
   const currentNarrative = useMemo(() => {
-    if (headlines.length === 0) return { mood: 'Syncing...', reason: 'Market data is being processed.', topAsset: 'Scan Pending...', riskFactor: 'N/A' };
-    
-    // Simple logic: Calc avg sentiment score
-    const avg = headlines.reduce((sum, h) => sum + h.sentimentScore, 0) / headlines.length;
-    
+    if (headlines.length === 0) {
+      return {
+        mood: error ? 'Feed Offline' : 'Scanning Live Wires',
+        reason: error ? 'The institutional headline feed is currently unavailable.' : 'Connecting to institutional news sources.',
+        topAsset: 'Scanning...'
+      };
+    }
+
+    const bullish = headlines.filter(h => h.sentiment === 'Bullish').length;
+    const bearish = headlines.filter(h => h.sentiment === 'Bearish').length;
+    const neutral = headlines.length - bullish - bearish;
+    const mood = bullish > bearish ? 'Institutional Bullish' : bearish > bullish ? 'Institutional Bearish' : 'Neutral / Mixed';
+    const strongest = [...headlines].sort((a, b) => Math.abs(b.sentimentScore) - Math.abs(a.sentimentScore))[0];
+    const leadSource = strongest?.source || headlines[0]?.source || 'Institutional Wire';
+
     return {
-      mood: avg > 0.15 ? 'Institutional Bullish' : avg < -0.15 ? 'Institutional Bearish' : 'Neutral / Mixed',
-      reason: 'Automated sentiment analysis based on late-breaking institutional headlines.',
-      topAsset: headlines[0]?.title.length > 60 ? headlines[0].title.slice(0, 60) + '…' : (headlines[0]?.title || 'FX'),
-      riskFactor: 'Volatily in sentiment readings indicates market uncertainty.'
+      mood,
+      reason: `${bullish} bullish, ${bearish} bearish, and ${neutral} neutral headlines across ${headlines.length} live wire items. Lead source: ${leadSource}.`,
+      topAsset: strongest?.title?.length > 100
+        ? strongest.title.slice(0, 100) + '…'
+        : strongest?.title || headlines[0]?.title || 'Major Markets'
     };
-  }, [headlines]);
+  }, [headlines, error]);
 
   return (
     <div className="page-container">
@@ -240,7 +270,9 @@ const NewsTerminal: React.FC = () => {
       <div className="settings-card" style={{ marginTop: '1.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.02) 100%)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
            <h2 className="settings-section-title" style={{ fontSize: '1.1rem', margin: 0 }}>🧠 AI Sentiment Analysis</h2>
-           <span style={{ fontSize: '0.7rem', color: '#8b9ab8' }}>Syncing: {isLoading ? 'Working...' : 'Live'}</span>
+           <span style={{ fontSize: '0.7rem', color: isLoading ? '#eab308' : '#4ade80' }}>
+             {isLoading ? 'Scanning Live Wires...' : headlines.length > 0 ? `${headlines.length} Headlines Live` : 'Feed Offline'}
+           </span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
            <div>
